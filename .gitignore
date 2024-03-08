@@ -1,0 +1,27 @@
+/bin
+/share/bash-completion/completions
+/share/fish/vendor_completions.d
+/share/man/man1
+/share/zsh/site-functions
+/vc-cli
+.envrc
+/dist
+/site
+/CHANGELOG.md
+/.goreleaser.generated.yml
+/script/build
+/script/build.exe
+
+# VS Code
+.vscode
+
+# IntelliJ
+.idea
+
+# macOS
+.DS_Store
+
+# vim
+*.swp
+
+vendor/
