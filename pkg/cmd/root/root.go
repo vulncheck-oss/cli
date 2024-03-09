@@ -6,6 +6,7 @@ import (
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/auth"
+	"github.com/vulncheck-oss/cli/pkg/build"
 	"github.com/vulncheck-oss/cli/pkg/cmd/ascii"
 	cmdVersion "github.com/vulncheck-oss/cli/pkg/cmd/version"
 	"os"
@@ -19,7 +20,7 @@ func (ae *AuthError) Error() string {
 	return ae.err.Error()
 }
 
-func NewCmdRoot(version, buildDate string) *cobra.Command {
+func NewCmdRoot() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "vc <command> <subcommand> [flags]",
 		Short: "VulnCheck CLI.",
@@ -30,7 +31,7 @@ func NewCmdRoot(version, buildDate string) *cobra.Command {
 		$ vc backup abb
 	`),
 		Annotations: map[string]string{
-			"versionInfo": cmdVersion.Format(version, buildDate),
+			"versionInfo": cmdVersion.Format(build.Version, build.Date),
 		},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
@@ -54,7 +55,7 @@ func NewCmdRoot(version, buildDate string) *cobra.Command {
 
 func Execute(version string, date string) {
 
-	if err := NewCmdRoot(version, date).Execute(); err != nil {
+	if err := NewCmdRoot().Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
