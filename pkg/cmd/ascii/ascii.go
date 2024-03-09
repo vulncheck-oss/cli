@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/pkg/session"
 )
 
 //go:embed ascii.txt
@@ -17,5 +18,6 @@ func Command() *cobra.Command {
 			fmt.Println(ascii)
 		},
 	}
+	session.DisableAuthCheck(cmd)
 	return cmd
 }

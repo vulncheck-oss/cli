@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
-	"github.com/vulncheck-oss/cli/pkg/auth"
 	"github.com/vulncheck-oss/cli/pkg/build"
 	"github.com/vulncheck-oss/cli/pkg/cmd/ascii"
+	"github.com/vulncheck-oss/cli/pkg/cmd/auth"
 	cmdVersion "github.com/vulncheck-oss/cli/pkg/cmd/version"
+	"github.com/vulncheck-oss/cli/pkg/session"
 	"os"
 )
 
@@ -35,7 +36,7 @@ func NewCmdRoot() *cobra.Command {
 		},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
-			if auth.IsAuthCheckEnabled(cmd) && !auth.CheckAuth() {
+			if session.IsAuthCheckEnabled(cmd) && !session.CheckAuth() {
 				fmt.Println(authHelp())
 				return &AuthError{}
 			}
@@ -47,13 +48,19 @@ func NewCmdRoot() *cobra.Command {
 
 	cmd.PersistentFlags().Bool("help", false, "Show help for command")
 
+	cmd.AddGroup(&cobra.Group{
+		ID:    "core",
+		Title: "Core Commands",
+	})
+
 	cmd.AddCommand(cmdVersion.Command())
 	cmd.AddCommand(ascii.Command())
+	cmd.AddCommand(auth.Command())
 
 	return cmd
 }
 
-func Execute(version string, date string) {
+func Execute() {
 
 	if err := NewCmdRoot().Execute(); err != nil {
 		fmt.Println(err)

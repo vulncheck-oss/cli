@@ -1,6 +1,8 @@
-package auth
+package session
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/spf13/cobra"
+)
 
 func IsAuthCheckEnabled(cmd *cobra.Command) bool {
 	switch cmd.Name() {
@@ -26,5 +28,5 @@ func DisableAuthCheck(cmd *cobra.Command) {
 }
 
 func CheckAuth() bool {
-	return false
+	return true
 }

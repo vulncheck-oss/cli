@@ -3,7 +3,7 @@ package version
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/vulncheck-oss/cli/pkg/auth"
+	"github.com/vulncheck-oss/cli/pkg/session"
 	"regexp"
 	"strings"
 )
@@ -17,7 +17,7 @@ func Command() *cobra.Command {
 		},
 	}
 
-	auth.DisableAuthCheck(cmd)
+	session.DisableAuthCheck(cmd)
 	return cmd
 }
 

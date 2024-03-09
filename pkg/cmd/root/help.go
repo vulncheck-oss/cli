@@ -8,7 +8,7 @@ import (
 func authHelp() string {
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
 		return heredoc.Doc(`
-			vc: To use GitHub CLI in a GitHub Actions workflow, set the GH_TOKEN environment variable. Example:
+			vc: To use VulnCheck CLI in a GitHub Actions workflow, set the VC_TOKEN environment variable. Example:
 			  env:
 			    VC_TOKEN: ${{ secrets.vulncheck_token }}
 		`)
