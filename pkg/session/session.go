@@ -2,7 +2,21 @@ package session
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/pkg/environment"
+	"github.com/vulncheck-oss/sdk"
 )
+
+type MeResponse struct {
+	Benchmark float64 `json:"_benchmark"`
+	Data      Me      `json:"data"`
+}
+
+type Me struct {
+	ID     string
+	Email  string
+	Name   string
+	Avatar string
+}
 
 func IsAuthCheckEnabled(cmd *cobra.Command) bool {
 	switch cmd.Name() {
@@ -29,4 +43,8 @@ func DisableAuthCheck(cmd *cobra.Command) {
 
 func CheckAuth() bool {
 	return true
+}
+
+func CheckToken(token string) (response *sdk.UserResponse, err error) {
+	return sdk.Connect(environment.Env.API, token).GetMe()
 }

@@ -2,8 +2,10 @@ package login
 
 import (
 	"github.com/MakeNowJust/heredoc/v2"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/session"
+	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/cli/pkg/util"
 	"strings"
 )
@@ -51,6 +53,17 @@ func Command() *cobra.Command {
 			if !ValidToken(args[0]) {
 				return util.FlagErrorf("Invalid token specified")
 			}
+
+			spinner := ui.Spinner("Verifying Token...")
+
+			res, err := session.CheckToken(args[0])
+			spinner.Send(tea.Quit)
+			if err != nil {
+				return util.FlagErrorf("Token verification failed: %v", err)
+			}
+
+			ui.Success("Token Verified as", res.Data.Email)
+
 			return nil
 		},
 	}

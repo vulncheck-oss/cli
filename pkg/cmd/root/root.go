@@ -9,6 +9,8 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cmd/ascii"
 	"github.com/vulncheck-oss/cli/pkg/cmd/auth"
 	cmdVersion "github.com/vulncheck-oss/cli/pkg/cmd/version"
+	"github.com/vulncheck-oss/cli/pkg/config"
+	"github.com/vulncheck-oss/cli/pkg/environment"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"os"
 )
@@ -35,6 +37,9 @@ func NewCmdRoot() *cobra.Command {
 			"versionInfo": cmdVersion.Format(build.Version, build.Date),
 		},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+
+			environment.Init()
+			config.Init()
 
 			if session.IsAuthCheckEnabled(cmd) && !session.CheckAuth() {
 				fmt.Println(authHelp())
