@@ -1,6 +1,7 @@
 package login
 
 import (
+	"fmt"
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/session"
@@ -55,19 +56,14 @@ func Command() *cobra.Command {
 			}
 
 			spinner := ui.Spinner("Verifying Token...")
-			time.Sleep(3 * time.Second)
-			spinner.Send(ui.SpinnerSuccess("Verification Successful"))
-			time.Sleep(3 * time.Second)
-
-			/*
-				spinner := ui.Spinner("Verifying Token...")
-				res, err := session.CheckToken(args[0])
-				if err != nil {
-					return util.FlagErrorf("Token verification failed: %v", err)
-				}
-				spinner.Send(ui.SpinnerSuccess("Verification Successful" + res.Data.Email))
-			*/
-
+			res, err := session.CheckToken(args[0])
+			if err != nil {
+				return util.FlagErrorf("Token verification failed: %v", err)
+			}
+			spinner.Quit()
+			ui.Success("Verification Successful")
+			ui.Success(fmt.Sprintf("Token belongs to %s (%s)", res.Data.Name, res.Data.Email))
+			time.Sleep(1 * time.Second)
 			return nil
 		},
 	}

@@ -5,8 +5,10 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func Success(strings ...string) string {
-	greenCheck := lipgloss.NewStyle().Foreground(lipgloss.Color("#00ff00")).Render("✓")
-	success := lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Render(strings...)
-	return fmt.Sprintf("[ %s ] %s", greenCheck, success)
+func Success(str string) {
+	fmt.Printf(
+		"[ %s ] %s\n",
+		lipgloss.NewStyle().Foreground(lipgloss.Color("#00ff00")).Render("✓"),
+		lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Render(str),
+	)
 }
