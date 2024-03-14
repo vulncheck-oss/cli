@@ -30,7 +30,8 @@ var Environments = []Environment{
 	},
 }
 
-var Env = Environments[0]
+// TODO: move this to [0] before initial release
+var Env = Environments[2]
 
 func Init() {
 	envVar := os.Getenv("VC_ENV")

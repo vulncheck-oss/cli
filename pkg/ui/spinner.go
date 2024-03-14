@@ -5,6 +5,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"os"
 )
 
 type model struct {
@@ -14,44 +15,51 @@ type model struct {
 	copy     string
 }
 
-func (m model) Init() tea.Cmd {
+type SpinnerSuccessCopy string
+
+func (m *model) Init() tea.Cmd {
 	return m.spinner.Tick
 }
 
-func (m model) Quit() {
+func (m *model) Quit() tea.Msg {
 	m.quitting = true
+	return tea.Quit
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		if msg.String() == "q" {
-			m.Quit()
-		}
+	case SpinnerSuccessCopy:
+		m.copy = string(msg)
 	}
-
 	var cmd tea.Cmd
 	m.spinner, cmd = m.spinner.Update(msg)
 	return m, cmd
 }
 
-func (m model) View() string {
-	str := fmt.Sprintf("%s %s \n", m.spinner.View(), m.copy)
-	if m.quitting {
-		return str + "\r"
+func SpinnerSuccess(copy string) tea.Cmd {
+	return func() tea.Msg {
+		return SpinnerSuccessCopy(copy)
 	}
-	return str
+}
+
+func (m *model) View() string {
+	greenCheck := lipgloss.NewStyle().Foreground(lipgloss.Color("#00ff00")).Render("✓")
+	if m.quitting {
+		return fmt.Sprintf("[ %s] %s\n\n", greenCheck, m.copy)
+	}
+	return fmt.Sprintf("[ %s] %s\n\n", m.spinner.View(), m.copy)
 }
 
 func Spinner(copy string) *tea.Program {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-	p := tea.NewProgram(model{spinner: s, copy: copy})
-
+	program := tea.NewProgram(&model{spinner: s, copy: copy})
 	go func() {
-		p.Run()
+		if _, err := program.Run(); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 	}()
-
-	return p
+	return program
 }

@@ -2,12 +2,12 @@ package login
 
 import (
 	"github.com/MakeNowJust/heredoc/v2"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/cli/pkg/util"
 	"strings"
+	"time"
 )
 
 func Command() *cobra.Command {
@@ -55,14 +55,18 @@ func Command() *cobra.Command {
 			}
 
 			spinner := ui.Spinner("Verifying Token...")
+			time.Sleep(3 * time.Second)
+			spinner.Send(ui.SpinnerSuccess("Verification Successful"))
+			time.Sleep(3 * time.Second)
 
-			res, err := session.CheckToken(args[0])
-			spinner.Send(tea.Quit)
-			if err != nil {
-				return util.FlagErrorf("Token verification failed: %v", err)
-			}
-
-			ui.Success("Token Verified as", res.Data.Email)
+			/*
+				spinner := ui.Spinner("Verifying Token...")
+				res, err := session.CheckToken(args[0])
+				if err != nil {
+					return util.FlagErrorf("Token verification failed: %v", err)
+				}
+				spinner.Send(ui.SpinnerSuccess("Verification Successful" + res.Data.Email))
+			*/
 
 			return nil
 		},

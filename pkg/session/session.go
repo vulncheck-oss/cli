@@ -18,6 +18,14 @@ type Me struct {
 	Avatar string
 }
 
+func CheckAuth() bool {
+	return true
+}
+
+func CheckToken(token string) (response *sdk.UserResponse, err error) {
+	return sdk.Connect(environment.Env.API, token).GetMe()
+}
+
 func IsAuthCheckEnabled(cmd *cobra.Command) bool {
 	switch cmd.Name() {
 	case "help", cobra.ShellCompRequestCmd, cobra.ShellCompNoDescRequestCmd:
@@ -39,12 +47,4 @@ func DisableAuthCheck(cmd *cobra.Command) {
 	}
 
 	cmd.Annotations["skipAuthCheck"] = "true"
-}
-
-func CheckAuth() bool {
-	return true
-}
-
-func CheckToken(token string) (response *sdk.UserResponse, err error) {
-	return sdk.Connect(environment.Env.API, token).GetMe()
 }
