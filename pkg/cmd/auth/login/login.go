@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/cli/pkg/util"
 	"strings"
-	"time"
 )
 
 func Command() *cobra.Command {
@@ -61,9 +61,11 @@ func Command() *cobra.Command {
 				return util.FlagErrorf("Token verification failed: %v", err)
 			}
 			spinner.Quit()
-			ui.Success("Verification Successful")
-			ui.Success(fmt.Sprintf("Token belongs to %s (%s)", res.Data.Name, res.Data.Email))
-			time.Sleep(1 * time.Second)
+			ui.Success(fmt.Sprintf("Authenticated as %s (%s)", res.Data.Name, res.Data.Email))
+			_, err = config.SaveToken(args[0])
+			if err != nil {
+				return util.FlagErrorf("Failed to save config: %v", err)
+			}
 			return nil
 		},
 	}
