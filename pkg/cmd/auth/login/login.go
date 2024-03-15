@@ -3,7 +3,6 @@ package login
 import (
 	"fmt"
 	"github.com/MakeNowJust/heredoc/v2"
-	"github.com/octoper/go-ray"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
@@ -57,7 +56,6 @@ func Command() *cobra.Command {
 				}
 				args = []string{token}
 			}
-			ray.Ray(args[0])
 			if !ValidToken(args[0]) {
 				return util.FlagErrorf("Invalid token specified")
 			}
