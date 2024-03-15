@@ -3,6 +3,7 @@ package login
 import (
 	"fmt"
 	"github.com/MakeNowJust/heredoc/v2"
+	"github.com/octoper/go-ray"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
@@ -48,9 +49,15 @@ func Command() *cobra.Command {
 		Use:   "token",
 		Short: "Connect a VulnCheck account using a token",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 1 {
-				return util.FlagErrorf("No token specified")
+			if len(args) < 1 {
+				token, err := ui.TokenPrompt()
+
+				if err != nil {
+					return util.FlagErrorf("Failed to read token: %v", err)
+				}
+				args = []string{token}
 			}
+			ray.Ray(args[0])
 			if !ValidToken(args[0]) {
 				return util.FlagErrorf("Invalid token specified")
 			}

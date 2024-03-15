@@ -3,6 +3,7 @@ package auth
 import (
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cmd/auth/login"
+	"github.com/vulncheck-oss/cli/pkg/cmd/auth/status"
 	"github.com/vulncheck-oss/cli/pkg/session"
 )
 
@@ -16,6 +17,7 @@ func Command() *cobra.Command {
 	session.DisableAuthCheck(cmd)
 
 	cmd.AddCommand(login.Command())
+	cmd.AddCommand(status.Command())
 
 	return cmd
 }

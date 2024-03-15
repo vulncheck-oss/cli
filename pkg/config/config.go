@@ -59,6 +59,17 @@ func configDir() (string, error) {
 	return dir, nil
 }
 
+func HasConfig() bool {
+
+	_, err := loadConfig()
+
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
 func SaveToken(token string) (string, error) {
 	dir, err := configDir()
 	if err != nil {
