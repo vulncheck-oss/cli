@@ -8,6 +8,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/build"
 	"github.com/vulncheck-oss/cli/pkg/cmd/ascii"
 	"github.com/vulncheck-oss/cli/pkg/cmd/auth"
+	"github.com/vulncheck-oss/cli/pkg/cmd/indices"
 	cmdVersion "github.com/vulncheck-oss/cli/pkg/cmd/version"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/environment"
@@ -29,7 +30,7 @@ func NewCmdRoot() *cobra.Command {
 		Short: "VulnCheck CLI.",
 		Long:  "Work seamlessly with the VulnCheck API.",
 		Example: heredoc.Doc(`
-		$ vc index list
+		$ vc indices list
 		$ vc index abb
 		$ vc backup abb
 	`),
@@ -61,6 +62,7 @@ func NewCmdRoot() *cobra.Command {
 	cmd.AddCommand(cmdVersion.Command())
 	cmd.AddCommand(ascii.Command())
 	cmd.AddCommand(auth.Command())
+	cmd.AddCommand(indices.Command())
 
 	return cmd
 }

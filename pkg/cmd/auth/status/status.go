@@ -2,6 +2,7 @@ package status
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/pkg/cmd/auth/login"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
@@ -16,10 +17,15 @@ func Command() *cobra.Command {
 			config.Init()
 
 			if !config.HasConfig() {
-				ui.Danger("No configuration found. Please run `vc auth login` to authenticate.")
+				return ui.Danger("No configuration found. Please run `vc auth login` to authenticate.")
 			}
 
-			return nil
+			if !config.HasToken() {
+				return ui.Danger("No token found. Please run `vc auth login` to authenticate.")
+			}
+
+			token := config.Token()
+			return login.SaveToken(token)
 		},
 	}
 	session.DisableAuthCheck(cmd)

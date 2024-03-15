@@ -3,13 +3,18 @@ package login
 import (
 	"fmt"
 	"github.com/MakeNowJust/heredoc/v2"
+	"github.com/charmbracelet/huh"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/cli/pkg/util"
-	"strings"
 )
+
+type CmdCopy struct {
+	Short string
+	Long  string
+}
 
 func Command() *cobra.Command {
 
@@ -34,6 +39,65 @@ func Command() *cobra.Command {
 			# Authenticate with vulncheck.com by passing in a token
 			$ vc auth login token vulncheck_******************
 		`),
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			if config.HasConfig() && config.HasToken() {
+				logoutChoice := true
+				confirm := huh.NewConfirm().
+					Title("You currently have a token saved. Do you want to invalidate it first?").
+					Affirmative("Yes").
+					Negative("No").
+					Value(&logoutChoice)
+				confirm.Run()
+
+				if logoutChoice {
+					if _, err := session.InvalidateToken(config.Token()); err != nil {
+						if err := config.RemoveToken(); err != nil {
+							return ui.Danger("Failed to remove token from config")
+						}
+						return ui.Info("Token was not valid, removing from config")
+					} else {
+						if err := config.RemoveToken(); err != nil {
+							return ui.Danger("Failed to remove token from config")
+						}
+						ui.Success("Token invalidated successfully")
+					}
+				} else {
+					return nil
+				}
+
+			}
+
+			var choice string
+			form := huh.NewForm(
+				huh.NewGroup(
+					huh.NewSelect[string]().
+						Title("Select an authentication method").
+						Options(
+							huh.NewOption("Login with a web browser", "web"),
+							huh.NewOption("Paste an authentication token", "token"),
+						).Value(&choice),
+				),
+			)
+
+			err := form.Run()
+			if err != nil {
+				return util.FlagErrorf("Failed to select authentication method: %v", err)
+			}
+
+			switch choice {
+			case "token":
+				return cmdToken(cmd, args)
+			default:
+				return util.FlagErrorf("Invalid choice")
+			}
+		},
+	}
+
+	token := &cobra.Command{
+		Use:   "token",
+		Short: "Connect a VulnCheck account using an authentication token",
+		RunE:  cmdToken,
 	}
 
 	web := &cobra.Command{
@@ -44,50 +108,44 @@ func Command() *cobra.Command {
 		},
 	}
 
-	token := &cobra.Command{
-		Use:   "token",
-		Short: "Connect a VulnCheck account using a token",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				token, err := ui.TokenPrompt()
-
-				if err != nil {
-					return util.FlagErrorf("Failed to read token: %v", err)
-				}
-				args = []string{token}
-			}
-			if !ValidToken(args[0]) {
-				return util.FlagErrorf("Invalid token specified")
-			}
-
-			spinner := ui.Spinner("Verifying Token...")
-			res, err := session.CheckToken(args[0])
-			if err != nil {
-				return util.FlagErrorf("Token verification failed: %v", err)
-			}
-			spinner.Quit()
-			ui.Success(fmt.Sprintf("Authenticated as %s (%s)", res.Data.Name, res.Data.Email))
-			_, err = config.SaveToken(args[0])
-			if err != nil {
-				return util.FlagErrorf("Failed to save config: %v", err)
-			}
-			return nil
-		},
-	}
-
 	cmd.AddCommand(web, token)
 
 	session.DisableAuthCheck(cmd)
 	return cmd
 }
 
-func ValidToken(token string) bool {
-	if !strings.HasPrefix(token, "vulncheck_") {
-		return false
+func cmdToken(cmd *cobra.Command, args []string) error {
+
+	var token string
+
+	input := huh.
+		NewInput().
+		Title("Enter your authentication token").
+		Password(true).
+		Placeholder("vulncheck_******************").
+		Value(&token)
+
+	if err := input.Run(); err != nil {
+		return ui.Danger(fmt.Sprintf("Token verification failed: %v", err))
 	}
 
-	if len(token) != 74 {
-		return false
+	if !config.ValidToken(token) {
+		return util.FlagErrorf("Invalid token specified")
 	}
-	return true
+
+	return SaveToken(token)
+}
+
+func SaveToken(token string) error {
+
+	spinner := ui.Spinner("Verifying Token...")
+	res, err := session.CheckToken(token)
+	if err != nil {
+		return ui.Danger(fmt.Sprintf("Token verification failed: %v", err))
+	}
+	spinner.Quit()
+	if err := config.SaveToken(token); err != nil {
+		return util.FlagErrorf("Failed to save token: %v", err)
+	}
+	return ui.Success(fmt.Sprintf("Authenticated as %s (%s)", res.Data.Name, res.Data.Email))
 }

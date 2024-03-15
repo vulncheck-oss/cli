@@ -6,6 +6,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/environment"
 	"log"
 	"os"
+	"strings"
 )
 
 type Environment struct {
@@ -20,7 +21,6 @@ type Config struct {
 
 func Init() {
 	environment.Init()
-	viper.SetDefault("Environment", "production")
 }
 
 func loadConfig() (*Config, error) {
@@ -45,6 +45,18 @@ func loadConfig() (*Config, error) {
 	return &config, nil
 }
 
+func saveConfig(config *Config) error {
+	dir, err := configDir()
+	if err != nil {
+		return err
+	}
+	viper.AddConfigPath(dir)
+	viper.SetConfigName("vc")
+	viper.SetConfigType("yaml")
+	viper.Set("Token", config.Token)
+	return viper.WriteConfigAs(fmt.Sprintf("%s/vc.yaml", dir))
+}
+
 func configDir() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -60,28 +72,52 @@ func configDir() (string, error) {
 }
 
 func HasConfig() bool {
-
 	_, err := loadConfig()
-
 	if err != nil {
 		return false
 	}
-
 	return true
 }
 
-func SaveToken(token string) (string, error) {
-	dir, err := configDir()
+func HasToken() bool {
+	config, err := loadConfig()
 	if err != nil {
-		return "", nil
+		return false
 	}
-	viper.AddConfigPath(dir)
-	viper.SetConfigName("vc")
-	viper.SetConfigType("yaml")
-	viper.Set("Token", token)
-	err = viper.WriteConfigAs(fmt.Sprintf("%s/vc.yaml", dir))
+	if !ValidToken(config.Token) {
+		return false
+	}
+	return true
+}
+
+func Token() string {
+	config, err := loadConfig()
 	if err != nil {
-		return "", err
+		return ""
 	}
-	return dir, nil
+	return config.Token
+}
+
+func SaveToken(token string) error {
+	config := &Config{
+		Token: token,
+	}
+	return saveConfig(config)
+}
+
+func RemoveToken() error {
+	config := &Config{
+		Token: "",
+	}
+	return saveConfig(config)
+}
+
+func ValidToken(token string) bool {
+	if !strings.HasPrefix(token, "vulncheck_") {
+		return false
+	}
+	if len(token) != 74 {
+		return false
+	}
+	return true
 }

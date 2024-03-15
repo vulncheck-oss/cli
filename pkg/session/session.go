@@ -18,12 +18,17 @@ type Me struct {
 	Avatar string
 }
 
+var ErrorUnauthorized = "errors: [Unauthorized]"
+
 func CheckAuth() bool {
 	return true
 }
 
 func CheckToken(token string) (response *sdk.UserResponse, err error) {
 	return sdk.Connect(environment.Env.API, token).GetMe()
+}
+func InvalidateToken(token string) (response *sdk.Response, err error) {
+	return sdk.Connect(environment.Env.API, token).Logout()
 }
 
 func IsAuthCheckEnabled(cmd *cobra.Command) bool {

@@ -30,7 +30,7 @@ var Environments = []Environment{
 	},
 }
 
-// TODO: move this to [0] before initial release
+// TODO: move this to [0] before initial release - and remove staging from the array
 var Env = Environments[2]
 
 func Init() {

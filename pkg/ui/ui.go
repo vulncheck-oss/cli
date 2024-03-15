@@ -7,12 +7,22 @@ import (
 
 var format = "[ %s ] %s\n"
 
-func Success(str string) {
+func Success(str string) error {
 	fmt.Printf(
 		format,
-		lipgloss.NewStyle().Foreground(lipgloss.Color("#00ff00")).Render("✓"),
+		lipgloss.NewStyle().Foreground(lipgloss.Color("#34d399")).Render("✓"),
 		lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Render(str),
 	)
+	return nil
+}
+
+func Info(str string) error {
+	fmt.Printf(
+		format,
+		lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab")).Render("i"),
+		lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Render(str),
+	)
+	return nil
 }
 
 func Danger(sr string) error {
