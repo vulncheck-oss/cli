@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/huh/spinner"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/cli/pkg/util"
+	"github.com/vulncheck-oss/sdk"
 )
 
 type CmdCopy struct {
@@ -43,11 +45,11 @@ func Command() *cobra.Command {
 
 			if config.HasConfig() && config.HasToken() {
 				logoutChoice := true
-				confirm := huh.NewConfirm().
+				confirm := huh.NewForm(huh.NewGroup(huh.NewConfirm().
 					Title("You currently have a token saved. Do you want to invalidate it first?").
 					Affirmative("Yes").
 					Negative("No").
-					Value(&logoutChoice)
+					Value(&logoutChoice))).WithTheme(huh.ThemeDracula())
 				confirm.Run()
 
 				if logoutChoice {
@@ -138,12 +140,18 @@ func cmdToken(cmd *cobra.Command, args []string) error {
 
 func SaveToken(token string) error {
 
-	spinner := ui.Spinner("Verifying Token...")
-	res, err := session.CheckToken(token)
+	var res *sdk.UserResponse
+	var err error
+
+	_ = spinner.New().
+		Style(ui.Pantone).
+		Title(" Verifying token...").Action(func() {
+		res, err = session.CheckToken(token)
+	}).Run()
+
 	if err != nil {
 		return ui.Danger(fmt.Sprintf("Token verification failed: %v", err))
 	}
-	spinner.Quit()
 	if err := config.SaveToken(token); err != nil {
 		return util.FlagErrorf("Failed to save token: %v", err)
 	}
