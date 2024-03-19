@@ -2,6 +2,7 @@ package root
 
 import (
 	_ "embed"
+	"errors"
 	"fmt"
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
@@ -13,12 +14,22 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/environment"
 	"github.com/vulncheck-oss/cli/pkg/session"
-	"os"
+	"github.com/vulncheck-oss/cli/pkg/ui"
+	"github.com/vulncheck-oss/sdk"
 )
 
 type AuthError struct {
 	err error
 }
+
+type exitCode int
+
+const (
+	exitOK        exitCode = 0
+	exitError     exitCode = 1
+	exitCancel    exitCode = 2
+	exitAuthError exitCode = 3
+)
 
 func (ae *AuthError) Error() string {
 	return ae.err.Error()
@@ -68,9 +79,11 @@ func NewCmdRoot() *cobra.Command {
 }
 
 func Execute() {
-
 	if err := NewCmdRoot().Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		if errors.Is(err, sdk.ErrorUnauthorized) {
+			fmt.Println(ui.Danger("Error: %s, Try authenticating with: vc auth login", err.Error()))
+		}
+		// fmt.Println(err)
+		// os.Exit(1)
 	}
 }

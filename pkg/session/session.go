@@ -2,8 +2,10 @@ package session
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/environment"
 	"github.com/vulncheck-oss/sdk"
+	"os"
 )
 
 type MeResponse struct {
@@ -18,9 +20,17 @@ type Me struct {
 	Avatar string
 }
 
-var ErrorUnauthorized = "errors: [Unauthorized]"
-
 func CheckAuth() bool {
+	token := os.Getenv("VC_TOKEN")
+	if token != "" && config.ValidToken(token) {
+		return true
+	}
+	if token != "" && !config.ValidToken(token) {
+		return false
+	}
+
+	token = config.Token()
+
 	return true
 }
 

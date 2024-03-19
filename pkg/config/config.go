@@ -72,6 +72,7 @@ func configDir() (string, error) {
 }
 
 func HasConfig() bool {
+
 	_, err := loadConfig()
 	if err != nil {
 		return false
@@ -79,23 +80,23 @@ func HasConfig() bool {
 	return true
 }
 
-func HasToken() bool {
-	config, err := loadConfig()
-	if err != nil {
-		return false
-	}
-	if !ValidToken(config.Token) {
-		return false
-	}
-	return true
-}
-
 func Token() string {
+
+	token := os.Getenv("VC_TOKEN")
+
+	if token != "" && ValidToken(token) {
+		return token
+	}
+
 	config, err := loadConfig()
 	if err != nil {
 		return ""
 	}
 	return config.Token
+}
+
+func HasToken() bool {
+	return Token() != ""
 }
 
 func SaveToken(token string) error {

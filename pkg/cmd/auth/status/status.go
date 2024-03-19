@@ -16,12 +16,8 @@ func Command() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config.Init()
 
-			if !config.HasConfig() {
-				return ui.Danger("No configuration found. Please run `vc auth login` to authenticate.")
-			}
-
 			if !config.HasToken() {
-				return ui.Danger("No token found. Please run `vc auth login` to authenticate.")
+				return ui.Danger("No token found. Please run `vc auth login` to authenticate or populate the environment variable `VC_TOKEN`.")
 			}
 
 			token := config.Token()

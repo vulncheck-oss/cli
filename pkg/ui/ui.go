@@ -30,10 +30,10 @@ func Info(str string) error {
 	return nil
 }
 
-func Danger(sr string) error {
+func Danger(str string, a ...any) error {
 	return fmt.Errorf(
 		format,
 		Red.Render("✗"),
-		White.Render(sr),
+		White.Render(fmt.Sprintf(str, a)),
 	)
 }
