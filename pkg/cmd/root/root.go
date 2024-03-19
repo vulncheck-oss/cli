@@ -64,6 +64,8 @@ func NewCmdRoot() *cobra.Command {
 		},
 	}
 
+	cmd.SilenceErrors = true
+
 	cmd.PersistentFlags().Bool("help", false, "Show help for command")
 
 	cmd.AddGroup(&cobra.Group{
@@ -82,9 +84,9 @@ func NewCmdRoot() *cobra.Command {
 func Execute() {
 	if err := NewCmdRoot().Execute(); err != nil {
 		if errors.Is(err, sdk.ErrorUnauthorized) {
-			fmt.Println(ui.Danger("Error: %s, Try authenticating with: vc auth login", err.Error()))
-			os.Exit(1)
+			fmt.Println(ui.Danger("Error: %v, Try authenticating with: vc auth login", err.Error()))
 		}
+		os.Exit(1)
 		// fmt.Println(err)
 		// os.Exit(1)
 	}
