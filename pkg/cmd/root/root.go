@@ -16,6 +16,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk"
+	"os"
 )
 
 type AuthError struct {
@@ -82,6 +83,7 @@ func Execute() {
 	if err := NewCmdRoot().Execute(); err != nil {
 		if errors.Is(err, sdk.ErrorUnauthorized) {
 			fmt.Println(ui.Danger("Error: %s, Try authenticating with: vc auth login", err.Error()))
+			os.Exit(1)
 		}
 		// fmt.Println(err)
 		// os.Exit(1)
