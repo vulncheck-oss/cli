@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"testing"
 )
 
@@ -34,4 +35,28 @@ func TestValidToken(t *testing.T) {
 		})
 	}
 
+}
+
+func TestSaveAndLoadConfig(t *testing.T) {
+	// Setup: Create a temporary directory for config
+	tempDir := t.TempDir()
+	homeDir := os.Getenv("HOME")     // Save original HOME
+	os.Setenv("HOME", tempDir)       // Temporarily override HOME
+	defer os.Setenv("HOME", homeDir) // Restore HOME
+
+	expectedToken := "vulncheck_testtoken1234567890abcdefghijklmnopqrstuvw"
+	config := &Config{Token: expectedToken}
+	err := saveConfig(config)
+	if err != nil {
+		t.Fatalf("Failed to save config: %v", err)
+	}
+
+	loadedConfig, err := loadConfig()
+	if err != nil {
+		t.Fatalf("Failed to load config: %v", err)
+	}
+
+	if loadedConfig.Token != expectedToken {
+		t.Errorf("Expected token %s, got %s", expectedToken, loadedConfig.Token)
+	}
 }
