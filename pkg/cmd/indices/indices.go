@@ -2,6 +2,7 @@ package indices
 
 import (
 	"fmt"
+	"github.com/octoper/go-ray"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/environment"
@@ -32,9 +33,11 @@ func Browse() *cobra.Command {
 			}
 			if len(args) > 0 && args[0] != "" {
 				indices := response.GetData()
-				_ = ui.Info(fmt.Sprintf("Browsing %d indices searching for \"%s\"", len(ui.IndicesRows(indices, args[0])), args[0]))
+				ui.Info(fmt.Sprintf("Browsing %d indices searching for \"%s\"", len(ui.IndicesRows(indices, args[0])), args[0]))
 				return ui.Indices(indices, args[0])
 			}
+
+			ray.Ray(response.String())
 			ui.Info(fmt.Sprintf("Browsing %d indices", len(response.GetData())))
 			return ui.Indices(response.GetData(), "")
 		},

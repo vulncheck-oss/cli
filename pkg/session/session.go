@@ -5,7 +5,6 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/environment"
 	"github.com/vulncheck-oss/sdk"
-	"os"
 )
 
 type MeResponse struct {
@@ -21,17 +20,11 @@ type Me struct {
 }
 
 func CheckAuth() bool {
-	token := os.Getenv("VC_TOKEN")
+	token := config.Token()
 	if token != "" && config.ValidToken(token) {
 		return true
 	}
-	if token != "" && !config.ValidToken(token) {
-		return false
-	}
-
-	token = config.Token()
-
-	return true
+	return false
 }
 
 func CheckToken(token string) (response *sdk.UserResponse, err error) {

@@ -9,6 +9,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/build"
 	"github.com/vulncheck-oss/cli/pkg/cmd/ascii"
 	"github.com/vulncheck-oss/cli/pkg/cmd/auth"
+	"github.com/vulncheck-oss/cli/pkg/cmd/index"
 	"github.com/vulncheck-oss/cli/pkg/cmd/indices"
 	cmdVersion "github.com/vulncheck-oss/cli/pkg/cmd/version"
 	"github.com/vulncheck-oss/cli/pkg/config"
@@ -56,7 +57,7 @@ func NewCmdRoot() *cobra.Command {
 
 			if session.IsAuthCheckEnabled(cmd) && !session.CheckAuth() {
 				fmt.Println(authHelp())
-				return &AuthError{}
+				return ui.Error("No valid token found")
 			}
 
 			return nil
@@ -64,6 +65,7 @@ func NewCmdRoot() *cobra.Command {
 		},
 	}
 
+	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
 
 	cmd.PersistentFlags().Bool("help", false, "Show help for command")
@@ -77,6 +79,7 @@ func NewCmdRoot() *cobra.Command {
 	cmd.AddCommand(ascii.Command())
 	cmd.AddCommand(auth.Command())
 	cmd.AddCommand(indices.Command())
+	cmd.AddCommand(index.Command())
 
 	return cmd
 }
@@ -84,10 +87,11 @@ func NewCmdRoot() *cobra.Command {
 func Execute() {
 	if err := NewCmdRoot().Execute(); err != nil {
 		if errors.Is(err, sdk.ErrorUnauthorized) {
-			fmt.Println(ui.Danger("Error: %v, Try authenticating with: vc auth login", err.Error()))
+			fmt.Println(ui.Danger("Error: Unauthorized, Try authenticating with: vc auth login"))
+		} else {
+			fmt.Println(ui.Danger(err.Error()))
 		}
+
 		os.Exit(1)
-		// fmt.Println(err)
-		// os.Exit(1)
 	}
 }

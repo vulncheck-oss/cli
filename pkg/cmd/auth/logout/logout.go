@@ -24,7 +24,8 @@ func Command() *cobra.Command {
 				if err := config.RemoveToken(); err != nil {
 					return ui.Danger("Failed to remove token")
 				}
-				return ui.Success("Token successfully invalidated")
+				ui.Success("Token successfully invalidated")
+				return nil
 			}
 			if errors.Is(err, sdk.ErrorUnauthorized) {
 				if err := config.RemoveToken(); err != nil {
