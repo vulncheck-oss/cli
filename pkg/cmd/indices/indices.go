@@ -27,7 +27,7 @@ func Browse() *cobra.Command {
 		Use:   "browse <search>",
 		Short: "Browse indices",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			response, err := sdk.Connect(environment.Env.API, config.Token()).GetIndexes()
+			response, err := sdk.Connect(environment.Env.API, config.Token()).GetIndices()
 			if err != nil {
 				return err
 			}

@@ -8,18 +8,16 @@ import (
 	"github.com/vulncheck-oss/sdk"
 )
 
-type indexOptions struct {
-	Json   bool
-	Browse bool
-}
-
 func Command() *cobra.Command {
 
-	opts := &indexOptions{}
-
 	cmd := &cobra.Command{
-		Use:   "index <index>",
-		Short: "",
+		Use:   "index <command>",
+		Short: "Browse or list an index",
+	}
+
+	cmdList := &cobra.Command{
+		Use:   "list <index>",
+		Short: "List documents of a specified index",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return ui.Error("index name is required")
@@ -28,21 +26,29 @@ func Command() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
-			if opts.Json {
-				ui.Json(response.GetData())
-				return nil
-			}
-
-			if opts.Browse {
-				ui.Viewport(args[0], response.GetData())
-			}
+			ui.Json(response.GetData())
 			return nil
 		},
 	}
 
-	cmd.Flags().BoolVar(&opts.Json, "json", false, "Output as JSON")
-	cmd.Flags().BoolVar(&opts.Browse, "browse", false, "Browse the index in a pager")
+	cmdBrowse := &cobra.Command{
+		Use:   "browse <index>",
+		Short: "Browse documents of an index interactively",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return ui.Error("index name is required")
+			}
+			response, err := sdk.Connect(environment.Env.API, config.Token()).GetIndex(args[0])
+			if err != nil {
+				return err
+			}
+			ui.Viewport(args[0], response.GetData())
+			return nil
+		},
+	}
+
+	cmd.AddCommand(cmdList)
+	cmd.AddCommand(cmdBrowse)
 
 	return cmd
 }

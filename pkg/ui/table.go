@@ -46,7 +46,7 @@ func (m tableModel) View() string {
 	return baseStyle.Render(m.table.View()) + "\n"
 }
 
-func IndicesRows(indices []sdk.IndexesMeta, search string) []table.Row {
+func IndicesRows(indices []sdk.IndicesMeta, search string) []table.Row {
 	var rows []table.Row
 	for _, index := range indices {
 		if search != "" && !strings.Contains(index.Name, search) && !strings.Contains(index.Description, search) {
@@ -61,7 +61,7 @@ func IndicesRows(indices []sdk.IndexesMeta, search string) []table.Row {
 	return rows
 }
 
-func Indices(indices []sdk.IndexesMeta, search string) error {
+func Indices(indices []sdk.IndicesMeta, search string) error {
 	columns := []table.Column{
 		{Title: "Name", Width: 20},
 		{Title: "Description", Width: 40},
