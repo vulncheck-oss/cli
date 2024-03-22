@@ -4,7 +4,6 @@ import (
 	"testing"
 )
 
-// TestExtractFile tests the extractFile function for various URL inputs.
 func TestExtractFile(t *testing.T) {
 	tests := []struct {
 		name    string

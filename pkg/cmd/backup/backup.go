@@ -50,16 +50,13 @@ func Command() *cobra.Command {
 			file, err := extractFile(response.GetData()[0].URL)
 
 			date := parseDate(response.GetData()[0].DateAdded)
-			ui.Info(response.GetData()[0].DateAdded)
 
 			ui.Info(fmt.Sprintf("Backup of %s found, created on %s", args[0], date))
 			ui.Info(fmt.Sprintf("Downloading backup as %s ", file))
-			/*
-				if err := ui.Download(response.GetData()[0].URL, file); err != nil {
-					return err
-				}
-			*/
-			ui.Success("Backup downloaded successfully as " + file)
+			if err := ui.Download(response.GetData()[0].URL, file); err != nil {
+				return err
+			}
+			ui.Success("Backup downloaded successfully")
 			return nil
 		},
 	}
