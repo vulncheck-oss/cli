@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
-	"github.com/vulncheck-oss/cli/pkg/environment"
+	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
-	"github.com/vulncheck-oss/sdk"
 	"net/url"
 	"strings"
 	"time"
@@ -26,7 +25,7 @@ func Command() *cobra.Command {
 			if len(args) != 1 {
 				return ui.Error("index name is required")
 			}
-			response, err := sdk.Connect(environment.Env.API, config.Token()).GetIndexBackup(args[0])
+			response, err := session.Connect(config.Token()).GetIndexBackup(args[0])
 			if err != nil {
 				return err
 			}
@@ -42,7 +41,7 @@ func Command() *cobra.Command {
 			if len(args) != 1 {
 				return ui.Error("index name is required")
 			}
-			response, err := sdk.Connect(environment.Env.API, config.Token()).GetIndexBackup(args[0])
+			response, err := session.Connect(config.Token()).GetIndexBackup(args[0])
 			if err != nil {
 				return err
 			}

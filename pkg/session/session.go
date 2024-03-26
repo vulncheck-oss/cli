@@ -1,10 +1,14 @@
 package session
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/pkg/build"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/environment"
 	"github.com/vulncheck-oss/sdk"
+	"regexp"
+	"strings"
 )
 
 type MeResponse struct {
@@ -27,11 +31,37 @@ func CheckAuth() bool {
 	return false
 }
 
+func ChangelogURL(version string) string {
+	path := "https://github.com/vulncheck-oss/cli"
+	r := regexp.MustCompile(`^v?\d+\.\d+\.\d+(-[\w.]+)?$`)
+	if !r.MatchString(version) {
+		return fmt.Sprintf("%s/releases/latest", path)
+	}
+
+	url := fmt.Sprintf("%s/releases/tag/v%s", path, strings.TrimPrefix(version, "v"))
+	return url
+}
+
+func VersionFormat(version, buildDate string) string {
+	version = strings.TrimPrefix(version, "v")
+
+	var dateStr string
+	if buildDate != "" {
+		dateStr = fmt.Sprintf(" (%s)", buildDate)
+	}
+
+	return fmt.Sprintf("vc version %s%s\n%s\n", version, dateStr, ChangelogURL(version))
+}
+
+func Connect(token string) *sdk.Client {
+	return sdk.Connect(environment.Env.API, token).SetUserAgent(fmt.Sprintf("VulnCheck CLI %s", build.Version))
+}
+
 func CheckToken(token string) (response *sdk.UserResponse, err error) {
-	return sdk.Connect(environment.Env.API, token).GetMe()
+	return Connect(token).GetMe()
 }
 func InvalidateToken(token string) (response *sdk.Response, err error) {
-	return sdk.Connect(environment.Env.API, token).Logout()
+	return Connect(token).Logout()
 }
 
 func IsAuthCheckEnabled(cmd *cobra.Command) bool {

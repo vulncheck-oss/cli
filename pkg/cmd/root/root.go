@@ -12,7 +12,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cmd/backup"
 	"github.com/vulncheck-oss/cli/pkg/cmd/index"
 	"github.com/vulncheck-oss/cli/pkg/cmd/indices"
-	cmdVersion "github.com/vulncheck-oss/cli/pkg/cmd/version"
+	"github.com/vulncheck-oss/cli/pkg/cmd/version"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/environment"
 	"github.com/vulncheck-oss/cli/pkg/session"
@@ -49,7 +49,7 @@ func NewCmdRoot() *cobra.Command {
 		$ vc backup abb
 	`),
 		Annotations: map[string]string{
-			"versionInfo": cmdVersion.Format(build.Version, build.Date),
+			"versionInfo": session.VersionFormat(build.Version, build.Date),
 		},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
@@ -76,7 +76,7 @@ func NewCmdRoot() *cobra.Command {
 		Title: "Core Commands",
 	})
 
-	cmd.AddCommand(cmdVersion.Command())
+	cmd.AddCommand(version.Command())
 	cmd.AddCommand(ascii.Command())
 	cmd.AddCommand(auth.Command())
 	cmd.AddCommand(indices.Command())
