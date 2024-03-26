@@ -7,7 +7,7 @@ import (
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/build"
-	"github.com/vulncheck-oss/cli/pkg/cmd/ascii"
+	"github.com/vulncheck-oss/cli/pkg/cmd/about"
 	"github.com/vulncheck-oss/cli/pkg/cmd/auth"
 	"github.com/vulncheck-oss/cli/pkg/cmd/backup"
 	"github.com/vulncheck-oss/cli/pkg/cmd/index"
@@ -50,6 +50,11 @@ func NewCmdRoot() *cobra.Command {
 	`),
 		Annotations: map[string]string{
 			"versionInfo": session.VersionFormat(build.Version, build.Date),
+			"aboutInfo": heredoc.Doc(`
+				The VulnCheck CLI is a command-line interface for the VulnCheck API
+				For more information on our products, please visit https://vulncheck.com
+				For API Documentation, please visit https://docs.vulncheck.com
+`),
 		},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
@@ -77,7 +82,7 @@ func NewCmdRoot() *cobra.Command {
 	})
 
 	cmd.AddCommand(version.Command())
-	cmd.AddCommand(ascii.Command())
+	cmd.AddCommand(about.Command())
 	cmd.AddCommand(auth.Command())
 	cmd.AddCommand(indices.Command())
 	cmd.AddCommand(index.Command())

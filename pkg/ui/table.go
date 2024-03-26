@@ -14,7 +14,8 @@ var baseStyle = lipgloss.NewStyle().
 	BorderForeground(lipgloss.Color("#6667ab"))
 
 type tableModel struct {
-	table table.Model
+	table  table.Model
+	action func(index string) error
 }
 
 func (m tableModel) Init() tea.Cmd { return nil }
@@ -33,9 +34,13 @@ func (m tableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "ctrl+c":
 			return m, tea.Quit
 		case "enter":
-			return m, tea.Batch(
-				tea.Printf("Action placeholder for %s", m.table.SelectedRow()[1]),
-			)
+			m.action(m.table.SelectedRow()[0])
+			return m, tea.Quit
+			/*
+				return m, tea.Batch(
+					m.action(m.table.SelectedRow()[0]),
+				)
+			*/
 		}
 	}
 	m.table, cmd = m.table.Update(msg)
@@ -61,7 +66,7 @@ func IndicesRows(indices []sdk.IndicesMeta, search string) []table.Row {
 	return rows
 }
 
-func Indices(indices []sdk.IndicesMeta, search string) error {
+func Indices(indices []sdk.IndicesMeta, search string, action func(index string) error) error {
 	columns := []table.Column{
 		{Title: "Name", Width: 20},
 		{Title: "Description", Width: 40},
@@ -89,7 +94,7 @@ func Indices(indices []sdk.IndicesMeta, search string) error {
 		Bold(false)
 	t.SetStyles(s)
 
-	m := tableModel{t}
+	m := tableModel{t, action}
 	p := tea.NewProgram(m)
 	if _, err := p.Run(); err != nil {
 		return fmt.Errorf("error running program: %v", err)
