@@ -55,6 +55,7 @@ func NewCmdRoot() *cobra.Command {
 				For more information on our products, please visit https://vulncheck.com
 				For API Documentation, please visit https://docs.vulncheck.com
 `),
+			"InteractiveOnly": "This command is interactive and cannot run in a CI environment, please try %s instead",
 		},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
