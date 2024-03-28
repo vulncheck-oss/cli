@@ -5,6 +5,7 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	ltable "github.com/charmbracelet/lipgloss/table"
 	"github.com/vulncheck-oss/sdk"
 	"strings"
 )
@@ -66,7 +67,7 @@ func IndicesRows(indices []sdk.IndicesMeta, search string) []table.Row {
 	return rows
 }
 
-func Indices(indices []sdk.IndicesMeta, search string, action func(index string) error) error {
+func IndicesBrowse(indices []sdk.IndicesMeta, search string, action func(index string) error) error {
 	columns := []table.Column{
 		{Title: "Name", Width: 20},
 		{Title: "Description", Width: 40},
@@ -100,5 +101,23 @@ func Indices(indices []sdk.IndicesMeta, search string, action func(index string)
 		return fmt.Errorf("error running program: %v", err)
 	}
 
+	return nil
+}
+
+func IndicesList(indices []sdk.IndicesMeta, search string) error {
+
+	t := ltable.New().
+		Border(lipgloss.NormalBorder()).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("99"))).
+		Headers("Name", "Description", "Href").Width(120)
+
+	for _, index := range indices {
+		if search != "" && !strings.Contains(index.Name, search) && !strings.Contains(index.Description, search) {
+			continue
+		}
+		t.Row(index.Name, index.Description, index.Href)
+	}
+
+	fmt.Println(t)
 	return nil
 }

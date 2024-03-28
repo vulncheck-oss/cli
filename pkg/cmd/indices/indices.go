@@ -14,8 +14,46 @@ func Command() *cobra.Command {
 		Short: "Manage indices",
 	}
 
+	cmd.AddCommand(List())
 	cmd.AddCommand(Browse())
 
+	return cmd
+}
+
+type ListOptions struct {
+	Json bool
+}
+
+func List() *cobra.Command {
+
+	opts := &ListOptions{
+		Json: false,
+	}
+
+	cmd := &cobra.Command{
+		Use:   "list <search>",
+		Short: "List indices",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			response, err := session.Connect(config.Token()).GetIndices()
+			if err != nil {
+				return err
+			}
+			if len(args) > 0 && args[0] != "" {
+				indices := response.GetData()
+				ui.Info(fmt.Sprintf("Listing %d indices searching for \"%s\"", len(ui.IndicesRows(indices, args[0])), args[0]))
+				return ui.IndicesList(indices, args[0])
+			}
+			ui.Info(fmt.Sprintf("Listing %d indices", len(response.GetData())))
+			if opts.Json {
+				ui.Json(response.GetData())
+				return nil
+			}
+			ui.IndicesList(response.GetData(), "")
+			return nil
+		},
+	}
+
+	cmd.Flags().BoolVarP(&opts.Json, "json", "j", false, "Output as JSON")
 	return cmd
 }
 
@@ -42,11 +80,11 @@ func Browse() *cobra.Command {
 			if len(args) > 0 && args[0] != "" {
 				indices := response.GetData()
 				ui.Info(fmt.Sprintf("Browsing %d indices searching for \"%s\"", len(ui.IndicesRows(indices, args[0])), args[0]))
-				return ui.Indices(indices, args[0], action)
+				return ui.IndicesBrowse(indices, args[0], action)
 			}
 
 			ui.Info(fmt.Sprintf("Browsing %d indices", len(response.GetData())))
-			return ui.Indices(response.GetData(), "", action)
+			return ui.IndicesBrowse(response.GetData(), "", action)
 		},
 	}
 
