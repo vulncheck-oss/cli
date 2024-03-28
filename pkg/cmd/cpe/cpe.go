@@ -1,7 +1,7 @@
 package cpe
 
 import (
-	"github.com/octoper/go-ray"
+	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
@@ -20,8 +20,14 @@ func Command() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			ray.Ray(response)
-			ui.Json(response.GetData())
+			cves := response.GetData()
+			ui.CpeStruct(response.GetCpeStruct())
+			if len(cves) == 0 {
+				ui.Info(fmt.Sprintf("No CVEs were found for cpe %s", args[0]))
+				return nil
+			}
+			ui.Info(fmt.Sprintf("%d CVEs were found for cpe %s", len(cves), args[0]))
+			ui.Json(cves)
 			return nil
 		},
 	}

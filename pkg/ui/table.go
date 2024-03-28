@@ -121,3 +121,14 @@ func IndicesList(indices []sdk.IndicesMeta, search string) error {
 	fmt.Println(t)
 	return nil
 }
+
+func CpeStruct(cpe sdk.CpeStruct) error {
+	t := ltable.New().
+		Border(lipgloss.NormalBorder()).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("99"))).
+		Headers("Part", "Vendor", "Product", "Version", "Update", "Edition").
+		Row(cpe.Part, cpe.Vendor, cpe.Product, cpe.Version, cpe.Update, cpe.Edition).Width(80)
+	fmt.Println(t)
+	return nil
+
+}
