@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	ltable "github.com/charmbracelet/lipgloss/table"
 	"github.com/vulncheck-oss/sdk"
+	"golang.org/x/term"
 	"strings"
 )
 
@@ -122,13 +123,28 @@ func IndicesList(indices []sdk.IndicesMeta, search string) error {
 	return nil
 }
 
-func CpeStruct(cpe sdk.CpeStruct) error {
+func TermWidth() int {
+	width, _, _ := term.GetSize(0)
+	return width
+}
+
+func CpeMeta(cpe sdk.CpeMeta) error {
 	t := ltable.New().
 		Border(lipgloss.NormalBorder()).
 		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("99"))).
 		Headers("Part", "Vendor", "Product", "Version", "Update", "Edition").
-		Row(cpe.Part, cpe.Vendor, cpe.Product, cpe.Version, cpe.Update, cpe.Edition).Width(80)
+		Row(cpe.Part, cpe.Vendor, cpe.Product, cpe.Version, cpe.Update, cpe.Edition).Width(TermWidth())
 	fmt.Println(t)
 	return nil
+}
 
+func PurlMeta(purl sdk.PurlMeta) error {
+	t := ltable.New().
+		Border(lipgloss.NormalBorder()).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("99"))).
+		Headers("Type", "Namespace", "Nme", "Version", "Qualifiers", "Subpath").
+		Row(purl.Type, purl.Namespace, purl.Name, purl.Version, strings.Join(purl.Qualifiers, ","), purl.Subpath).
+		Width(TermWidth())
+	fmt.Println(t)
+	return nil
 }

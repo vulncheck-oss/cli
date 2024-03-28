@@ -11,7 +11,7 @@ import (
 func Command() *cobra.Command {
 	return &cobra.Command{
 		Use:   "cpe <scheme>",
-		Short: "Look up a specified cpe",
+		Short: "Look up a specified cpe for any related CVEs",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return ui.Error("cpe scheme is required")
@@ -21,7 +21,9 @@ func Command() *cobra.Command {
 				return err
 			}
 			cves := response.GetData()
-			ui.CpeStruct(response.GetCpeStruct())
+			if err := ui.CpeMeta(response.GetCpeMeta()); err != nil {
+				return err
+			}
 			if len(cves) == 0 {
 				ui.Info(fmt.Sprintf("No CVEs were found for cpe %s", args[0]))
 				return nil
