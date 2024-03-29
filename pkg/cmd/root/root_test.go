@@ -18,6 +18,38 @@ func Test_AuthCommand(t *testing.T) {
 	}
 }
 
+func Test_AuthStatusCommand(t *testing.T) {
+	actual, root := setRootActual("auth", "status", "--help")
+	if err := root.Execute(); err != nil {
+		t.Errorf("expected no error but got %v", err)
+	}
+	if strings.HasPrefix(i18n.C.AuthStatusShort, actual.String()) {
+		t.Errorf("expected %s but got %s", i18n.C.AuthStatusShort, actual.String())
+	}
+
+}
+
+func Test_AuthLoginCommand(t *testing.T) {
+	actual, root := setRootActual("auth", "login", "--help")
+	if err := root.Execute(); err != nil {
+		t.Errorf("expected no error but got %v", err)
+	}
+	if strings.HasPrefix(i18n.C.AuthLoginShort, actual.String()) {
+		t.Errorf("expected %s but got %s", i18n.C.AuthLoginShort, actual.String())
+	}
+}
+
+func Test_AuthLogoutCommand(t *testing.T) {
+	actual, root := setRootActual("auth", "logout", "--help")
+	if err := root.Execute(); err != nil {
+		t.Errorf("expected no error but got %v", err)
+	}
+	if strings.HasPrefix(i18n.C.AuthLogoutShort, actual.String()) {
+		t.Errorf("expected %s but got %s", i18n.C.AuthLogoutShort, actual.String())
+	}
+
+}
+
 func Test_IndicesCommand(t *testing.T) {
 	actual, root := setRootActual("indices")
 	if err := root.Execute(); err != nil {

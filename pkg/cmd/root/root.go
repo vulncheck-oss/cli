@@ -41,6 +41,7 @@ func (ae *AuthError) Error() string {
 }
 
 func NewCmdRoot() *cobra.Command {
+	i18n.Init()
 	cmd := &cobra.Command{
 		Use:   "vc <command> <subcommand> [flags]",
 		Short: "VulnCheck CLI.",
@@ -54,7 +55,6 @@ func NewCmdRoot() *cobra.Command {
 
 			environment.Init()
 			config.Init()
-			i18n.Init()
 
 			if session.IsAuthCheckEnabled(cmd) && !session.CheckAuth() {
 				fmt.Println(authHelp())

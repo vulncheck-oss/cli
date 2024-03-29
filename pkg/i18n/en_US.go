@@ -11,7 +11,37 @@ var En = Copy{
 	InteractiveOnly: "This command is interactive and cannot run in a CI environment, please try %s instead",
 	RootLong:        "Work seamlessly with the VulnCheck API.",
 
-	AuthShort:    "Authenticate vc with the VulnCheck portal",
+	AuthShort:       "Authenticate vc with the VulnCheck portal",
+	AuthStatusShort: "Check authentication status",
+	AuthStatusLong:  "Check if you're currently authenticated and if so, display the account information",
+	AuthLoginShort:  "Authenticate with the VulnCheck portal",
+	AuthLoginLong: heredoc.Docf(`
+			Authenticate with a VulnCheck account.
+
+			The default authentication mode is a web-based browser flow.
+
+			Alternatively, use %[1]stoken%[1]s to specify an issued token directly.
+
+			Alternatively, vc will use the authentication token found in the %[1]sVC_TOKEN%[1]s environment variable.
+			This method is most suitable for "headless" use of vc such as in automation.
+		`, "`"),
+	AuthLoginExample: heredoc.Doc(`
+			# Start interactive authentication
+			$ vc auth login
+
+			# Authenticate with vulncheck.com by passing in a token
+			$ vc auth login token vulncheck_******************
+	`),
+	AuthLoginErrorCI: "This command is interactive and cannot be run in a CI environment, use the VC_TOKEN environment variable instead",
+
+	AuthLoginToken: "Connect a VulnCheck account using an authentication token",
+	AuthLoginWeb:   "Log in with a VulnCheck account using a web browser",
+
+	AuthLogoutShort:             "Invalidate and remove your current authentication token",
+	AuthLogoutTokenRemoved:      "Token invalidated and removed",
+	AuthLogoutErrorFailed:       "Failed to remove token",
+	AuthLogoutErrorInvalidToken: "Token was invalid, removing from config",
+
 	IndicesShort: "View indices",
 
 	ListIndicesShort:  "List indices",
@@ -43,8 +73,8 @@ var En = Copy{
 	PurlNoCves:    "No CVEs were found for purl %s",
 	PurlCvesFound: "%d CVEs were found for purl %s",
 
-	ErrorNoToken:            "No valid token found",
 	ErrorUnauthorized:       "Error: Unauthorized, Try authenticating with: vc auth login",
+	ErrorNoToken:            "No token found. Please run `vc auth login` to authenticate or populate the environment variable `VC_TOKEN`.",
 	ErrorIndexRequired:      "index name is required",
 	ErrorCpeSchemeRequired:  "cpe scheme is required",
 	ErrorPurlSchemeRequired: "purl scheme is required",

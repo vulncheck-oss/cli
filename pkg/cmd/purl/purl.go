@@ -2,7 +2,6 @@ package purl
 
 import (
 	"fmt"
-	"github.com/octoper/go-ray"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
@@ -23,7 +22,6 @@ func Command() *cobra.Command {
 				return err
 			}
 			cves := response.Cves()
-			ray.Ray(response.PurlMeta())
 			if err := ui.PurlMeta(response.PurlMeta()); err != nil {
 				return err
 			}

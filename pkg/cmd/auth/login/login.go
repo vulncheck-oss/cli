@@ -1,9 +1,9 @@
 package login
 
 import (
-	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
+	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 )
@@ -16,30 +16,14 @@ type CmdCopy struct {
 func Command() *cobra.Command {
 
 	cmd := &cobra.Command{
-		Use:   "login",
-		Short: "Log in with a VulnCheck account",
-
-		Long: heredoc.Docf(`
-			Authenticate with a VulnCheck account.
-
-			The default authentication mode is a web-based browser flow.
-
-			Alternatively, use %[1]stoken%[1]s to specify an issued token directly.
-
-			Alternatively, vc will use the authentication token found in the %[1]sVC_TOKEN%[1]s environment variable.
-			This method is most suitable for "headless" use of vc such as in automation.
-		`, "`"),
-		Example: heredoc.Doc(`
-			# Start interactive authentication
-			$ vc auth login
-
-			# Authenticate with vulncheck.com by passing in a token
-			$ vc auth login token vulncheck_******************
-		`),
+		Use:     "login",
+		Short:   i18n.C.AuthLoginShort,
+		Long:    i18n.C.AuthLoginLong,
+		Example: i18n.C.AuthLoginExample,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			if config.IsCI() {
-				return ui.Error("This command is interactive and cannot be run in a CI environment, use the VC_TOKEN environment variable instead")
+				return ui.Error(i18n.C.AuthLoginErrorCI)
 			}
 
 			if config.HasConfig() && config.HasToken() {
@@ -67,13 +51,13 @@ func Command() *cobra.Command {
 
 	token := &cobra.Command{
 		Use:   "token",
-		Short: "Connect a VulnCheck account using an authentication token",
+		Short: i18n.C.AuthLoginToken,
 		RunE:  cmdToken,
 	}
 
 	web := &cobra.Command{
 		Use:   "web",
-		Short: "Log in with a VulnCheck account using a web browser",
+		Short: i18n.C.AuthLoginWeb,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return ui.Error("web login is not yet implemented")
 		},

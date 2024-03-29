@@ -1,23 +1,24 @@
 package status
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cmd/auth/login"
 	"github.com/vulncheck-oss/cli/pkg/config"
+	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/session"
-	"github.com/vulncheck-oss/cli/pkg/ui"
 )
 
 func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "Check authentication status",
-		Long:  "Check if you're currently authenticated and if so, display the account information",
+		Short: i18n.C.AuthStatusShort,
+		Long:  i18n.C.AuthStatusLong,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config.Init()
 
 			if !config.HasToken() {
-				return ui.Danger("No token found. Please run `vc auth login` to authenticate or populate the environment variable `VC_TOKEN`.")
+				return fmt.Errorf(i18n.C.ErrorNoToken)
 			}
 
 			token := config.Token()

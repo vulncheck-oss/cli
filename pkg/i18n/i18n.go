@@ -7,7 +7,21 @@ type Copy struct {
 	InteractiveOnly string
 	RootLong        string
 
-	AuthShort    string
+	AuthShort                   string
+	AuthStatusShort             string
+	AuthStatusLong              string
+	AuthLoginShort              string
+	AuthLoginLong               string
+	AuthLoginExample            string
+	AuthLoginErrorCI            string
+	AuthLogoutShort             string
+	AuthLogoutTokenRemoved      string
+	AuthLogoutErrorFailed       string
+	AuthLogoutErrorInvalidToken string
+
+	AuthLoginToken string
+	AuthLoginWeb   string
+
 	IndicesShort string
 
 	ListIndicesShort  string
