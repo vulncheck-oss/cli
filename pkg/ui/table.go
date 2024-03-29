@@ -71,7 +71,7 @@ func IndicesRows(indices []sdk.IndicesMeta, search string) []table.Row {
 func IndicesBrowse(indices []sdk.IndicesMeta, search string, action func(index string) error) error {
 	columns := []table.Column{
 		{Title: "Name", Width: 20},
-		{Title: "Description", Width: 40},
+		{Title: "Description", Width: TermWidth() - 52},
 		{Title: "URL", Width: 20},
 	}
 
@@ -81,7 +81,8 @@ func IndicesBrowse(indices []sdk.IndicesMeta, search string, action func(index s
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(true),
-		table.WithHeight(20),
+		table.WithHeight(TermHeight()-10),
+		table.WithWidth(TermWidth()-5),
 	)
 
 	s := table.DefaultStyles()
@@ -110,7 +111,7 @@ func IndicesList(indices []sdk.IndicesMeta, search string) error {
 	t := ltable.New().
 		Border(lipgloss.NormalBorder()).
 		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("99"))).
-		Headers("Name", "Description", "Href").Width(120)
+		Headers("Name", "Description", "Href").Width(TermWidth())
 
 	for _, index := range indices {
 		if search != "" && !strings.Contains(index.Name, search) && !strings.Contains(index.Description, search) {
@@ -126,6 +127,11 @@ func IndicesList(indices []sdk.IndicesMeta, search string) error {
 func TermWidth() int {
 	width, _, _ := term.GetSize(0)
 	return width
+}
+
+func TermHeight() int {
+	_, height, _ := term.GetSize(0)
+	return height
 }
 
 func CpeMeta(cpe sdk.CpeMeta) error {
