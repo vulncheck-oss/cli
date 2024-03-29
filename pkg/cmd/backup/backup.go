@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
+	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"net/url"
@@ -15,12 +16,12 @@ func Command() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "backup <command>",
-		Short: "Download a backup of a specified index",
+		Short: i18n.C.BackupShort,
 	}
 
 	cmdUrl := &cobra.Command{
 		Use:   "url <index>",
-		Short: "Get the temporary signed URL of the backup of an index",
+		Short: i18n.C.BackupUrlShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return ui.Error("index name is required")
@@ -36,10 +37,10 @@ func Command() *cobra.Command {
 
 	cmdDownload := &cobra.Command{
 		Use:   "download <index>",
-		Short: "Download the backup of an index",
+		Short: i18n.C.BackupDownloadShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
-				return ui.Error("index name is required")
+				return ui.Error(i18n.C.ErrorIndexRequired)
 			}
 			response, err := session.Connect(config.Token()).GetIndexBackup(args[0])
 			if err != nil {
@@ -50,12 +51,12 @@ func Command() *cobra.Command {
 
 			date := parseDate(response.GetData()[0].DateAdded)
 
-			ui.Info(fmt.Sprintf("Backup of %s found, created on %s", args[0], date))
-			ui.Info(fmt.Sprintf("Downloading backup as %s ", file))
+			ui.Info(fmt.Sprintf(i18n.C.BackupDownloadInfo, args[0], date))
+			ui.Info(fmt.Sprintf(i18n.C.BackupDownloadProgress, file))
 			if err := ui.Download(response.GetData()[0].URL, file); err != nil {
 				return err
 			}
-			ui.Success("Backup downloaded successfully")
+			ui.Success(i18n.C.BackupDownloadComplete)
 			return nil
 		},
 	}

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
-	"github.com/vulncheck-oss/cli/pkg/build"
 	"github.com/vulncheck-oss/cli/pkg/cmd/about"
 	"github.com/vulncheck-oss/cli/pkg/cmd/auth"
 	"github.com/vulncheck-oss/cli/pkg/cmd/backup"
@@ -17,6 +16,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cmd/version"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/environment"
+	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk"
@@ -44,29 +44,21 @@ func NewCmdRoot() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "vc <command> <subcommand> [flags]",
 		Short: "VulnCheck CLI.",
-		Long:  "Work seamlessly with the VulnCheck API.",
+		Long:  i18n.C.RootLong,
 		Example: heredoc.Doc(`
 		$ vc indices list
 		$ vc index abb
 		$ vc backup abb
 	`),
-		Annotations: map[string]string{
-			"versionInfo": session.VersionFormat(build.Version, build.Date),
-			"aboutInfo": heredoc.Doc(`
-				The VulnCheck CLI is a command-line interface for the VulnCheck API
-				For more information on our products, please visit https://vulncheck.com
-				For API Documentation, please visit https://docs.vulncheck.com
-`),
-			"InteractiveOnly": "This command is interactive and cannot run in a CI environment, please try %s instead",
-		},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
 			environment.Init()
 			config.Init()
+			i18n.Init()
 
 			if session.IsAuthCheckEnabled(cmd) && !session.CheckAuth() {
 				fmt.Println(authHelp())
-				return ui.Error("No valid token found")
+				return ui.Error(i18n.C.ErrorNoToken)
 			}
 
 			return nil
@@ -99,7 +91,7 @@ func NewCmdRoot() *cobra.Command {
 func Execute() {
 	if err := NewCmdRoot().Execute(); err != nil {
 		if errors.Is(err, sdk.ErrorUnauthorized) {
-			fmt.Println(ui.Danger("Error: Unauthorized, Try authenticating with: vc auth login"))
+			fmt.Println(ui.Danger(i18n.C.ErrorUnauthorized))
 		} else {
 			fmt.Println(ui.Danger(err.Error()))
 		}
