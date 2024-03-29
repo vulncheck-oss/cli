@@ -21,7 +21,7 @@ func Command() *cobra.Command {
 				return err
 			}
 			cves := response.GetData()
-			if err := ui.CpeMeta(response.GetCpeMeta()); err != nil {
+			if err := ui.CpeMeta(response.CpeMeta()); err != nil {
 				return err
 			}
 			if len(cves) == 0 {

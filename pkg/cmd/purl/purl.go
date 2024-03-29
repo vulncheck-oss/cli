@@ -21,9 +21,9 @@ func Command() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			cves := response.GetCves()
-			ray.Ray(response.GetPurlMeta())
-			if err := ui.PurlMeta(response.GetPurlMeta()); err != nil {
+			cves := response.Cves()
+			ray.Ray(response.PurlMeta())
+			if err := ui.PurlMeta(response.PurlMeta()); err != nil {
 				return err
 			}
 			if len(cves) == 0 {
