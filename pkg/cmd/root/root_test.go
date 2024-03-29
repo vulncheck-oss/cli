@@ -10,7 +10,6 @@ import (
 
 func Test_AuthCommand(t *testing.T) {
 	actual, root := setRootActual("auth")
-	root.SetArgs([]string{"auth"})
 	if err := root.Execute(); err != nil {
 		t.Errorf("expected no error but got %v", err)
 	}
@@ -21,7 +20,6 @@ func Test_AuthCommand(t *testing.T) {
 
 func Test_IndicesCommand(t *testing.T) {
 	actual, root := setRootActual("indices")
-	root.SetArgs([]string{"indices"})
 	if err := root.Execute(); err != nil {
 		t.Errorf("expected no error but got %v", err)
 	}
@@ -32,7 +30,6 @@ func Test_IndicesCommand(t *testing.T) {
 
 func Test_IndexCommand(t *testing.T) {
 	actual, root := setRootActual("index")
-	root.SetArgs([]string{"index"})
 	if err := root.Execute(); err != nil {
 		t.Errorf("expected no error but got %v", err)
 	}
@@ -43,12 +40,31 @@ func Test_IndexCommand(t *testing.T) {
 
 func Test_BackupCommand(t *testing.T) {
 	actual, root := setRootActual("backup")
-	root.SetArgs([]string{"backup"})
 	if err := root.Execute(); err != nil {
 		t.Errorf("expected no error but got %v", err)
 	}
 	if strings.HasPrefix(i18n.C.BackupShort, actual.String()) {
 		t.Errorf("expected %s but got %s", i18n.C.BackupShort, actual.String())
+	}
+}
+
+func Test_CpeCommand(t *testing.T) {
+	actual, root := setRootActual("cpe", "--help")
+	if err := root.Execute(); err != nil {
+		t.Errorf("expected no error but got %v", err)
+	}
+	if strings.HasPrefix(i18n.C.CpeShort, actual.String()) {
+		t.Errorf("expected %s but got %s", i18n.C.CpeShort, actual.String())
+	}
+}
+
+func Test_PurlCommand(t *testing.T) {
+	actual, root := setRootActual("purl", "--help")
+	if err := root.Execute(); err != nil {
+		t.Errorf("expected no error but got %v", err)
+	}
+	if strings.HasPrefix(i18n.C.PurlShort, actual.String()) {
+		t.Errorf("expected %s but got %s", i18n.C.PurlShort, actual.String())
 	}
 }
 
