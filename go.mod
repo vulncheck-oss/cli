@@ -2,7 +2,7 @@ module github.com/vulncheck-oss/cli
 
 go 1.21.5
 
-replace github.com/vulncheck-oss/sdk => /Users/k/vc/oss/sdk
+// replace github.com/vulncheck-oss/sdk => /Users/k/vc/oss/sdk
 
 require (
 	github.com/MakeNowJust/heredoc/v2 v2.0.1
@@ -12,9 +12,11 @@ require (
 	github.com/charmbracelet/huh v0.3.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20240306161957-71f31c155b08
 	github.com/charmbracelet/lipgloss v0.10.0
+	github.com/octoper/go-ray v0.1.5
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
-	github.com/vulncheck-oss/sdk v1.2.3
+	github.com/vulncheck-oss/sdk v1.2.4
+	golang.org/x/term v0.16.0
 )
 
 require (
@@ -40,7 +42,6 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
-	github.com/octoper/go-ray v0.1.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
@@ -55,7 +56,6 @@ require (
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
-	golang.org/x/term v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
