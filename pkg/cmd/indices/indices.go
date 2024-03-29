@@ -48,7 +48,9 @@ func List() *cobra.Command {
 				ui.Json(response.GetData())
 				return nil
 			}
-			ui.IndicesList(response.GetData(), "")
+			if err := ui.IndicesList(response.GetData(), ""); err != nil {
+				return err
+			}
 			return nil
 		},
 	}
