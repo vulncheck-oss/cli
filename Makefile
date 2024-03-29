@@ -24,3 +24,6 @@ ray:
 
 test:
 	@go test ./...
+
+update:
+	go get -u ./... && go mod tidy
