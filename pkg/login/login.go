@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"
-	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk"
 )
 
-func chooseAuthMethod() (string, error) {
+func ChooseAuthMethod() (string, error) {
 
 	var choice string
 	form := huh.NewForm(
@@ -33,13 +32,13 @@ func chooseAuthMethod() (string, error) {
 	return choice, nil
 }
 
-func existingToken() error {
+func ExistingToken() error {
 	logoutChoice := true
 	confirm := huh.NewForm(huh.NewGroup(huh.NewConfirm().
 		Title("You currently have a token saved. Do you want to invalidate it first?").
 		Affirmative("Yes").
 		Negative("No").
-		Value(&logoutChoice))).WithTheme(huh.ThemeDracula())
+		Value(&logoutChoice))).WithTheme(huh.ThemeCatppuccin())
 	confirm.Run()
 
 	if logoutChoice {
@@ -59,28 +58,6 @@ func existingToken() error {
 	}
 
 	return nil
-}
-
-func cmdToken(cmd *cobra.Command, args []string) error {
-
-	var token string
-
-	input := huh.
-		NewInput().
-		Title("Enter your authentication token").
-		Password(true).
-		Placeholder("vulncheck_******************").
-		Value(&token)
-
-	if err := input.Run(); err != nil {
-		return ui.Error("Token verification failed: %v", err)
-	}
-
-	if !config.ValidToken(token) {
-		return ui.Error("Invalid token specified")
-	}
-
-	return SaveToken(token)
 }
 
 func SaveToken(token string) error {
