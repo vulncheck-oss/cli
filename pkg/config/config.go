@@ -52,6 +52,7 @@ func saveConfig(config *Config) error {
 	}
 	viper.AddConfigPath(dir)
 	viper.SetConfigName("vc")
+	viper.SetConfigPermissions(0600)
 	viper.SetConfigType("yaml")
 	viper.Set("Token", config.Token)
 	return viper.WriteConfigAs(fmt.Sprintf("%s/vc.yaml", dir))
