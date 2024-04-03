@@ -9,10 +9,19 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/ui"
 )
 
+type Options struct {
+	Json bool
+}
+
 func Command() *cobra.Command {
-	return &cobra.Command{
-		Use:   "purl <scheme>",
-		Short: i18n.C.PurlShort,
+	opts := &Options{
+		Json: false,
+	}
+
+	cmd := &cobra.Command{
+		Use:     "purl <scheme>",
+		Short:   i18n.C.PurlShort,
+		Example: fmt.Sprintf(i18n.C.PurlExample, "pkg:hackage/aeson@0.3.2.8"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return ui.Error(i18n.C.ErrorPurlSchemeRequired)
@@ -20,6 +29,11 @@ func Command() *cobra.Command {
 			response, err := session.Connect(config.Token()).GetPurl(args[0])
 			if err != nil {
 				return err
+			}
+
+			if opts.Json {
+				ui.Json(response.GetData())
+				return nil
 			}
 			cves := response.Cves()
 			if err := ui.PurlMeta(response.PurlMeta()); err != nil {
@@ -34,4 +48,8 @@ func Command() *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.Flags().BoolVarP(&opts.Json, "json", "j", false, "Output as JSON")
+
+	return cmd
 }

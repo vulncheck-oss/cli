@@ -65,10 +65,12 @@ var En = Copy{
 	BackupDownloadComplete: "Backup downloaded successfully",
 
 	CpeShort:     "Look up a specified cpe for any related CVEs",
+	CpeExample:   "vc cpe \"%s\"",
 	CpeNoCves:    "No CVEs were found for cpe %s",
 	CpeCvesFound: "%d CVEs were found for cpe %s",
 
-	PurlShort: "Look up a specified PURL for any CVES or vulnerabilities",
+	PurlShort:   "Look up a specified PURL for any CVES or vulnerabilities",
+	PurlExample: "vc purl \"%s\"",
 
 	PurlNoCves:    "No CVEs were found for purl %s",
 	PurlCvesFound: "%d CVEs were found for purl %s",

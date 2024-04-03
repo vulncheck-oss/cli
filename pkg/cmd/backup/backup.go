@@ -12,11 +12,19 @@ import (
 	"time"
 )
 
+type UrlOptions struct {
+	Json bool
+}
+
 func Command() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "backup <command>",
 		Short: i18n.C.BackupShort,
+	}
+
+	opts := &UrlOptions{
+		Json: false,
 	}
 
 	cmdUrl := &cobra.Command{
@@ -30,10 +38,19 @@ func Command() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			ui.Json(response.GetData()[0])
+			if opts.Json {
+				ui.Json(response.GetData()[0])
+				return nil
+			}
+
+			ui.Stat("Filename", response.GetData()[0].Filename)
+			ui.Stat("SHA256", response.GetData()[0].Sha256)
+			ui.Stat("Date Added", response.GetData()[0].DateAdded)
+			ui.Stat("URL", response.GetData()[0].URL)
 			return nil
 		},
 	}
+	cmdUrl.Flags().BoolVarP(&opts.Json, "json", "j", false, "Output as JSON")
 
 	cmdDownload := &cobra.Command{
 		Use:   "download <index>",

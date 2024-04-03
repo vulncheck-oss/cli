@@ -44,10 +44,12 @@ type Copy struct {
 	BackupDownloadComplete string
 
 	CpeShort     string
+	CpeExample   string
 	CpeNoCves    string
 	CpeCvesFound string
 
 	PurlShort     string
+	PurlExample   string
 	PurlNoCves    string
 	PurlCvesFound string
 
