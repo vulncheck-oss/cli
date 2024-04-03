@@ -66,6 +66,10 @@ func Command() *cobra.Command {
 
 			file, err := extractFile(response.GetData()[0].URL)
 
+			if err != nil {
+				return err
+			}
+
 			date := parseDate(response.GetData()[0].DateAdded)
 
 			ui.Info(fmt.Sprintf(i18n.C.BackupDownloadInfo, args[0], date))

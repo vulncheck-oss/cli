@@ -39,7 +39,9 @@ func ExistingToken() error {
 		Affirmative("Yes").
 		Negative("No").
 		Value(&logoutChoice))).WithTheme(huh.ThemeCatppuccin())
-	confirm.Run()
+	if err := confirm.Run(); err != nil {
+		return err
+	}
 
 	if logoutChoice {
 		if _, err := session.InvalidateToken(config.Token()); err != nil {

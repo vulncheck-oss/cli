@@ -1,7 +1,5 @@
 package i18n
 
-var lang = "en_US"
-
 type Copy struct {
 	AboutInfo       string
 	InteractiveOnly string

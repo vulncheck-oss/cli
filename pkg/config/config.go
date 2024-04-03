@@ -73,12 +73,8 @@ func configDir() (string, error) {
 }
 
 func HasConfig() bool {
-
 	_, err := loadConfig()
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func Token() string {

@@ -36,7 +36,9 @@ func (m tableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "ctrl+c":
 			return m, tea.Quit
 		case "enter":
-			m.action(m.table.SelectedRow()[0])
+			if err := m.action(m.table.SelectedRow()[0]); err != nil {
+				return m, tea.Quit
+			}
 			return m, tea.Quit
 			/*
 				return m, tea.Batch(
