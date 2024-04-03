@@ -27,15 +27,6 @@ type AuthError struct {
 	err error
 }
 
-type exitCode int
-
-const (
-	exitOK        exitCode = 0
-	exitError     exitCode = 1
-	exitCancel    exitCode = 2
-	exitAuthError exitCode = 3
-)
-
 func (ae *AuthError) Error() string {
 	return ae.err.Error()
 }

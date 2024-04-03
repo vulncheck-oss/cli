@@ -12,9 +12,10 @@ require (
 	github.com/charmbracelet/huh v0.3.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20240328185852-590ecabc34b9
 	github.com/charmbracelet/lipgloss v0.10.0
+	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
-	github.com/vulncheck-oss/sdk v1.2.5
+	github.com/vulncheck-oss/sdk v1.2.6
 	golang.org/x/term v0.18.0
 )
 

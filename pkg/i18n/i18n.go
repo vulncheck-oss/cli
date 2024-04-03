@@ -1,7 +1,5 @@
 package i18n
 
-var lang = "en_US"
-
 type Copy struct {
 	AboutInfo       string
 	InteractiveOnly string
@@ -44,10 +42,12 @@ type Copy struct {
 	BackupDownloadComplete string
 
 	CpeShort     string
+	CpeExample   string
 	CpeNoCves    string
 	CpeCvesFound string
 
 	PurlShort     string
+	PurlExample   string
 	PurlNoCves    string
 	PurlCvesFound string
 

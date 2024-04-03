@@ -7,9 +7,11 @@ import (
 )
 
 var format = "%s %s\n"
+var statFormat = "%s %s: %s\n"
 
 var Pantone = lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))
 var White = lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff"))
+var Gray = lipgloss.NewStyle().Foreground(lipgloss.Color("#dddddd"))
 var Emerald = lipgloss.NewStyle().Foreground(lipgloss.Color("#34d399"))
 var Red = lipgloss.NewStyle().Foreground(lipgloss.Color("#ff0000"))
 
@@ -26,6 +28,15 @@ func Info(str string) {
 		format,
 		Pantone.Render("i"),
 		White.Render(str),
+	)
+}
+
+func Stat(label string, value string) {
+	fmt.Printf(
+		statFormat,
+		Pantone.Render("i"),
+		Gray.Render(label),
+		White.Render(value),
 	)
 }
 

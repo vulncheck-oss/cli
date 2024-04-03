@@ -2,8 +2,11 @@ package login
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/pkg/cmd/auth/login/token"
+	"github.com/vulncheck-oss/cli/pkg/cmd/auth/login/web"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
+	pkgLogin "github.com/vulncheck-oss/cli/pkg/login"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 )
@@ -27,12 +30,12 @@ func Command() *cobra.Command {
 			}
 
 			if config.HasConfig() && config.HasToken() {
-				if err := existingToken(); err != nil {
+				if err := pkgLogin.ExistingToken(); err != nil {
 					return err
 				}
 			}
 
-			choice, err := chooseAuthMethod()
+			choice, err := pkgLogin.ChooseAuthMethod()
 
 			if err != nil {
 				return err
@@ -40,30 +43,16 @@ func Command() *cobra.Command {
 
 			switch choice {
 			case "token":
-				return cmdToken(cmd, args)
+				return token.CmdToken(cmd, args)
 			case "web":
-				return ui.Error("Command currently under construction")
+				return web.CmdWeb(cmd, args)
 			default:
 				return ui.Error("Invalid choice")
 			}
 		},
 	}
 
-	token := &cobra.Command{
-		Use:   "token",
-		Short: i18n.C.AuthLoginToken,
-		RunE:  cmdToken,
-	}
-
-	web := &cobra.Command{
-		Use:   "web",
-		Short: i18n.C.AuthLoginWeb,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return ui.Error("web login is not yet implemented")
-		},
-	}
-
-	cmd.AddCommand(web, token)
+	cmd.AddCommand(web.Command(), token.Command())
 
 	session.DisableAuthCheck(cmd)
 	return cmd

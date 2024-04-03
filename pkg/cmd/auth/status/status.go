@@ -3,9 +3,9 @@ package status
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/vulncheck-oss/cli/pkg/cmd/auth/login"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
+	"github.com/vulncheck-oss/cli/pkg/login"
 	"github.com/vulncheck-oss/cli/pkg/session"
 )
 

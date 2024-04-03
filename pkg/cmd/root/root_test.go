@@ -106,9 +106,7 @@ func setRootActual(args ...string) (*bytes.Buffer, *cobra.Command) {
 	root.SetOut(actual)
 	root.SetErr(actual)
 	var argsArray []string
-	for _, arg := range args {
-		argsArray = append(argsArray, arg)
-	}
+	argsArray = append(argsArray, args...)
 	root.SetArgs(argsArray)
 	return actual, root
 }
