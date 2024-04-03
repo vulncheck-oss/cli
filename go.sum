@@ -111,8 +111,8 @@ github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsT
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/subosito/gotenv v1.6.0 h1:9NlTDc1FTs4qu0DDq7AEtTPNw6SVm7uBMsUCUjABIf8=
 github.com/subosito/gotenv v1.6.0/go.mod h1:Dk4QP5c2W3ibzajGcXpNraDfq2IrhjMIvMSWPKKo0FU=
-github.com/vulncheck-oss/sdk v1.2.5 h1:gJgUm+dojHTC9fUSl/doq9IGS5QqtH5BGCDgTkcIjU8=
-github.com/vulncheck-oss/sdk v1.2.5/go.mod h1:ufLXRGtv47jpjt2B7FcwUXhexX7F4lj4LaXl3ZyNiKA=
+github.com/vulncheck-oss/sdk v1.2.6 h1:5KVRqHs7nnQ9mJNeEUEDwZq7E2V9oGrre0XGBlwG/Ao=
+github.com/vulncheck-oss/sdk v1.2.6/go.mod h1:ufLXRGtv47jpjt2B7FcwUXhexX7F4lj4LaXl3ZyNiKA=
 go.uber.org/multierr v1.11.0 h1:blXXJkSxSSfBVBlC76pxqeO+LN3aDfLQo+309xJstO0=
 go.uber.org/multierr v1.11.0/go.mod h1:20+QtiLqy0Nd6FdQB9TLXag12DsQkrbs3htMFfDN80Y=
 golang.org/x/exp v0.0.0-20240325151524-a685a6edb6d8 h1:aAcj0Da7eBAtrTp03QXWvm88pSyOt+UgdZw2BFZ+lEw=
