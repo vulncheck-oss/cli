@@ -1,11 +1,15 @@
 package index
 
 import (
+	"reflect"
+	"strings"
+
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
+	"github.com/vulncheck-oss/sdk"
 )
 
 func Command() *cobra.Command {
@@ -15,6 +19,15 @@ func Command() *cobra.Command {
 		Short: i18n.C.IndexShort,
 	}
 
+	// Define flags for index commands
+	keys := reflect.TypeOf(sdk.IndexQueryParameters{})
+
+	// Dynamically add flags for index commands
+	for i := 0; i < keys.NumField(); i++ {
+		flag := cleanStructFieldNames(keys.Field(i).Name)
+		cmd.PersistentFlags().String(flag, "", keys.Field(i).Name)
+	}
+
 	cmdList := &cobra.Command{
 		Use:   "list <index>",
 		Short: i18n.C.IndexListShort,
@@ -22,7 +35,15 @@ func Command() *cobra.Command {
 			if len(args) != 1 {
 				return ui.Error(i18n.C.ErrorIndexRequired)
 			}
-			response, err := session.Connect(config.Token()).GetIndex(args[0])
+
+			// Create a new IndexQueryParameters struct and set the values from the flags
+			queryParameters := sdk.IndexQueryParameters{}
+			for i := 0; i < keys.NumField(); i++ {
+				flag := cleanStructFieldNames(keys.Field(i).Name)
+				reflect.ValueOf(&queryParameters).Elem().Field(i).SetString(cmd.Flag(flag).Value.String())
+			}
+
+			response, err := session.Connect(config.Token()).GetIndex(args[0], queryParameters)
 			if err != nil {
 				return err
 			}
@@ -38,7 +59,15 @@ func Command() *cobra.Command {
 			if len(args) != 1 {
 				return ui.Error(i18n.C.ErrorIndexRequired)
 			}
-			response, err := session.Connect(config.Token()).GetIndex(args[0])
+
+			// Create a new IndexQueryParameters struct and set the values from the flags
+			queryParameters := sdk.IndexQueryParameters{}
+			for i := 0; i < keys.NumField(); i++ {
+				flag := cleanStructFieldNames(keys.Field(i).Name)
+				reflect.ValueOf(&queryParameters).Elem().Field(i).SetString(cmd.Flag(flag).Value.String())
+			}
+
+			response, err := session.Connect(config.Token()).GetIndex(args[0], queryParameters)
 			if err != nil {
 				return err
 			}
@@ -51,4 +80,11 @@ func Command() *cobra.Command {
 	cmd.AddCommand(cmdBrowse)
 
 	return cmd
+}
+
+func cleanStructFieldNames(s string) string {
+	s = strings.ToLower(s)
+	s = strings.ReplaceAll(s, " ", "-")
+
+	return s
 }
