@@ -22,7 +22,7 @@ func Command() *cobra.Command {
 	// Define flags for index commands
 	keys := reflect.TypeOf(sdk.IndexQueryParameters{})
 
-	// Dynamically add flags for index commands
+	// Dynamically add flags for index commands (list and browse)
 	for i := 0; i < keys.NumField(); i++ {
 		flag := cleanStructFieldNames(keys.Field(i).Name)
 		cmd.PersistentFlags().String(flag, "", keys.Field(i).Name)
