@@ -51,6 +51,12 @@ type Copy struct {
 	PurlNoCves    string
 	PurlCvesFound string
 
+	SbomShort     string
+	SbomListShort string
+
+	SbomScanShort     string
+	SbomScanListShort string
+
 	ErrorNoToken      string
 	ErrorUnauthorized string
 

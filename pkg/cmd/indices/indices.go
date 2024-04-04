@@ -21,13 +21,13 @@ func Command() *cobra.Command {
 	return cmd
 }
 
-type ListOptions struct {
+type Options struct {
 	Json bool
 }
 
 func List() *cobra.Command {
 
-	opts := &ListOptions{
+	opts := &Options{
 		Json: false,
 	}
 

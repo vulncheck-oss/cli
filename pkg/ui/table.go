@@ -156,3 +156,31 @@ func PurlMeta(purl sdk.PurlMeta) error {
 	fmt.Println(t)
 	return nil
 }
+
+func SbomList(sboms []sdk.SbomMeta) error {
+	t := ltable.New().
+		Border(lipgloss.NormalBorder()).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("99"))).
+		Headers("ID", "Name", "Repository", "Created At", "Updated At").
+		Width(TermWidth())
+
+	for _, sbom := range sboms {
+		t.Row(sbom.Id, sbom.Name, sbom.Repository, sbom.CreatedAt, sbom.UpdatedAt)
+	}
+	fmt.Println(t)
+	return nil
+}
+
+func SbomScans(scans []sdk.SbomScanMeta) error {
+	t := ltable.New().
+		Border(lipgloss.NormalBorder()).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("99"))).
+		Headers("ID", "Status", "Created At", "Updated At").
+		Width(TermWidth())
+
+	for _, scan := range scans {
+		t.Row(scan.Id, scan.Status, scan.CreatedAt, scan.UpdatedAt)
+	}
+	fmt.Println(t)
+	return nil
+}

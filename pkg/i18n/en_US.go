@@ -75,6 +75,12 @@ var En = Copy{
 	PurlNoCves:    "No CVEs were found for purl %s",
 	PurlCvesFound: "%d CVEs were found for purl %s",
 
+	SbomShort:     "SBOM Management",
+	SbomListShort: "List all SBOMs",
+
+	SbomScanShort:     "List SBOM scans, reports, and differences",
+	SbomScanListShort: "List Scans of an SBOM Profile",
+
 	ErrorUnauthorized:       "Error: Unauthorized, Try authenticating with: vc auth login",
 	ErrorNoToken:            "No token found. Please run `vc auth login` to authenticate or populate the environment variable `VC_TOKEN`.",
 	ErrorIndexRequired:      "index name is required",
