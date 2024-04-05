@@ -1,17 +1,20 @@
 package web
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/charmbracelet/huh/spinner"
+	"github.com/octoper/go-ray"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
-	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/environment"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
-	"github.com/vulncheck-oss/cli/pkg/login"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
+	"net/http"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -56,50 +59,26 @@ func Command() *cobra.Command {
 }
 
 func CmdWeb(cmd *cobra.Command, args []string) error {
-	var responseJSON *InquiryResponse
-	response, err := session.Connect(config.Token()).Form("name", GetName()).Request("POST", "/inquiry")
-	if err != nil {
-		return err
-	}
-	defer response.Body.Close()
-	_ = json.NewDecoder(response.Body).Decode(&responseJSON)
-
 	ui.Info("Attempting to launch vulncheck.com in your browser...")
-	if err := browser.OpenURL(fmt.Sprintf("%s/inquiry/%s", environment.Env.WEB, responseJSON.Data.Hash)); err != nil {
-		return err
-	}
 
 	var errorResponse error
-	var pingResponse *InquiryPingResponse
 
 	_ = spinner.New().
 		Style(ui.Pantone).
 		Title(" Awaiting Verification...").Action(func() {
 
-		ticker := time.NewTicker(2 * time.Second)
-		defer ticker.Stop()
-
-		timeout := time.After(30 * time.Second)
-
-		for {
-			select {
-			case <-ticker.C:
-				var responsePing *InquiryPingResponse
-				response, err := session.Connect(config.Token()).Request("GET", fmt.Sprintf("/inquiry/ping/%s", responseJSON.Data.Hash))
-				if err != nil {
-					errorResponse = err
-					return
-				}
-				defer response.Body.Close()
-				_ = json.NewDecoder(response.Body).Decode(&responsePing)
-				if config.ValidToken(responsePing.Data.Token) {
-					pingResponse = responsePing
-					return
-				}
-			case <-timeout:
-				return
-			}
+		if err := browser.OpenURL(fmt.Sprintf("%s/inquiry/new", environment.Env.WEB)); err != nil {
+			errorResponse = err
+			return
 		}
+
+		hash, err := ListenForHash()
+		if err != nil {
+			errorResponse = err
+			return
+		}
+
+		ray.Ray(hash)
 
 	}).Run()
 
@@ -107,9 +86,42 @@ func CmdWeb(cmd *cobra.Command, args []string) error {
 		return errorResponse
 	}
 
-	if pingResponse != nil {
-		return login.SaveToken(pingResponse.Data.Token)
+	return nil
+}
+
+var Server *http.Server = &http.Server{Addr: ":8080"}
+
+func ListenForHash() (string, error) {
+
+	var hash string
+
+	http.HandleFunc("/inquiry/", func(w http.ResponseWriter, r *http.Request) {
+		hash := strings.TrimPrefix(r.URL.Path, "/inquiry/")
+		if err := UpdateInquiry(hash); err != nil {
+			fmt.Println(err)
+		}
+		redirect := fmt.Sprintf("%s/inquiry/%s", environment.Env.WEB, hash)
+		http.Redirect(w, r, redirect, http.StatusMovedPermanently)
+	})
+
+	if err := Server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return "", err
 	}
+
+	return hash, nil
+}
+
+func UpdateInquiry(hash string) error {
+	var responseJSON *InquiryResponse
+	response, err := session.Connect("").
+		Form("name", GetName()).
+		Request("PUT", fmt.Sprintf("/inquiry/%s", hash))
+
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	_ = json.NewDecoder(response.Body).Decode(&responseJSON)
 	return nil
 }
 
@@ -128,4 +140,10 @@ func GetName() string {
 	}
 
 	return strings.TrimSpace(string(out))
+}
+
+func Hash() string {
+	hasher := md5.New()
+	hasher.Write([]byte(time.Now().String()))
+	return hex.EncodeToString(hasher.Sum(nil))
 }
