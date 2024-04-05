@@ -44,7 +44,7 @@ func ListenForHash() (string, error) {
 			fmt.Println(err)
 		}
 		redirect := fmt.Sprintf("%s/inquiry/%s", environment.Env.WEB, hash)
-		http.Redirect(w, r, redirect, http.StatusFound)
+		http.Redirect(w, r, redirect, http.StatusTemporaryRedirect)
 	})
 }
 
@@ -56,7 +56,7 @@ func ListenForToken() (string, error) {
 		} else {
 			redirect = fmt.Sprintf("%s/token#cli-s", environment.Env.WEB)
 		}
-		http.Redirect(w, r, redirect, http.StatusFound)
+		http.Redirect(w, r, redirect, http.StatusTemporaryRedirect)
 	})
 }
 
