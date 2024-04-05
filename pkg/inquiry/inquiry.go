@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/vulncheck-oss/cli/pkg/environment"
 	"github.com/vulncheck-oss/cli/pkg/session"
+	"net"
 	"net/http"
 	"os/exec"
 	"runtime"
@@ -26,11 +27,13 @@ type Inquiry struct {
 	UpdatedAt  string `json:"updated_at"`
 }
 
-type InquiryResponse struct {
+type Response struct {
 	Benchmark float64 `json:"_benchmark"`
 	Message   string  `json:"message"`
 	Data      Inquiry `json:"data"`
 }
+
+var Port = ":8678"
 
 func ListenForHash() (string, error) {
 	return ListenFor("inquiry", func(w http.ResponseWriter, r *http.Request, hash string) {
@@ -41,14 +44,19 @@ func ListenForHash() (string, error) {
 			fmt.Println(err)
 		}
 		redirect := fmt.Sprintf("%s/inquiry/%s", environment.Env.WEB, hash)
-		http.Redirect(w, r, redirect, http.StatusMovedPermanently)
+		http.Redirect(w, r, redirect, http.StatusFound)
 	})
 }
 
 func ListenForToken() (string, error) {
 	return ListenFor("token", func(w http.ResponseWriter, r *http.Request, token string) {
-		redirect := fmt.Sprintf("%s/token#cli-success", environment.Env.WEB)
-		http.Redirect(w, r, redirect, http.StatusMovedPermanently)
+		var redirect string
+		if token == "denied" {
+			redirect = fmt.Sprintf("%s/token#cli-d", environment.Env.WEB)
+		} else {
+			redirect = fmt.Sprintf("%s/token#cli-s", environment.Env.WEB)
+		}
+		http.Redirect(w, r, redirect, http.StatusFound)
 	})
 }
 
@@ -56,7 +64,7 @@ func ListenFor(path string, action func(http.ResponseWriter, *http.Request, stri
 	var value string
 	done := make(chan bool)
 
-	server := &http.Server{Addr: ":8080"}
+	server := &http.Server{Addr: Port}
 
 	http.HandleFunc("/"+path+"/", func(w http.ResponseWriter, r *http.Request) {
 		value = strings.TrimPrefix(r.URL.Path, "/"+path+"/")
@@ -78,6 +86,7 @@ func ListenFor(path string, action func(http.ResponseWriter, *http.Request, stri
 		timer.Stop()
 		Shutdown(server)
 	case <-timer.C:
+		Shutdown(server)
 	}
 
 	return value, nil
@@ -93,7 +102,7 @@ func Shutdown(server *http.Server) {
 
 // UpdateInquiry update the inquiry passing ComputerName and user agent
 func UpdateInquiry(hash string) error {
-	var responseJSON *InquiryResponse
+	var responseJSON *Response
 	response, err := session.Connect("").
 		Form("name", GetName()).
 		Request("PUT", fmt.Sprintf("/inquiry/%s", hash))
@@ -121,4 +130,16 @@ func GetName() string {
 	}
 
 	return strings.TrimSpace(string(out))
+}
+
+// IsPortAvailable checks if a port is available by trying to listen on it
+func IsPortAvailable(port string) bool {
+	ln, err := net.Listen("tcp", port)
+
+	if err != nil {
+		return false
+	}
+
+	_ = ln.Close()
+	return true
 }

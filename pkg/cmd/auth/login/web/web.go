@@ -27,6 +27,11 @@ func Command() *cobra.Command {
 }
 
 func CmdWeb(cmd *cobra.Command, args []string) error {
+
+	if !inquiry.IsPortAvailable(inquiry.Port) {
+		return fmt.Errorf("this method is not available, try vc auth login token")
+	}
+
 	ui.Info("Attempting to launch vulncheck.com in your browser...")
 
 	var errorResponse error
