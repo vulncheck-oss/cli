@@ -2,13 +2,13 @@ package index
 
 import (
 	"reflect"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
+	"github.com/vulncheck-oss/cli/pkg/utils"
 	"github.com/vulncheck-oss/sdk"
 )
 
@@ -24,7 +24,7 @@ func Command() *cobra.Command {
 
 	// Dynamically add flags for index commands (list and browse)
 	for i := 0; i < keys.NumField(); i++ {
-		flag := cleanStructFieldNames(keys.Field(i).Name)
+		flag := utils.NormalizeString(keys.Field(i).Name)
 		cmd.PersistentFlags().String(flag, "", keys.Field(i).Name)
 	}
 
@@ -39,7 +39,7 @@ func Command() *cobra.Command {
 			// Create a new IndexQueryParameters struct and set the values from the flags
 			queryParameters := sdk.IndexQueryParameters{}
 			for i := 0; i < keys.NumField(); i++ {
-				flag := cleanStructFieldNames(keys.Field(i).Name)
+				flag := utils.NormalizeString(keys.Field(i).Name)
 				reflect.ValueOf(&queryParameters).Elem().Field(i).SetString(cmd.Flag(flag).Value.String())
 			}
 
@@ -63,7 +63,7 @@ func Command() *cobra.Command {
 			// Create a new IndexQueryParameters struct and set the values from the flags
 			queryParameters := sdk.IndexQueryParameters{}
 			for i := 0; i < keys.NumField(); i++ {
-				flag := cleanStructFieldNames(keys.Field(i).Name)
+				flag := utils.NormalizeString(keys.Field(i).Name)
 				reflect.ValueOf(&queryParameters).Elem().Field(i).SetString(cmd.Flag(flag).Value.String())
 			}
 
@@ -80,11 +80,4 @@ func Command() *cobra.Command {
 	cmd.AddCommand(cmdBrowse)
 
 	return cmd
-}
-
-func cleanStructFieldNames(s string) string {
-	s = strings.ToLower(s)
-	s = strings.ReplaceAll(s, " ", "-")
-
-	return s
 }
