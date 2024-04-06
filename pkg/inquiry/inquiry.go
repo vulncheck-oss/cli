@@ -37,27 +37,19 @@ var Port = ":8678"
 
 func ListenForHash() (string, error) {
 	return ListenFor("inquiry", func(w http.ResponseWriter, r *http.Request, hash string) {
-		if hash == "denied" {
-			return // denied
-		}
 		if err := UpdateInquiry(hash); err != nil {
 			fmt.Println(err)
 		}
-		redirect := fmt.Sprintf("%s/inquiry/%s", environment.Env.WEB, hash)
-		http.Redirect(w, r, redirect, http.StatusTemporaryRedirect)
 	})
 }
 
 func ListenForToken() (string, error) {
 	return ListenFor("token", func(w http.ResponseWriter, r *http.Request, token string) {
-		var redirect string
-		if token == "denied" {
-			redirect = fmt.Sprintf("%s/token#cli-d", environment.Env.WEB)
-		} else {
-			redirect = fmt.Sprintf("%s/token#cli-s", environment.Env.WEB)
-		}
-		http.Redirect(w, r, redirect, http.StatusTemporaryRedirect)
 	})
+}
+
+type HashResult struct {
+	Hash string `json:"hash"`
 }
 
 func ListenFor(path string, action func(http.ResponseWriter, *http.Request, string)) (string, error) {
@@ -66,9 +58,32 @@ func ListenFor(path string, action func(http.ResponseWriter, *http.Request, stri
 
 	server := &http.Server{Addr: Port}
 
-	http.HandleFunc("/"+path+"/", func(w http.ResponseWriter, r *http.Request) {
-		value = strings.TrimPrefix(r.URL.Path, "/"+path+"/")
+	http.HandleFunc("/"+path, func(w http.ResponseWriter, r *http.Request) {
+
+		w.Header().Set("Access-Control-Allow-Origin", environment.Env.WEB)
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		if r.Method != http.MethodPost {
+			http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+			return
+		}
+
+		var result HashResult
+
+		if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
+			http.Error(w, "Failed to decode request body", http.StatusBadRequest)
+			return
+		}
+
+		value = result.Hash
 		action(w, r, value)
+
+		w.WriteHeader(http.StatusOK)
 		done <- true
 	})
 
