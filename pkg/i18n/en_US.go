@@ -72,8 +72,9 @@ var En = Copy{
 	PurlShort:   "Look up a specified PURL for any CVES or vulnerabilities",
 	PurlExample: "vc purl \"%s\"",
 
-	PurlNoCves:    "No CVEs were found for purl %s",
-	PurlCvesFound: "%d CVEs were found for purl %s",
+	PurlNoVulns:    "No Vulnerabilities were found for purl %s",
+	PurlVulnFound:  "1 Vulnerability were found for purl %s",
+	PurlVulnsFound: "%d Vulnerabilities were found for purl %s",
 
 	ErrorUnauthorized:       "Error: Unauthorized, Try authenticating with: vc auth login",
 	ErrorNoToken:            "No token found. Please run `vc auth login` to authenticate or populate the environment variable `VC_TOKEN`.",
