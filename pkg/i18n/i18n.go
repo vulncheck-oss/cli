@@ -46,10 +46,11 @@ type Copy struct {
 	CpeNoCves    string
 	CpeCvesFound string
 
-	PurlShort     string
-	PurlExample   string
-	PurlNoCves    string
-	PurlCvesFound string
+	PurlShort      string
+	PurlExample    string
+	PurlNoVulns    string
+	PurlVulnFound  string
+	PurlVulnsFound string
 
 	ErrorNoToken      string
 	ErrorUnauthorized string

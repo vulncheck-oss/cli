@@ -112,7 +112,7 @@ func IndicesList(indices []sdk.IndicesMeta, search string) error {
 
 	t := ltable.New().
 		Border(lipgloss.NormalBorder()).
-		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("99"))).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
 		Headers("Name", "Description", "Href").Width(TermWidth())
 
 	for _, index := range indices {
@@ -138,8 +138,7 @@ func TermHeight() int {
 
 func CpeMeta(cpe sdk.CpeMeta) error {
 	t := ltable.New().
-		Border(lipgloss.NormalBorder()).
-		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("99"))).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
 		Headers("Part", "Vendor", "Product", "Version", "Update", "Edition").
 		Row(cpe.Part, cpe.Vendor, cpe.Product, cpe.Version, cpe.Update, cpe.Edition).Width(TermWidth())
 	fmt.Println(t)
@@ -148,11 +147,24 @@ func CpeMeta(cpe sdk.CpeMeta) error {
 
 func PurlMeta(purl sdk.PurlMeta) error {
 	t := ltable.New().
-		Border(lipgloss.NormalBorder()).
-		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("99"))).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
 		Headers("Type", "Namespace", "Nme", "Version", "Qualifiers", "Subpath").
 		Row(purl.Type, purl.Namespace, purl.Name, purl.Version, strings.Join(purl.Qualifiers, ","), purl.Subpath).
 		Width(TermWidth())
+	fmt.Println(t)
+	return nil
+}
+
+func PurlVulns(vulns []sdk.PurlVulnerability) error {
+	t := ltable.New().
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
+		Headers("Detection", "Fixed Version").
+		Width(TermWidth())
+
+	for _, vuln := range vulns {
+		t.Row(vuln.Detection, vuln.FixedVersion)
+	}
+
 	fmt.Println(t)
 	return nil
 }

@@ -35,16 +35,22 @@ func Command() *cobra.Command {
 				ui.Json(response.GetData())
 				return nil
 			}
-			cves := response.Cves()
+			vulns := response.Vulnerabilities()
 			if err := ui.PurlMeta(response.PurlMeta()); err != nil {
 				return err
 			}
-			if len(cves) == 0 {
-				ui.Info(fmt.Sprintf(i18n.C.PurlNoCves, args[0]))
+			if len(vulns) == 0 {
+				ui.Info(fmt.Sprintf(i18n.C.PurlNoVulns, args[0]))
 				return nil
 			}
-			ui.Info(fmt.Sprintf(i18n.C.PurlCvesFound, len(cves), args[0]))
-			ui.Json(cves)
+			if len(vulns) == 1 {
+				ui.Info(fmt.Sprintf(i18n.C.PurlVulnFound, args[0]))
+			} else {
+				ui.Info(fmt.Sprintf(i18n.C.PurlVulnsFound, len(vulns), args[0]))
+			}
+			if err := ui.PurlVulns(vulns); err != nil {
+				return err
+			}
 			return nil
 		},
 	}
