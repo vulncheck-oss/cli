@@ -38,6 +38,7 @@ jobs:
           if [[ "${{ runner.os }}" == "Windows" ]]; then
             echo "${{ secrets.GO_MODULE_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
             echo -e "Host github.com\n  HostName github.com\n  User git\n  IdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
+            powershell -Command "Set-Service -Name ssh-agent -StartupType Manual"
             net start ssh-agent
             ssh-add ~/.ssh/id_rsa
           else
