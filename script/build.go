@@ -20,6 +20,9 @@ var tasks = map[string]func(string) error{
 
 		return run("go", "build", "-trimpath", "-ldflags", ldflags, "-o", exe, "./cmd/vc")
 	},
+	"manpages": func(_ string) error {
+		return run("go", "run", "./cmd/gen-docs", "--man-page", "--doc-path", "./share/man/man1/")
+	},
 	"clean": func(_ string) error {
 		return rmrf("bin", "share")
 	},
