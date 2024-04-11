@@ -11,8 +11,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    env:
-      GOPRIVATE: github.com/vulncheck-oss
 
     steps:
       - name: Set up Go 1.21
@@ -31,6 +29,9 @@ jobs:
           key: go-${{ runner.os }}-${{ hashFiles('go.mod') }}
           restore-keys: |
             go-${{ runner.os }}-
+
+      - name: configure git
+        run: git config --global url."git@github.com:".insteadOf "https://github.com/"
 
       - name: Download dependencies
         run: go mod download

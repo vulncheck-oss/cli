@@ -17,8 +17,6 @@ permissions:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    env:
-      GOPRIVATE: github.com/vulncheck-oss
     steps:
       - name: Set up Go 1.21
         uses: actions/setup-go@v5
@@ -36,6 +34,9 @@ jobs:
           key: go-${{ runner.os }}-${{ hashFiles('go.mod') }}
           restore-keys: |
             go-${{ runner.os }}-
+
+      - name: configure git
+        run: git config --global url."git@github.com:".insteadOf "https://github.com/"
 
       - name: Verify dependencies
         run: |
