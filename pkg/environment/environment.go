@@ -30,8 +30,7 @@ var Environments = []Environment{
 	},
 }
 
-// TODO: move this to [0] before initial release - and remove staging from the array
-var Env = Environments[2]
+var Env = Environments[0]
 
 func Init() {
 	envVar := os.Getenv("VC_ENV")
