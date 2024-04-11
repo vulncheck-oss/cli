@@ -46,7 +46,7 @@ jobs:
             ssh-add - <<< "${{ secrets.GO_MODULE_PRIVATE_KEY }}"
             echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
           fi
-        shell: msys2 {0}
+        shell: bash
 
       - name: configure git
         run: git config --global url."git@github.com:".insteadOf "https://github.com/"
