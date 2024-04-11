@@ -36,6 +36,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           if [[ "${{ runner.os }}" == "Windows" ]]; then
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
             echo "${{ secrets.GO_MODULE_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
             echo -e "Host github.com\n  HostName github.com\n  User git\n  IdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
             powershell -Command "Set-Service -Name ssh-agent -StartupType Manual"
