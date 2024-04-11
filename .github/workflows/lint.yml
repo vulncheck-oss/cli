@@ -18,7 +18,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     env:
-      GOPRIVATE: github.com/vulncheck-oss/sdk
+      GOPRIVATE: github.com/vulncheck-oss
     steps:
       - name: Set up Go 1.21
         uses: actions/setup-go@v5
