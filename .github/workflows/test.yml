@@ -35,11 +35,9 @@ jobs:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         run: |
           if [[ "${{ runner.os }}" == "Windows" ]]; then
-            echo "${{ secrets.GO_MODULE_PRIVATE_KEY }}" | Out-File -FilePath ~/.ssh/id_rsa -Encoding ascii
-            (Get-Content ~/.ssh/id_rsa) -replace '\r\n', "`n" | Set-Content ~/.ssh/id_rsa
-            Set-Content -Path ~/.ssh/config -Value "Host github.com`n  HostName github.com`n  User git`n  IdentityFile ~/.ssh/id_rsa"
-            Get-Service -Name ssh-agent | Set-Service -StartupType Manual
-            Start-Service -Name ssh-agent
+            echo "${{ secrets.GO_MODULE_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+            echo -e "Host github.com\n  HostName github.com\n  User git\n  IdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
+            net start ssh-agent
             ssh-add ~/.ssh/id_rsa
           else
             mkdir -p ~/.ssh
