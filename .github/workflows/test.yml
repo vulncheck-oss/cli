@@ -39,7 +39,7 @@ jobs:
             echo "${{ secrets.GO_MODULE_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
             echo -e "Host github.com\n  HostName github.com\n  User git\n  IdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
             powershell -Command "Set-Service -Name ssh-agent -StartupType Manual"
-            net start ssh-agent
+            eval `ssh-agent -s`
             ssh-add ~/.ssh/id_rsa
           else
             ssh-keyscan github.com >> ~/.ssh/known_hosts
