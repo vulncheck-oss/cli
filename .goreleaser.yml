@@ -8,7 +8,7 @@ release:
 before:
   hooks:
     - >-
-      {{ if eq .Runtime.Goos "windows" }}echo{{ end }} make manpages GH_VERSION={{.Version}}
+      {{ if eq .Runtime.Goos "windows" }}echo{{ end }} make manpages VC_VERSION={{.Version}}
     - >-
       {{ if ne .Runtime.Goos "linux" }}echo{{ end }} make completions
 

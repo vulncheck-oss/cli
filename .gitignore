@@ -25,3 +25,6 @@
 *.swp
 
 vendor/
+
+## environment
+.env

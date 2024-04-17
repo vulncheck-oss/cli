@@ -3,7 +3,7 @@ package session
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/vulncheck-oss/cli/pkg/build"
+	"github.com/vulncheck-oss/cli/internal/build"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/environment"
 	"github.com/vulncheck-oss/sdk"

@@ -1,3 +1,25 @@
+// Build tasks for the VulnCheck CLI project.
+//
+// Usage:  go run script/build.go [<tasks>...] [<env>...]
+//
+// Known tasks are:
+//
+//   bin/gh:
+//     Builds the main executable.
+//     Supported environment variables:
+//     - VC_VERSION: determined from source by default
+//     - VC_OAUTH_CLIENT_ID
+//     - VC_OAUTH_CLIENT_SECRET
+//     - SOURCE_DATE_EPOCH: enables reproducible builds
+//     - GO_LDFLAGS
+//
+//   manpages:
+//     Builds the man pages under `share/man/man1/`.
+//
+//   clean:
+//     Deletes all built files.
+//
+
 package main
 
 import (

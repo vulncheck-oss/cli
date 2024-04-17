@@ -22,7 +22,7 @@ sign_windows() {
     return 1
   fi
 
-  osslsigncode sign -n "GitHub CLI" -t http://timestamp.digicert.com \
+  osslsigncode sign -n "VulnCheck CLI" -t http://timestamp.digicert.com \
     -pkcs12 "$CERT_FILE" -readpass <(printf "%s" "$CERT_PASSWORD") -h sha256 \
     -in "$1" -out "$1"~
 
@@ -36,10 +36,16 @@ sign_macos() {
   fi
 
   if [[ $1 == *.zip ]]; then
+    echo "Running notarytool submit for $1"
+    echo "Apple ID: ${APPLE_ID?}"
+    echo "Team ID: ${APPLE_DEVELOPER_ID?}"
     xcrun notarytool submit "$1" --apple-id "${APPLE_ID?}" --team-id "${APPLE_DEVELOPER_ID?}" --password "${APPLE_ID_PASSWORD?}"
   else
+    echo "Running codesign for $1"
+    echo "Using Developer ID: ${APPLE_DEVELOPER_ID?}"
     codesign --timestamp --options=runtime -s "${APPLE_DEVELOPER_ID?}" -v "$1"
   fi
+
 }
 
 if [ $# -eq 0 ]; then
