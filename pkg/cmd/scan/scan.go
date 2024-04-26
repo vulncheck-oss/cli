@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/anchore/syft/syft"
-	"github.com/octoper/go-ray"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
+	"github.com/vulncheck-oss/sdk"
 )
 
 type Options struct {
@@ -46,17 +46,23 @@ func Command() *cobra.Command {
 				purls = append(purls, p.PURL)
 			}
 
-			ui.Info(fmt.Sprintf(i18n.C.ScanPurlsFound, len(purls)))
+			ui.Info(fmt.Sprintf(i18n.C.ScanPackagesFound, len(purls)))
 
-			for _, purl := range purls {
+			ui.NewProgress(len(purls))
+
+			var vulns []sdk.PurlVulnerability
+
+			for index, purl := range purls {
 				response, err := session.Connect(config.Token()).GetPurl(purl)
 				if err != nil {
 					return err
 				}
-				if len(response.Data.Cves) > 0 {
-					ray.Ray(response.Data)
+				if len(response.Data.Vulnerabilities) > 0 {
+					vulns = append(vulns, response.Data.Vulnerabilities...)
 				}
+				ui.UpdateProgress(index + 1)
 			}
+			ui.Info(fmt.Sprintf(i18n.C.ScanCvesFound, len(vulns), len(purls)))
 
 			return nil
 		},

@@ -81,7 +81,8 @@ var En = Copy{
 
 	ScanShort:                  "Scan a directory for vulnerabilities",
 	ScanExample:                "vc scan /path/to/directory",
-	ScanPurlsFound:             "Found %d purls",
+	ScanPackagesFound:          "SBOM generated, scanning %d found packages",
+	ScanCvesFound:              "Found %d vulnerabilities in the %d packages",
 	ScanErrorDirectoryRequired: "Error: Directory is required",
 
 	ErrorUnauthorized: "Error: Unauthorized, Try authenticating with: vc auth login",

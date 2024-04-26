@@ -58,7 +58,8 @@ type Copy struct {
 	ScanShort                  string
 	ScanExample                string
 	ScanErrorDirectoryRequired string
-	ScanPurlsFound             string
+	ScanPackagesFound          string
+	ScanCvesFound              string
 
 	ErrorNoToken      string
 	ErrorUnauthorized string
