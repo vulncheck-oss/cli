@@ -7,9 +7,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
+	"github.com/vulncheck-oss/cli/pkg/models"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk"
+	"github.com/vulncheck-oss/sdk/pkg/client"
 )
 
 type Options struct {
@@ -62,6 +64,28 @@ func Command() *cobra.Command {
 				}
 				ui.UpdateProgress(index + 1)
 			}
+
+			result := models.ScanResult{
+				Vulnerabilities: []models.ScanResultVulnerabilities{},
+			}
+
+			for _, vuln := range vulns {
+				nvd2Response, err := session.Connect(config.Token()).GetIndexVulncheckNvd2(sdk.IndexQueryParameters{Cve: vuln.Detection})
+				result.Vulnerabilities = append(result.Vulnerabilities, models.ScanResultVulnerabilities{
+					CVE:               vuln.Detection,
+					CVSSBaseScore:     baseScore(nvd2Response.Data[0]),
+					CVSSTemporalScore: temporalScore(nvd2Response.Data[0]),
+				})
+
+				if err != nil {
+					return err
+				}
+			}
+
+			if err := ui.ScanResults(result.Vulnerabilities); err != nil {
+				return err
+			}
+
 			ui.Info(fmt.Sprintf(i18n.C.ScanCvesFound, len(vulns), len(purls)))
 
 			return nil
@@ -73,4 +97,81 @@ func Command() *cobra.Command {
 
 	return cmd
 
+}
+
+func baseScore(item client.ApiNVD20CVEExtended) string {
+	if item.Metrics == nil {
+		return "n/a"
+	}
+	var score *float32
+	if (item.Metrics.CvssMetricV31 != nil) && (len(*item.Metrics.CvssMetricV31) > 0) {
+		score = (*item.Metrics.CvssMetricV31)[0].CvssData.BaseScore
+	}
+
+	if score == nil && (item.Metrics.CvssMetricV30 != nil) && (len(*item.Metrics.CvssMetricV30) > 0) {
+		score = (*item.Metrics.CvssMetricV30)[0].CvssData.BaseScore
+	}
+
+	if score == nil && (item.Metrics.CvssMetricV2 != nil) && (len(*item.Metrics.CvssMetricV2) > 0) {
+		score = (*item.Metrics.CvssMetricV2)[0].CvssData.BaseScore
+	}
+
+	if score == nil {
+		return "n/a"
+	}
+
+	return formatSingleDecimal(score)
+}
+
+func temporalScore(item client.ApiNVD20CVEExtended) string {
+	if item.Metrics == nil {
+		return "n/a"
+	}
+	var score *float32
+
+	if item.Metrics.CvssMetricV31 != nil && len(*item.Metrics.CvssMetricV31) > 0 {
+		score = (*item.Metrics.CvssMetricV31)[0].CvssData.TemporalScore
+	}
+
+	if score == nil && item.Metrics.TemporalCVSSV31 != nil {
+		score = item.Metrics.TemporalCVSSV31.TemporalScore
+	}
+
+	if score == nil && item.Metrics.TemporalCVSSV31Secondary != nil && len(*item.Metrics.TemporalCVSSV31Secondary) > 0 {
+		score = (*item.Metrics.TemporalCVSSV31Secondary)[0].TemporalScore
+	}
+
+	if score == nil && item.Metrics.CvssMetricV30 != nil && len(*item.Metrics.CvssMetricV30) > 0 {
+		score = (*item.Metrics.CvssMetricV30)[0].CvssData.TemporalScore
+	}
+
+	if score == nil && item.Metrics.TemporalCVSSV30Secondary != nil && len(*item.Metrics.TemporalCVSSV30Secondary) > 0 {
+		score = (*item.Metrics.TemporalCVSSV30Secondary)[0].TemporalScore
+	}
+
+	if score == nil && item.Metrics.TemporalCVSSV30 != nil {
+		score = item.Metrics.TemporalCVSSV30.TemporalScore
+	}
+
+	if score == nil && item.Metrics.CvssMetricV2 != nil && len(*item.Metrics.CvssMetricV2) > 0 {
+		score = (*item.Metrics.CvssMetricV2)[0].CvssData.TemporalScore
+	}
+
+	if score == nil && item.Metrics.TemporalCVSSV2 != nil {
+		score = item.Metrics.TemporalCVSSV2.TemporalScore
+	}
+
+	if score == nil && item.Metrics.TemporalCVSSV2Secondary != nil && len(*item.Metrics.TemporalCVSSV2Secondary) > 0 {
+		score = (*item.Metrics.TemporalCVSSV2Secondary)[0].TemporalScore
+	}
+
+	if score == nil {
+		return "n/a"
+	}
+
+	return formatSingleDecimal(score)
+}
+
+func formatSingleDecimal(value *float32) string {
+	return fmt.Sprintf("%.1f", *value)
 }

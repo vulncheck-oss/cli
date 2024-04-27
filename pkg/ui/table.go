@@ -6,6 +6,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	ltable "github.com/charmbracelet/lipgloss/table"
+	"github.com/vulncheck-oss/cli/pkg/models"
 	"github.com/vulncheck-oss/sdk"
 	"golang.org/x/term"
 	"strings"
@@ -163,6 +164,20 @@ func PurlVulns(vulns []sdk.PurlVulnerability) error {
 
 	for _, vuln := range vulns {
 		t.Row(vuln.Detection, vuln.FixedVersion)
+	}
+
+	fmt.Println(t)
+	return nil
+}
+
+func ScanResults(results []models.ScanResultVulnerabilities) error {
+	t := ltable.New().
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
+		Headers("CVE", "CVSS Base Score", "CVSS Temporal Score").
+		Width(TermWidth())
+
+	for _, result := range results {
+		t.Row(result.CVE, result.CVSSBaseScore, result.CVSSTemporalScore)
 	}
 
 	fmt.Println(t)
