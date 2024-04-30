@@ -83,6 +83,7 @@ var En = Copy{
 	ScanExample:                "vc scan /path/to/directory",
 	ScanPackagesFound:          "SBOM generated, scanning %d found packages",
 	ScanCvesFound:              "Collecting details of %d vulnerabilities found in the %d packages",
+	ScanNoCvesFound:            "No vulnerabilities found in the %d packages",
 	ScanErrorDirectoryRequired: "Error: Directory is required",
 
 	ErrorUnauthorized: "Error: Unauthorized, Try authenticating with: vc auth login",

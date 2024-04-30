@@ -60,6 +60,7 @@ type Copy struct {
 	ScanErrorDirectoryRequired string
 	ScanPackagesFound          string
 	ScanCvesFound              string
+	ScanNoCvesFound            string
 
 	ErrorNoToken      string
 	ErrorUnauthorized string

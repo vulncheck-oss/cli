@@ -48,11 +48,12 @@ func Command() *cobra.Command {
 				purls = append(purls, p.PURL)
 			}
 
-			ui.Info(fmt.Sprintf(i18n.C.ScanPackagesFound, len(purls)))
+			if !opts.Json && !opts.Annotate {
+				ui.Info(fmt.Sprintf(i18n.C.ScanPackagesFound, len(purls)))
+				ui.NewProgress(len(purls))
+			}
 
-			ui.NewProgress(len(purls))
-
-			var vulns []sdk.PurlVulnerability
+			var vulns []models.ScanResultVulnerabilities
 
 			for index, purl := range purls {
 				response, err := session.Connect(config.Token()).GetPurl(purl)
@@ -60,9 +61,19 @@ func Command() *cobra.Command {
 					return err
 				}
 				if len(response.Data.Vulnerabilities) > 0 {
-					vulns = append(vulns, response.Data.Vulnerabilities...)
+					for _, vuln := range response.Data.Vulnerabilities {
+						vulns = append(vulns, models.ScanResultVulnerabilities{
+							Name:          response.PurlMeta().Name,
+							Version:       response.PurlMeta().Version,
+							CVE:           vuln.Detection,
+							FixedVersions: vuln.FixedVersion,
+						})
+
+					}
 				}
-				ui.UpdateProgress(index + 1)
+				if !opts.Json && !opts.Annotate {
+					ui.UpdateProgress(index + 1)
+				}
 			}
 
 			result := models.ScanResult{
@@ -70,11 +81,14 @@ func Command() *cobra.Command {
 			}
 
 			for _, vuln := range vulns {
-				nvd2Response, err := session.Connect(config.Token()).GetIndexVulncheckNvd2(sdk.IndexQueryParameters{Cve: vuln.Detection})
+				nvd2Response, err := session.Connect(config.Token()).GetIndexVulncheckNvd2(sdk.IndexQueryParameters{Cve: vuln.CVE})
 				result.Vulnerabilities = append(result.Vulnerabilities, models.ScanResultVulnerabilities{
-					CVE:               vuln.Detection,
+					CVE:               vuln.CVE,
+					Name:              vuln.Name,
+					Version:           vuln.Version,
 					CVSSBaseScore:     baseScore(nvd2Response.Data[0]),
 					CVSSTemporalScore: temporalScore(nvd2Response.Data[0]),
+					FixedVersions:     vuln.FixedVersions,
 				})
 
 				if err != nil {
@@ -82,11 +96,21 @@ func Command() *cobra.Command {
 				}
 			}
 
-			if err := ui.ScanResults(result.Vulnerabilities); err != nil {
-				return err
+			if opts.Json {
+				ui.Json(result)
+				return nil
+			}
+
+			if len(vulns) == 0 {
+				ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
+				return nil
 			}
 
 			ui.Info(fmt.Sprintf(i18n.C.ScanCvesFound, len(vulns), len(purls)))
+
+			if err := ui.ScanResults(result.Vulnerabilities); err != nil {
+				return err
+			}
 
 			return nil
 		},
