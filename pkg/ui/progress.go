@@ -50,7 +50,7 @@ func NewProgress(total int) {
 	}()
 
 	go func() {
-		if err := p.Start(); err != nil {
+		if _, err := p.Run(); err != nil {
 			fmt.Fprintf(os.Stderr, "Could not start progress: %v", err)
 			os.Exit(1)
 		}

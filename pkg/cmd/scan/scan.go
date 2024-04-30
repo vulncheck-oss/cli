@@ -42,6 +42,10 @@ func Command() *cobra.Command {
 
 			sbom, err := syft.CreateSBOM(context.Background(), src, nil)
 
+			if err != nil {
+				return err
+			}
+
 			var purls []string
 
 			for p := range sbom.Artifacts.Packages.Enumerate() {
