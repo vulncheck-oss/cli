@@ -30,9 +30,10 @@ type Copy struct {
 	BrowseIndicesSearch string
 	BrowseIndicesFull   string
 
-	IndexShort       string
-	IndexListShort   string
-	IndexBrowseShort string
+	IndexShort         string
+	IndexListShort     string
+	IndexBrowseShort   string
+	IndexErrorRequired string
 
 	BackupShort            string
 	BackupUrlShort         string
@@ -41,24 +42,28 @@ type Copy struct {
 	BackupDownloadProgress string
 	BackupDownloadComplete string
 
-	CpeShort     string
-	CpeExample   string
-	CpeNoCves    string
-	CpeCvesFound string
+	CpeShort               string
+	CpeExample             string
+	CpeNoCves              string
+	CpeCvesFound           string
+	CpeErrorSchemeRequired string
 
-	PurlShort      string
-	PurlExample    string
-	PurlNoVulns    string
-	PurlVulnFound  string
-	PurlVulnsFound string
+	PurlShort               string
+	PurlExample             string
+	PurlNoVulns             string
+	PurlVulnFound           string
+	PurlVulnsFound          string
+	PurlErrorSchemeRequired string
+
+	ScanShort                  string
+	ScanExample                string
+	ScanErrorDirectoryRequired string
+	ScanPackagesFound          string
+	ScanCvesFound              string
+	ScanNoCvesFound            string
 
 	ErrorNoToken      string
 	ErrorUnauthorized string
-
-	ErrorIndexRequired string
-
-	ErrorCpeSchemeRequired  string
-	ErrorPurlSchemeRequired string
 }
 
 var C Copy

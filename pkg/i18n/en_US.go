@@ -52,9 +52,10 @@ var En = Copy{
 	BrowseIndicesSearch: "Listing %d indices searching for \"%s\"",
 	BrowseIndicesFull:   "Listing %d indices",
 
-	IndexShort:       "Browse or list an index",
-	IndexListShort:   "List documents of a specified index",
-	IndexBrowseShort: "Browse documents of an index interactively",
+	IndexShort:         "Browse or list an index",
+	IndexListShort:     "List documents of a specified index",
+	IndexBrowseShort:   "Browse documents of an index interactively",
+	IndexErrorRequired: "index name is required",
 
 	BackupShort:         "Download a backup of a specified index",
 	BackupUrlShort:      "Get the temporary signed URL of the backup of an index",
@@ -64,21 +65,27 @@ var En = Copy{
 	BackupDownloadProgress: "Downloading backup as %s",
 	BackupDownloadComplete: "Backup downloaded successfully",
 
-	CpeShort:     "Look up a specified cpe for any related CVEs",
-	CpeExample:   "vc cpe \"%s\"",
-	CpeNoCves:    "No CVEs were found for cpe %s",
-	CpeCvesFound: "%d CVEs were found for cpe %s",
+	CpeShort:               "Look up a specified cpe for any related CVEs",
+	CpeExample:             "vc cpe \"%s\"",
+	CpeNoCves:              "No CVEs were found for cpe %s",
+	CpeCvesFound:           "%d CVEs were found for cpe %s",
+	CpeErrorSchemeRequired: "cpe scheme is required",
 
-	PurlShort:   "Look up a specified PURL for any CVES or vulnerabilities",
-	PurlExample: "vc purl \"%s\"",
+	PurlShort:               "Look up a specified PURL for any CVES or vulnerabilities",
+	PurlExample:             "vc purl \"%s\"",
+	PurlErrorSchemeRequired: "purl scheme is required",
 
 	PurlNoVulns:    "No Vulnerabilities were found for purl %s",
 	PurlVulnFound:  "1 Vulnerability were found for purl %s",
 	PurlVulnsFound: "%d Vulnerabilities were found for purl %s",
 
-	ErrorUnauthorized:       "Error: Unauthorized, Try authenticating with: vc auth login",
-	ErrorNoToken:            "No token found. Please run `vc auth login` to authenticate or populate the environment variable `VC_TOKEN`.",
-	ErrorIndexRequired:      "index name is required",
-	ErrorCpeSchemeRequired:  "cpe scheme is required",
-	ErrorPurlSchemeRequired: "purl scheme is required",
+	ScanShort:                  "Scan a directory for vulnerabilities",
+	ScanExample:                "vc scan /path/to/directory",
+	ScanPackagesFound:          "SBOM generated, scanning %d found packages",
+	ScanCvesFound:              "Collecting details of %d vulnerabilities found in the %d packages",
+	ScanNoCvesFound:            "No vulnerabilities found in the %d packages",
+	ScanErrorDirectoryRequired: "Error: Directory is required",
+
+	ErrorUnauthorized: "Error: Unauthorized, Try authenticating with: vc auth login",
+	ErrorNoToken:      "No token found. Please run `vc auth login` to authenticate or populate the environment variable `VC_TOKEN`.",
 }

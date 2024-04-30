@@ -33,7 +33,7 @@ func Command() *cobra.Command {
 		Short: i18n.C.IndexListShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
-				return ui.Error(i18n.C.ErrorIndexRequired)
+				return ui.Error(i18n.C.IndexErrorRequired)
 			}
 
 			// Create a new IndexQueryParameters struct and set the values from the flags
@@ -57,7 +57,7 @@ func Command() *cobra.Command {
 		Short: i18n.C.IndexBrowseShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
-				return ui.Error(i18n.C.ErrorIndexRequired)
+				return ui.Error(i18n.C.IndexErrorRequired)
 			}
 
 			// Create a new IndexQueryParameters struct and set the values from the flags

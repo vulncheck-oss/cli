@@ -57,7 +57,7 @@ func Command() *cobra.Command {
 		Short: i18n.C.BackupDownloadShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
-				return ui.Error(i18n.C.ErrorIndexRequired)
+				return ui.Error(i18n.C.IndexErrorRequired)
 			}
 			response, err := session.Connect(config.Token()).GetIndexBackup(args[0])
 			if err != nil {

@@ -24,7 +24,7 @@ func Command() *cobra.Command {
 		Example: fmt.Sprintf(i18n.C.PurlExample, "pkg:hackage/aeson@0.3.2.8"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
-				return ui.Error(i18n.C.ErrorPurlSchemeRequired)
+				return ui.Error(i18n.C.PurlErrorSchemeRequired)
 			}
 			response, err := session.Connect(config.Token()).GetPurl(args[0])
 			if err != nil {

@@ -25,7 +25,7 @@ func Command() *cobra.Command {
 		Example: fmt.Sprintf(i18n.C.CpeExample, "cpe:2.3:a:sap:businessobjects_business_intelligence_platform:4.2:-:*"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
-				return ui.Error(i18n.C.ErrorCpeSchemeRequired)
+				return ui.Error(i18n.C.CpeErrorSchemeRequired)
 			}
 			response, err := session.Connect(config.Token()).GetCpe(args[0])
 			if err != nil {
