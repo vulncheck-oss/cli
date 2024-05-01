@@ -76,8 +76,11 @@ func SaveToken(token string) error {
 	if err != nil {
 		return ui.Error("Token verification failed: %v", err)
 	}
-	if err := config.SaveToken(token); err != nil {
-		return ui.Error("Failed to save token: %v", err)
+
+	if !config.TokenFromEnv() {
+		if err := config.SaveToken(token); err != nil {
+			return ui.Error("Failed to save token: %v", err)
+		}
 	}
 	ui.Success(fmt.Sprintf("Authenticated as %s (%s)", res.Data.Name, res.Data.Email))
 	return nil

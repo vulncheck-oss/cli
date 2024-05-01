@@ -77,6 +77,10 @@ func HasConfig() bool {
 	return err == nil
 }
 
+func TokenFromEnv() bool {
+	return ValidToken(os.Getenv("VC_TOKEN"))
+}
+
 func Token() string {
 
 	token := os.Getenv("VC_TOKEN")
