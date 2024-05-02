@@ -12,6 +12,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk"
 	"github.com/vulncheck-oss/sdk/pkg/client"
+	"strings"
 )
 
 type Options struct {
@@ -49,7 +50,9 @@ func Command() *cobra.Command {
 			var purls []string
 
 			for p := range sbom.Artifacts.Packages.Enumerate() {
-				purls = append(purls, p.PURL)
+				if !strings.HasPrefix(p.PURL, "pkg:github") {
+					purls = append(purls, p.PURL)
+				}
 			}
 
 			if !opts.Json && !opts.Annotate {
@@ -62,7 +65,7 @@ func Command() *cobra.Command {
 			for index, purl := range purls {
 				response, err := session.Connect(config.Token()).GetPurl(purl)
 				if err != nil {
-					return err
+					return fmt.Errorf("error fetching purl %s: %w", purl, err)
 				}
 				if len(response.Data.Vulnerabilities) > 0 {
 					for _, vuln := range response.Data.Vulnerabilities {

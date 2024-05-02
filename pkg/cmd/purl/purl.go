@@ -27,8 +27,9 @@ func Command() *cobra.Command {
 				return ui.Error(i18n.C.PurlErrorSchemeRequired)
 			}
 			response, err := session.Connect(config.Token()).GetPurl(args[0])
+
 			if err != nil {
-				return err
+				return fmt.Errorf("error fetching purl %s: %w", args[0], err)
 			}
 
 			if opts.Json {
