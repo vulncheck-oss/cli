@@ -10,7 +10,7 @@ func authHelp() string {
 		return heredoc.Doc(`
 			vc: To use VulnCheck CLI in a GitHub Actions workflow, set the VC_TOKEN environment variable. Example:
 			  env:
-			    VC_TOKEN: ${{ secrets.vulncheck_token }}
+			    VC_TOKEN: ${{ secrets.VC_TOKEN }}
 		`)
 	}
 
