@@ -50,7 +50,7 @@ func Command() *cobra.Command {
 			var purls []string
 
 			for p := range sbom.Artifacts.Packages.Enumerate() {
-				if !strings.HasPrefix(p.PURL, "pkg:github") {
+				if p.PURL != "" && !strings.HasPrefix(p.PURL, "pkg:github") {
 					purls = append(purls, p.PURL)
 				}
 			}
