@@ -16,17 +16,18 @@ import (
 	"github.com/vulncheck-oss/sdk"
 	"github.com/vulncheck-oss/sdk/pkg/client"
 	"strings"
+	"time"
 )
 
 type Options struct {
-	Json     bool
-	Annotate bool
+	File     bool
+	FileName string
 }
 
 func Command() *cobra.Command {
 	opts := &Options{
-		Json:     false,
-		Annotate: false,
+		File:     false,
+		FileName: "output.json",
 	}
 
 	cmd := &cobra.Command{
@@ -42,31 +43,36 @@ func Command() *cobra.Command {
 			var purls []string
 			var vulns *[]models.ScanResultVulnerabilities
 
-			tasks := taskin.New(taskin.Tasks{
+			var output models.ScanResult
+
+			startTime := time.Now()
+
+			tasks := taskin.Tasks{
 				{
-					Title: "Generating SBOM",
+					Title: i18n.C.ScanSbomStart,
 					Task: func(t *taskin.Task) error {
 						result, err := getSbom(args[0])
 						if err != nil {
 							return err
 						}
-						t.Title = "SBOM created"
+						t.Title = i18n.C.ScanSbomEnd
 						sbm = result
 						return nil
 					},
 				},
 				{
-					Title: "Extracting PURLs",
+					Title: i18n.C.ScanExtractPurlStart,
 					Task: func(t *taskin.Task) error {
 						purls = getPurls(sbm)
-						t.Title = fmt.Sprintf("%d PURLs extracted", len(purls))
+						t.Title = fmt.Sprintf(i18n.C.ScanExtractPurlEnd, len(purls))
 						return nil
 					},
 				},
 				{
-					Title: "Scanning PURLs for vulnerabilities",
+					Title: i18n.C.ScanScanPurlStart,
 					Task: func(t *taskin.Task) error {
 						results, err := getVulns(purls, func(cur int, total int) {
+							t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgress, cur, total)
 							t.Progress(cur, total)
 						})
 						if err != nil {
@@ -74,52 +80,72 @@ func Command() *cobra.Command {
 						}
 						vulns = results
 
-						t.Title = fmt.Sprintf("%d vulnerabilities found", len(*vulns))
+						t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(*vulns))
 						return nil
 					},
 				},
 				{
-					Title: "Fetching vulnerability metadata",
+					Title: i18n.C.ScanVulnMetaStart,
 					Task: func(t *taskin.Task) error {
 						results, err := getMeta(*vulns)
 						if err != nil {
 							return err
 						}
 						*vulns = results
-						t.Title = "Vulnerability metadata fetched"
+						t.Title = i18n.C.ScanVulnMetaEnd
+						output = models.ScanResult{
+							Vulnerabilities: *vulns,
+						}
 						return nil
 					},
 				},
-			}, taskin.Config{
+			}
+
+			if opts.File {
+				tasks = append(tasks, taskin.Task{
+					Title: fmt.Sprintf("Saving results to %s", opts.FileName),
+					Task: func(t *taskin.Task) error {
+						if err := ui.JsonFile(output, opts.FileName); err != nil {
+							return err
+						}
+						t.Title = fmt.Sprintf("Results saved to %s", opts.FileName)
+						return nil
+					},
+				})
+			}
+
+			runners := taskin.New(tasks, taskin.Config{
 				ProgressOptions: []progress.Option{
 					progress.WithScaledGradient("#6667AB", "#34D399"),
 					progress.WithWidth(20),
+					progress.WithoutPercentage(),
 				},
 			})
 
-			if err := tasks.Run(); err != nil {
+			if err := runners.Run(); err != nil {
 				return err
 			}
 
 			if len(*vulns) == 0 {
 				ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
-				return nil
 			}
 
-			result := models.ScanResult{
-				Vulnerabilities: *vulns,
+			if len(*vulns) > 0 {
+				if err := ui.ScanResults(output.Vulnerabilities); err != nil {
+					return err
+				}
 			}
 
-			if err := ui.ScanResults(result.Vulnerabilities); err != nil {
-				return err
-			}
+			elapsedTime := time.Since(startTime)
+
+			ui.Info(fmt.Sprintf(i18n.C.ScanBenchmark, elapsedTime))
 
 			return nil
 		},
 	}
 
-	cmd.Flags().BoolVarP(&opts.Json, "json", "j", false, "Output as JSON")
-	cmd.Flags().BoolVarP(&opts.Annotate, "annotate", "a", false, "Output as Github Annotations")
+	cmd.Flags().BoolVarP(&opts.File, "file", "f", false, i18n.C.FlagSaveResults)
+	cmd.Flags().StringVarP(&opts.FileName, "file-name", "n", "output.json", i18n.C.FlagSpecifyFile)
 
 	return cmd
 

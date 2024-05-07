@@ -22,6 +22,11 @@ type Copy struct {
 	AuthLoginToken string
 	AuthLoginWeb   string
 
+	FlagSaveResults    string
+	FlagSpecifyFile    string
+	SavingResultsStart string
+	SavingResultsEnd   string
+
 	IndicesShort string
 
 	ListIndicesShort  string
@@ -60,9 +65,17 @@ type Copy struct {
 	ScanShort                  string
 	ScanExample                string
 	ScanErrorDirectoryRequired string
-	ScanPackagesFound          string
-	ScanCvesFound              string
+	ScanSbomStart              string
+	ScanSbomEnd                string
+	ScanExtractPurlStart       string
+	ScanExtractPurlEnd         string
+	ScanScanPurlStart          string
+	ScanScanPurlProgress       string
+	ScanScanPurlEnd            string
+	ScanVulnMetaStart          string
+	ScanVulnMetaEnd            string
 	ScanNoCvesFound            string
+	ScanBenchmark              string
 
 	ErrorNoToken      string
 	ErrorUnauthorized string
@@ -110,6 +123,11 @@ var En = Copy{
 	AuthLogoutErrorFailed:       "Failed to remove token",
 	AuthLogoutErrorInvalidToken: "Token was invalid, removing from config",
 
+	FlagSaveResults:    "Save Results as a file",
+	FlagSpecifyFile:    "Specify the file to save the results to",
+	SavingResultsStart: "Saving Results to %s",
+	SavingResultsEnd:   "Results saved to %s",
+
 	IndicesShort: "View indices",
 
 	ListIndicesShort:  "List indices",
@@ -147,11 +165,22 @@ var En = Copy{
 	PurlVulnFound:  "1 Vulnerability were found for purl %s",
 	PurlVulnsFound: "%d Vulnerabilities were found for purl %s",
 
-	ScanShort:                  "Scan a directory for vulnerabilities",
-	ScanExample:                "vc scan /path/to/directory",
-	ScanPackagesFound:          "SBOM generated, scanning %d found packages",
-	ScanCvesFound:              "Collecting details of %d vulnerabilities found in the %d packages",
+	ScanShort:   "Scan a directory for vulnerabilities",
+	ScanExample: "vc scan /path/to/directory",
+
+	ScanSbomStart:        "Generating SBOM",
+	ScanSbomEnd:          "SBOM created",
+	ScanExtractPurlStart: "Extracting PURLs",
+	ScanExtractPurlEnd:   "%d PURLs extracted",
+	ScanScanPurlStart:    "Scanning PURLs",
+	ScanScanPurlProgress: "Scanning PURLs [%d/%d]",
+	ScanScanPurlEnd:      "Scanning PURLs: %d vulns found",
+
+	ScanVulnMetaStart: "Fetching vulnerability metadata",
+	ScanVulnMetaEnd:   "Vulnerability metadata fetched",
+
 	ScanNoCvesFound:            "No vulnerabilities found in the %d packages",
+	ScanBenchmark:              "Scan completed in %s",
 	ScanErrorDirectoryRequired: "Error: Directory is required",
 
 	ErrorUnauthorized: "Error: Unauthorized, Try authenticating with: vc auth login",
