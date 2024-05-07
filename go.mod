@@ -11,6 +11,7 @@ require (
 	github.com/charmbracelet/huh v0.3.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20240404200615-66118a2cb3cf
 	github.com/charmbracelet/lipgloss v0.10.0
+	github.com/fumeapp/taskin v0.1.2
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
@@ -54,7 +55,6 @@ require (
 	github.com/charmbracelet/harmonica v0.2.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/containerd/cgroups v1.1.0 // indirect
-	github.com/containerd/console v1.0.4 // indirect
 	github.com/containerd/containerd v1.7.11 // indirect
 	github.com/containerd/continuity v0.4.2 // indirect
 	github.com/containerd/fifo v1.1.0 // indirect
@@ -83,7 +83,6 @@ require (
 	github.com/felixge/fgprof v0.9.3 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/fumeapp/taskin v0.1.2 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/getkin/kin-openapi v0.124.0 // indirect
 	github.com/github/go-spdx/v2 v2.2.0 // indirect
