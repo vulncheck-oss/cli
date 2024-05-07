@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/charmbracelet/lipgloss"
+	"os"
 )
 
 var format = "%s %s\n"
@@ -54,6 +55,20 @@ func Json(data interface{}) {
 		panic(err)
 	}
 	fmt.Println(string(marshaled))
+}
+
+func JsonFile(data interface{}, filename string) error {
+	marshaled, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(filename, marshaled, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type FlagError struct {

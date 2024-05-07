@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/anchore/syft/syft"
+	"github.com/anchore/syft/syft/sbom"
+	"github.com/charmbracelet/bubbles/progress"
+	"github.com/fumeapp/taskin"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
@@ -13,17 +16,18 @@ import (
 	"github.com/vulncheck-oss/sdk"
 	"github.com/vulncheck-oss/sdk/pkg/client"
 	"strings"
+	"time"
 )
 
 type Options struct {
-	Json     bool
-	Annotate bool
+	File     bool
+	FileName string
 }
 
 func Command() *cobra.Command {
 	opts := &Options{
-		Json:     false,
-		Annotate: false,
+		File:     false,
+		FileName: "output.json",
 	}
 
 	cmd := &cobra.Command{
@@ -35,99 +39,188 @@ func Command() *cobra.Command {
 				return ui.Error(i18n.C.ScanErrorDirectoryRequired)
 			}
 
-			src, err := syft.GetSource(context.Background(), args[0], nil)
-
-			if err != nil {
-				return err
-			}
-
-			sbom, err := syft.CreateSBOM(context.Background(), src, nil)
-
-			if err != nil {
-				return err
-			}
-
+			var sbm *sbom.SBOM
 			var purls []string
+			var vulns *[]models.ScanResultVulnerabilities
 
-			for p := range sbom.Artifacts.Packages.Enumerate() {
-				if p.PURL != "" && !strings.HasPrefix(p.PURL, "pkg:github") {
-					purls = append(purls, p.PURL)
-				}
-			}
+			var output models.ScanResult
 
-			if !opts.Json && !opts.Annotate {
-				ui.Info(fmt.Sprintf(i18n.C.ScanPackagesFound, len(purls)))
-				ui.NewProgress(len(purls))
-			}
+			startTime := time.Now()
 
-			var vulns []models.ScanResultVulnerabilities
-
-			for index, purl := range purls {
-				response, err := session.Connect(config.Token()).GetPurl(purl)
-				if err != nil {
-					return fmt.Errorf("error fetching purl %s: %w", purl, err)
-				}
-				if len(response.Data.Vulnerabilities) > 0 {
-					for _, vuln := range response.Data.Vulnerabilities {
-						vulns = append(vulns, models.ScanResultVulnerabilities{
-							Name:          response.PurlMeta().Name,
-							Version:       response.PurlMeta().Version,
-							CVE:           vuln.Detection,
-							FixedVersions: vuln.FixedVersion,
+			tasks := taskin.Tasks{
+				{
+					Title: i18n.C.ScanSbomStart,
+					Task: func(t *taskin.Task) error {
+						result, err := getSbom(args[0])
+						if err != nil {
+							return err
+						}
+						t.Title = i18n.C.ScanSbomEnd
+						sbm = result
+						return nil
+					},
+				},
+				{
+					Title: i18n.C.ScanExtractPurlStart,
+					Task: func(t *taskin.Task) error {
+						purls = getPurls(sbm)
+						t.Title = fmt.Sprintf(i18n.C.ScanExtractPurlEnd, len(purls))
+						return nil
+					},
+				},
+				{
+					Title: i18n.C.ScanScanPurlStart,
+					Task: func(t *taskin.Task) error {
+						results, err := getVulns(purls, func(cur int, total int) {
+							t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgress, cur, total)
+							t.Progress(cur, total)
 						})
+						if err != nil {
+							return err
+						}
+						vulns = results
 
-					}
-				}
-				if !opts.Json && !opts.Annotate {
-					ui.UpdateProgress(index + 1)
-				}
+						t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(*vulns))
+						return nil
+					},
+				},
+				{
+					Title: i18n.C.ScanVulnMetaStart,
+					Task: func(t *taskin.Task) error {
+						results, err := getMeta(*vulns)
+						if err != nil {
+							return err
+						}
+						*vulns = results
+						t.Title = i18n.C.ScanVulnMetaEnd
+						output = models.ScanResult{
+							Vulnerabilities: *vulns,
+						}
+						return nil
+					},
+				},
 			}
 
-			result := models.ScanResult{
-				Vulnerabilities: []models.ScanResultVulnerabilities{},
-			}
-
-			for _, vuln := range vulns {
-				nvd2Response, err := session.Connect(config.Token()).GetIndexVulncheckNvd2(sdk.IndexQueryParameters{Cve: vuln.CVE})
-				result.Vulnerabilities = append(result.Vulnerabilities, models.ScanResultVulnerabilities{
-					CVE:               vuln.CVE,
-					Name:              vuln.Name,
-					Version:           vuln.Version,
-					CVSSBaseScore:     baseScore(nvd2Response.Data[0]),
-					CVSSTemporalScore: temporalScore(nvd2Response.Data[0]),
-					FixedVersions:     vuln.FixedVersions,
+			if opts.File {
+				tasks = append(tasks, taskin.Task{
+					Title: fmt.Sprintf("Saving results to %s", opts.FileName),
+					Task: func(t *taskin.Task) error {
+						if err := ui.JsonFile(output, opts.FileName); err != nil {
+							return err
+						}
+						t.Title = fmt.Sprintf("Results saved to %s", opts.FileName)
+						return nil
+					},
 				})
+			}
 
-				if err != nil {
+			runners := taskin.New(tasks, taskin.Config{
+				ProgressOptions: []progress.Option{
+					progress.WithScaledGradient("#6667AB", "#34D399"),
+					progress.WithWidth(20),
+					progress.WithoutPercentage(),
+				},
+			})
+
+			if err := runners.Run(); err != nil {
+				return err
+			}
+
+			if len(*vulns) == 0 {
+				ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
+			}
+
+			if len(*vulns) > 0 {
+				if err := ui.ScanResults(output.Vulnerabilities); err != nil {
 					return err
 				}
 			}
 
-			if opts.Json {
-				ui.Json(result)
-				return nil
-			}
+			elapsedTime := time.Since(startTime)
 
-			if len(vulns) == 0 {
-				ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
-				return nil
-			}
-
-			ui.Info(fmt.Sprintf(i18n.C.ScanCvesFound, len(vulns), len(purls)))
-
-			if err := ui.ScanResults(result.Vulnerabilities); err != nil {
-				return err
-			}
+			ui.Info(fmt.Sprintf(i18n.C.ScanBenchmark, elapsedTime))
 
 			return nil
 		},
 	}
 
-	cmd.Flags().BoolVarP(&opts.Json, "json", "j", false, "Output as JSON")
-	cmd.Flags().BoolVarP(&opts.Annotate, "annotate", "a", false, "Output as Github Annotations")
+	cmd.Flags().BoolVarP(&opts.File, "file", "f", false, i18n.C.FlagSaveResults)
+	cmd.Flags().StringVarP(&opts.FileName, "file-name", "n", "output.json", i18n.C.FlagSpecifyFile)
 
 	return cmd
 
+}
+
+func getSbom(dir string) (*sbom.SBOM, error) {
+	src, err := syft.GetSource(context.Background(), dir, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	sbm, err := syft.CreateSBOM(context.Background(), src, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return sbm, nil
+}
+
+func getPurls(sbm *sbom.SBOM) []string {
+
+	var purls []string
+
+	for p := range sbm.Artifacts.Packages.Enumerate() {
+		if p.PURL != "" && !strings.HasPrefix(p.PURL, "pkg:github") {
+			purls = append(purls, p.PURL)
+		}
+	}
+
+	return purls
+}
+
+func getVulns(purls []string, iterator func(cur int, total int)) (*[]models.ScanResultVulnerabilities, error) {
+
+	var vulns []models.ScanResultVulnerabilities
+
+	i := 0
+	for _, purl := range purls {
+		i++
+		response, err := session.Connect(config.Token()).GetPurl(purl)
+		if err != nil {
+			return nil, fmt.Errorf("error fetching purl %s: %v", purl, err)
+		}
+		if len(response.Data.Vulnerabilities) > 0 {
+			for _, vuln := range response.Data.Vulnerabilities {
+				vulns = append(vulns, models.ScanResultVulnerabilities{
+					Name:          response.PurlMeta().Name,
+					Version:       response.PurlMeta().Version,
+					CVE:           vuln.Detection,
+					FixedVersions: vuln.FixedVersion,
+				})
+
+			}
+		}
+		iterator(i, len(purls))
+	}
+
+	return &vulns, nil
+}
+
+func getMeta(vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulnerabilities, error) {
+	for i, vuln := range vulns {
+		nvd2Response, err := session.Connect(config.Token()).GetIndexVulncheckNvd2(sdk.IndexQueryParameters{Cve: vuln.CVE})
+
+		if err != nil {
+			return nil, err
+		}
+
+		vulns[i].CVSSBaseScore = baseScore(nvd2Response.Data[0])
+		vulns[i].CVSSTemporalScore = temporalScore(nvd2Response.Data[0])
+
+	}
+	return vulns, nil
 }
 
 func baseScore(item client.ApiNVD20CVEExtended) string {
