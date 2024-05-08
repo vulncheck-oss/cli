@@ -17,12 +17,6 @@ var Environments = []Environment{
 		WEB:    "https://vulncheck.com",
 	},
 	{
-		Name:   "staging",
-		Values: []string{"staging", "stage"},
-		API:    "https://api.staging.vulncheck.com",
-		WEB:    "https://staging.vulncheck.com",
-	},
-	{
 		Name:   "development",
 		Values: []string{"development", "dev", "local"},
 		API:    "http://localhost:8000",
