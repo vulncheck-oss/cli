@@ -41,7 +41,7 @@ func CmdWeb(cmd *cobra.Command, args []string) error {
 		Style(ui.Pantone).
 		Title(" Awaiting Verification...").Action(func() {
 
-		if err := browser.OpenURL(fmt.Sprintf("%s/inquiry/new", environment.Env.WEB)); err != nil {
+		if err := browser.OpenURL(fmt.Sprintf("%s/inquiry", environment.Env.WEB)); err != nil {
 			errorResponse = err
 			return
 		}
