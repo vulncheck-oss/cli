@@ -35,12 +35,12 @@ import (
 )
 
 var tasks = map[string]func(string) error{
-	"bin/vc": func(exe string) error {
+	"bin/vci": func(exe string) error {
 		ldflags := os.Getenv("GO_LDFLAGS")
 		ldflags = fmt.Sprintf("-X github.com/vulncheck-oss/cli/pkg/build.Version=%s %s", version(), ldflags)
 		ldflags = fmt.Sprintf("-X github.com/vulncheck-oss/cli/pkg/build.Date=%s %s", date(), ldflags)
 
-		return run("go", "build", "-trimpath", "-ldflags", ldflags, "-o", exe, "./cmd/vc")
+		return run("go", "build", "-trimpath", "-ldflags", ldflags, "-o", exe, "./cmd/vci")
 	},
 	"manpages": func(_ string) error {
 		return run("go", "run", "./cmd/gen-docs", "--man-page", "--doc-path", "./share/man/man1/")
@@ -64,9 +64,9 @@ func main() {
 
 	if len(args) < 2 {
 		if isWindowsTarget() {
-			args = append(args, filepath.Join("bin", "vc.exe"))
+			args = append(args, filepath.Join("bin", "vci.exe"))
 		} else {
-			args = append(args, "bin/vc")
+			args = append(args, "bin/vci")
 		}
 	}
 

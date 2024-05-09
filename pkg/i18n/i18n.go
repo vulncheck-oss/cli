@@ -92,7 +92,7 @@ var En = Copy{
 	InteractiveOnly: "This command is interactive and cannot run in a CI environment, please try %s instead",
 	RootLong:        "Work seamlessly with the VulnCheck API.",
 
-	AuthShort:       "Authenticate vc with the VulnCheck portal",
+	AuthShort:       "Authenticate vci with the VulnCheck portal",
 	AuthStatusShort: "Check authentication status",
 	AuthStatusLong:  "Check if you're currently authenticated and if so, display the account information",
 	AuthLoginShort:  "Authenticate with the VulnCheck portal",
@@ -103,15 +103,15 @@ var En = Copy{
 
 			Alternatively, use %[1]stoken%[1]s to specify an issued token directly.
 
-			Alternatively, vc will use the authentication token found in the %[1]sVC_TOKEN%[1]s environment variable.
-			This method is most suitable for "headless" use of vc such as in automation.
+			Alternatively, vci will use the authentication token found in the %[1]sVC_TOKEN%[1]s environment variable.
+			This method is most suitable for "headless" use of vci such as in automation.
 		`, "`"),
 	AuthLoginExample: heredoc.Doc(`
 			# Start interactive authentication
-			$ vc auth login
+			$ vci auth login
 
 			# Authenticate with vulncheck.com by passing in a token
-			$ vc auth login token vulncheck_******************
+			$ vci auth login token vulncheck_******************
 	`),
 	AuthLoginErrorCI: "This command is interactive and cannot be run in a CI environment, use the VC_TOKEN environment variable instead",
 
@@ -152,13 +152,13 @@ var En = Copy{
 	BackupDownloadComplete: "Backup downloaded successfully",
 
 	CpeShort:               "Look up a specified cpe for any related CVEs",
-	CpeExample:             "vc cpe \"%s\"",
+	CpeExample:             "vci cpe \"%s\"",
 	CpeNoCves:              "No CVEs were found for cpe %s",
 	CpeCvesFound:           "%d CVEs were found for cpe %s",
 	CpeErrorSchemeRequired: "cpe scheme is required",
 
 	PurlShort:               "Look up a specified PURL for any CVES or vulnerabilities",
-	PurlExample:             "vc purl \"%s\"",
+	PurlExample:             "vci purl \"%s\"",
 	PurlErrorSchemeRequired: "purl scheme is required",
 
 	PurlNoVulns:    "No Vulnerabilities were found for purl %s",
@@ -166,7 +166,7 @@ var En = Copy{
 	PurlVulnsFound: "%d Vulnerabilities were found for purl %s",
 
 	ScanShort:   "Scan a directory for vulnerabilities",
-	ScanExample: "vc scan /path/to/directory",
+	ScanExample: "vci scan /path/to/directory",
 
 	ScanSbomStart:        "Generating SBOM",
 	ScanSbomEnd:          "SBOM created",
@@ -183,8 +183,8 @@ var En = Copy{
 	ScanBenchmark:              "Scan completed in %s",
 	ScanErrorDirectoryRequired: "Error: Directory is required",
 
-	ErrorUnauthorized: "Error: Unauthorized, Try authenticating with: vc auth login",
-	ErrorNoToken:      "No token found. Please run `vc auth login` to authenticate or populate the environment variable `VC_TOKEN`.",
+	ErrorUnauthorized: "Error: Unauthorized, Try authenticating with: vci auth login",
+	ErrorNoToken:      "No token found. Please run `vci auth login` to authenticate or populate the environment variable `VC_TOKEN`.",
 }
 
 func Init() {
