@@ -35,13 +35,13 @@ func (ae *AuthError) Error() string {
 func NewCmdRoot() *cobra.Command {
 	i18n.Init()
 	cmd := &cobra.Command{
-		Use:   "vc <command> <subcommand> [flags]",
+		Use:   "vci <command> <subcommand> [flags]",
 		Short: "VulnCheck CLI.",
 		Long:  i18n.C.RootLong,
 		Example: heredoc.Doc(`
-		$ vc indices list
-		$ vc index abb
-		$ vc backup abb
+		$ vci indices list
+		$ vci index abb
+		$ vci backup abb
 	`),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
