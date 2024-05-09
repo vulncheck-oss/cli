@@ -1,0 +1,2 @@
+#!/bin/bash
+xcrun notarytool history --apple-id "${APPLE_ID?}" --team-id "${APPLE_DEVELOPER_ID?}" --password "${APPLE_ID_PASSWORD?}"
