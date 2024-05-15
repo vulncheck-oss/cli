@@ -17,13 +17,13 @@ sign_windows() {
     return 1
   fi
 
-  if [ -z "$KEY_FILE" ]; then
-    echo "error Windows code-signing; no value for KEY_FILE" >&2
+  if [ -z "$CERT_PASSWORD" ]; then
+    echo "error Windows code-signing; no value for CERT_PASSWORD" >&2
     return 1
   fi
 
-  osslsigncode sign -n "VulnCheck CLI" \
-    -certs "$CERT_FILE" -key "$KEY_FILE" \
+  osslsigncode sign -n "VulnCheck CLI" -t http://timestamp.digicert.com \
+    -pkcs12 "$CERT_FILE" -readpass <(printf "%s" "$CERT_PASSWORD") -h sha256 \
     -in "$1" -out "$1"~
 
   mv "$1"~ "$1"
