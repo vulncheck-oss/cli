@@ -15,7 +15,7 @@ require (
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
-	github.com/vulncheck-oss/sdk v1.2.7
+	github.com/vulncheck-oss/sdk v1.2.8
 	golang.org/x/term v0.19.0
 )
 
