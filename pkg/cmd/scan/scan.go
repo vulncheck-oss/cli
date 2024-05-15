@@ -130,14 +130,17 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			if len(*vulns) == 0 {
-				ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
-			}
-
-			if len(*vulns) > 0 {
-				if err := ui.ScanResults(output.Vulnerabilities); err != nil {
-					return err
+			if vulns != nil {
+				if len(*vulns) == 0 {
+					ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
 				}
+				if len(*vulns) > 0 {
+					if err := ui.ScanResults(output.Vulnerabilities); err != nil {
+						return err
+					}
+				}
+			} else {
+				ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
 			}
 
 			elapsedTime := time.Since(startTime)
@@ -172,6 +175,10 @@ func getSbom(dir string) (*sbom.SBOM, error) {
 }
 
 func getPurls(sbm *sbom.SBOM) []string {
+
+	if sbm == nil {
+		return []string{}
+	}
 
 	var purls []string
 
