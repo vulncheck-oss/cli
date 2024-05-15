@@ -78,7 +78,11 @@ func Command() *cobra.Command {
 						if err != nil {
 							return err
 						}
-						vulns = results
+						if results != nil {
+							vulns = results
+						} else {
+							vulns = &[]models.ScanResultVulnerabilities{}
+						}
 
 						t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(*vulns))
 						return nil
@@ -124,10 +128,6 @@ func Command() *cobra.Command {
 
 			if err := runners.Run(); err != nil {
 				return err
-			}
-
-			if vulns == nil {
-				ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
 			}
 
 			if len(*vulns) == 0 {
