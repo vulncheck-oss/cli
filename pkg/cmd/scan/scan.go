@@ -126,7 +126,7 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			if *vulns == nil || vulns == nil {
+			if vulns == nil {
 				ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
 			}
 
