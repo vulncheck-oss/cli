@@ -15,6 +15,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk"
 	"github.com/vulncheck-oss/sdk/pkg/client"
+	"os"
 	"strings"
 	"time"
 )
@@ -130,6 +131,8 @@ func Command() *cobra.Command {
 
 			ui.Info(fmt.Sprintf("DEBUG: about to run runners %d", len(runners)))
 			if err := runners.Run(); err != nil {
+				fmt.Fprintln(os.Stdout, fmt.Sprintf("DEBUG: runners.Run() error: %v", err))
+				os.Stdout.Sync() // Flush the stdout buffer
 				return err
 			}
 
