@@ -111,6 +111,7 @@ func Command() *cobra.Command {
 
 			if opts.File {
 				ui.Info(fmt.Sprintf("APPENDING FILE SAVE TASK"))
+				time.Sleep(2 * time.Second) // Add a delay here
 				tasks = append(tasks, taskin.Task{
 					Title: fmt.Sprintf("Saving results to %s", opts.FileName),
 					Task: func(t *taskin.Task) error {
@@ -121,7 +122,9 @@ func Command() *cobra.Command {
 						}
 						cwd, _ := os.Getwd()
 						ui.Info(fmt.Sprintf("DEBUG: Current working directory: %s", cwd))
+						time.Sleep(2 * time.Second) // Add a delay here
 						ui.Info(fmt.Sprintf("DEBUG: Absolute file path: %s", filepath.Join(cwd, opts.FileName)))
+						time.Sleep(2 * time.Second) // Add a delay here
 						t.Title = fmt.Sprintf("Results saved to %s", opts.FileName)
 						return nil
 					},
