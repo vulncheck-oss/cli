@@ -15,8 +15,6 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk"
 	"github.com/vulncheck-oss/sdk/pkg/client"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -53,14 +51,12 @@ func Command() *cobra.Command {
 				{
 					Title: i18n.C.ScanSbomStart,
 					Task: func(t *taskin.Task) error {
-						ui.Info("DEBUG: TOP OF TASK 1 - GET SBOM")
 						result, err := getSbom(args[0])
 						if err != nil {
 							return err
 						}
 						t.Title = i18n.C.ScanSbomEnd
 						sbm = result
-						ui.Info("DEBUG: BOTTOM OF TASK 1 - GET SBOM")
 						return nil
 					},
 				},
@@ -110,29 +106,18 @@ func Command() *cobra.Command {
 			}
 
 			if opts.File {
-				fmt.Fprintln(os.Stdout, "APPENDING FILE SAVE TASK")
-				os.Stdout.Sync()            // Flush the stdout buffer
-				time.Sleep(2 * time.Second) // Add a delay here
 				tasks = append(tasks, taskin.Task{
 					Title: fmt.Sprintf("Saving results to %s", opts.FileName),
 					Task: func(t *taskin.Task) error {
-						fmt.Fprintln(os.Stdout, fmt.Sprintf("DEBUG: TOP OF TASK 5 - SAVE RESULTS to %s", opts.FileName))
-						os.Stdout.Sync()            // Flush the stdout buffer
-						time.Sleep(2 * time.Second) // Add a delay here
 						if err := ui.JsonFile(output, opts.FileName); err != nil {
 							return err
 						}
-						cwd, _ := os.Getwd()
-						fmt.Fprintln(os.Stdout, fmt.Sprintf("DEBUG: Current working directory: %s", cwd))
-						os.Stdout.Sync()            // Flush the stdout buffer
-						time.Sleep(2 * time.Second) // Add a delay here
-						fmt.Fprintln(os.Stdout, fmt.Sprintf("DEBUG: Absolute file path: %s", filepath.Join(cwd, opts.FileName)))
-						os.Stdout.Sync()            // Flush the stdout buffer
-						time.Sleep(2 * time.Second) // Add a delay here
 						t.Title = fmt.Sprintf("Results saved to %s", opts.FileName)
 						return nil
 					},
 				})
+			} else {
+				ui.Info("DEBUG: not saving results")
 			}
 
 			runners := taskin.New(tasks, taskin.Config{
