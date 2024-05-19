@@ -162,7 +162,7 @@ func Command() *cobra.Command {
 					}
 				}
 			} else {
-				ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
+				ui.Info("DEBUG: vulns is NIL")
 			}
 
 			elapsedTime := time.Since(startTime)
