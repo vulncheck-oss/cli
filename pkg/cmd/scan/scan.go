@@ -110,20 +110,24 @@ func Command() *cobra.Command {
 			}
 
 			if opts.File {
-				ui.Info(fmt.Sprintf("APPENDING FILE SAVE TASK"))
+				fmt.Fprintln(os.Stdout, "APPENDING FILE SAVE TASK")
+				os.Stdout.Sync()            // Flush the stdout buffer
 				time.Sleep(2 * time.Second) // Add a delay here
 				tasks = append(tasks, taskin.Task{
 					Title: fmt.Sprintf("Saving results to %s", opts.FileName),
 					Task: func(t *taskin.Task) error {
-						ui.Info(fmt.Sprintf("DEBUG: TOP OF TASK 5 - SAVE RESULTS to %s", opts.FileName))
+						fmt.Fprintln(os.Stdout, fmt.Sprintf("DEBUG: TOP OF TASK 5 - SAVE RESULTS to %s", opts.FileName))
+						os.Stdout.Sync()            // Flush the stdout buffer
 						time.Sleep(2 * time.Second) // Add a delay here
 						if err := ui.JsonFile(output, opts.FileName); err != nil {
 							return err
 						}
 						cwd, _ := os.Getwd()
-						ui.Info(fmt.Sprintf("DEBUG: Current working directory: %s", cwd))
+						fmt.Fprintln(os.Stdout, fmt.Sprintf("DEBUG: Current working directory: %s", cwd))
+						os.Stdout.Sync()            // Flush the stdout buffer
 						time.Sleep(2 * time.Second) // Add a delay here
-						ui.Info(fmt.Sprintf("DEBUG: Absolute file path: %s", filepath.Join(cwd, opts.FileName)))
+						fmt.Fprintln(os.Stdout, fmt.Sprintf("DEBUG: Absolute file path: %s", filepath.Join(cwd, opts.FileName)))
+						os.Stdout.Sync()            // Flush the stdout buffer
 						time.Sleep(2 * time.Second) // Add a delay here
 						t.Title = fmt.Sprintf("Results saved to %s", opts.FileName)
 						return nil
