@@ -15,6 +15,8 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk"
 	"github.com/vulncheck-oss/sdk/pkg/client"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -108,13 +110,18 @@ func Command() *cobra.Command {
 			}
 
 			if opts.File {
+				ui.Info(fmt.Sprintf("APPENDING FILE SAVE TASK"))
 				tasks = append(tasks, taskin.Task{
 					Title: fmt.Sprintf("Saving results to %s", opts.FileName),
 					Task: func(t *taskin.Task) error {
 						ui.Info(fmt.Sprintf("DEBUG: TOP OF TASK 5 - SAVE RESULTS to %s", opts.FileName))
+						time.Sleep(2 * time.Second) // Add a delay here
 						if err := ui.JsonFile(output, opts.FileName); err != nil {
 							return err
 						}
+						cwd, _ := os.Getwd()
+						ui.Info(fmt.Sprintf("DEBUG: Current working directory: %s", cwd))
+						ui.Info(fmt.Sprintf("DEBUG: Absolute file path: %s", filepath.Join(cwd, opts.FileName)))
 						t.Title = fmt.Sprintf("Results saved to %s", opts.FileName)
 						return nil
 					},
