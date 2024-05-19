@@ -51,12 +51,14 @@ func Command() *cobra.Command {
 				{
 					Title: i18n.C.ScanSbomStart,
 					Task: func(t *taskin.Task) error {
+						ui.Info("DEBUG: TOP OF TASK 1 - GET SBOM")
 						result, err := getSbom(args[0])
 						if err != nil {
 							return err
 						}
 						t.Title = i18n.C.ScanSbomEnd
 						sbm = result
+						ui.Info("DEBUG: BOTTOM OF TASK 1 - GET SBOM")
 						return nil
 					},
 				},
