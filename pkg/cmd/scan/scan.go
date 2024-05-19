@@ -111,6 +111,7 @@ func Command() *cobra.Command {
 				tasks = append(tasks, taskin.Task{
 					Title: fmt.Sprintf("Saving results to %s", opts.FileName),
 					Task: func(t *taskin.Task) error {
+						ui.Info(fmt.Sprintf("DEBUG: TOP OF TASK 5 - SAVE RESULTS to %s", opts.FileName))
 						if err := ui.JsonFile(output, opts.FileName); err != nil {
 							return err
 						}
