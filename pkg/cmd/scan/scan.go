@@ -15,7 +15,9 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk"
 	"github.com/vulncheck-oss/sdk/pkg/client"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -49,6 +51,20 @@ func Command() *cobra.Command {
 			startTime := time.Now()
 
 			tasks := taskin.Tasks{
+				{
+					Title: "Debug: Print directory contents",
+					Task: func(t *taskin.Task) error {
+						files, err := ioutil.ReadDir(args[0])
+						if err != nil {
+							return err
+						}
+						fmt.Println("Directory contents:")
+						for _, file := range files {
+							fmt.Println(filepath.Join(args[0], file.Name()))
+						}
+						return nil
+					},
+				},
 				{
 					Title: i18n.C.ScanSbomStart,
 					Task: func(t *taskin.Task) error {
