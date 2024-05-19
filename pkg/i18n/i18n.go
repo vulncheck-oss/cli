@@ -174,7 +174,7 @@ var En = Copy{
 	ScanExtractPurlEnd:   "%d PURLs extracted",
 	ScanScanPurlStart:    "Scanning PURLs",
 	ScanScanPurlProgress: "Scanning PURLs [%d/%d]",
-	ScanScanPurlEnd:      "Scanning PURLs: %d vulns found",
+	ScanScanPurlEnd:      "Scanning PURLs: %d vulns found in %d packages",
 
 	ScanVulnMetaStart: "Fetching vulnerability metadata",
 	ScanVulnMetaEnd:   "Vulnerability metadata fetched",

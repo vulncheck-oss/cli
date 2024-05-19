@@ -84,7 +84,7 @@ func Command() *cobra.Command {
 							vulns = &[]models.ScanResultVulnerabilities{}
 						}
 
-						t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(*vulns))
+						t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(*vulns), len(purls))
 						return nil
 					},
 				},
@@ -126,6 +126,7 @@ func Command() *cobra.Command {
 				},
 			})
 
+			ui.Info(fmt.Sprintf("DEBUG: about to run runners %d", len(runners)))
 			if err := runners.Run(); err != nil {
 				return err
 			}
