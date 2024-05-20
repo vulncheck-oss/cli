@@ -71,7 +71,7 @@ func Command() *cobra.Command {
 				{
 					Title: i18n.C.ScanScanPurlStart,
 					Task: func(t *taskin.Task) error {
-						vulns = &[]models.ScanResultVulnerabilities{}
+						vulns = []models.ScanResultVulnerabilities{}
 						results, err := getVulns(purls, func(cur int, total int) {
 							t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgress, cur, total)
 							t.Progress(cur, total)
@@ -80,7 +80,7 @@ func Command() *cobra.Command {
 							return err
 						}
 						vulns = results
-						t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(*vulns), len(purls))
+						t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(vulns), len(purls))
 						return nil
 					},
 				},
