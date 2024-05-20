@@ -179,7 +179,7 @@ var En = Copy{
 	ScanVulnMetaStart: "Fetching vulnerability metadata",
 	ScanVulnMetaEnd:   "Vulnerability metadata fetched",
 
-	ScanNoCvesFound:            "No vulnerabilities found in the %d packages",
+	ScanNoCvesFound:            "No vulnerabilities found in %d packages",
 	ScanBenchmark:              "Scan completed in %s",
 	ScanErrorDirectoryRequired: "Error: Directory is required",
 

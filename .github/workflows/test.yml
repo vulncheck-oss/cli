@@ -30,29 +30,6 @@ jobs:
           restore-keys: |
             go-${{ runner.os }}-
 
-      - name: Add SSH Go Module Private Key
-        env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-        run: |
-          mkdir -p ~/.ssh
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            ssh-keyscan github.com >> ~/.ssh/known_hosts
-            echo "${{ secrets.GO_MODULE_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
-            echo -e "Host github.com\n  HostName github.com\n  User git\n  IdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
-            powershell -Command "Set-Service -Name ssh-agent -StartupType Manual"
-            eval `ssh-agent -s`
-            ssh-add ~/.ssh/id_rsa
-          else
-            ssh-keyscan github.com >> ~/.ssh/known_hosts
-            ssh-agent -a $SSH_AUTH_SOCK > /dev/null
-            ssh-add - <<< "${{ secrets.GO_MODULE_PRIVATE_KEY }}"
-            echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
-          fi
-        shell: bash
-
-      - name: configure git
-        run: git config --global url."git@github.com:".insteadOf "https://github.com/"
-
       - name: Download dependencies
         run: go mod download
 
