@@ -2,6 +2,8 @@ module github.com/vulncheck-oss/cli
 
 go 1.21.5
 
+replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.16
+
 require (
 	github.com/MakeNowJust/heredoc/v2 v2.0.1
 	github.com/alecthomas/chroma/v2 v2.13.0
@@ -11,7 +13,7 @@ require (
 	github.com/charmbracelet/huh v0.3.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20240508140610-13957916abf0
 	github.com/charmbracelet/lipgloss v0.10.1-0.20240506202754-3ee5dcab73cb
-	github.com/fumeapp/taskin v0.1.5
+	github.com/fumeapp/taskin v0.1.6
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
