@@ -15,9 +15,6 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk"
 	"github.com/vulncheck-oss/sdk/pkg/client"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -44,27 +41,13 @@ func Command() *cobra.Command {
 
 			var sbm *sbom.SBOM
 			var purls []string
-			var vulns *[]models.ScanResultVulnerabilities
+			var vulns []models.ScanResultVulnerabilities
 
 			var output models.ScanResult
 
 			startTime := time.Now()
 
 			tasks := taskin.Tasks{
-				{
-					Title: "Debug: Print directory contents",
-					Task: func(t *taskin.Task) error {
-						files, err := ioutil.ReadDir(args[0])
-						if err != nil {
-							return err
-						}
-						fmt.Println("Directory contents:")
-						for _, file := range files {
-							fmt.Println(filepath.Join(args[0], file.Name()))
-						}
-						return nil
-					},
-				},
 				{
 					Title: i18n.C.ScanSbomStart,
 					Task: func(t *taskin.Task) error {
@@ -98,24 +81,24 @@ func Command() *cobra.Command {
 						if results != nil {
 							vulns = results
 						} else {
-							vulns = &[]models.ScanResultVulnerabilities{}
+							vulns = []models.ScanResultVulnerabilities{}
 						}
 
-						t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(*vulns), len(purls))
+						t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(vulns), len(purls))
 						return nil
 					},
 				},
 				{
 					Title: i18n.C.ScanVulnMetaStart,
 					Task: func(t *taskin.Task) error {
-						results, err := getMeta(*vulns)
+						results, err := getMeta(vulns)
 						if err != nil {
 							return err
 						}
-						*vulns = results
+						vulns = results
 						t.Title = i18n.C.ScanVulnMetaEnd
 						output = models.ScanResult{
-							Vulnerabilities: *vulns,
+							Vulnerabilities: vulns,
 						}
 						return nil
 					},
@@ -133,8 +116,6 @@ func Command() *cobra.Command {
 						return nil
 					},
 				})
-			} else {
-				ui.Info("DEBUG: not saving results")
 			}
 
 			runners := taskin.New(tasks, taskin.Config{
@@ -145,24 +126,21 @@ func Command() *cobra.Command {
 				},
 			})
 
-			ui.Info(fmt.Sprintf("DEBUG: about to run runners %d", len(runners)))
 			if err := runners.Run(); err != nil {
-				fmt.Fprintln(os.Stdout, fmt.Sprintf("DEBUG: runners.Run() error: %v", err))
-				os.Stdout.Sync() // Flush the stdout buffer
 				return err
 			}
 
 			if vulns != nil {
-				if len(*vulns) == 0 {
+				if len(vulns) == 0 {
 					ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
 				}
-				if len(*vulns) > 0 {
+				if len(vulns) > 0 {
 					if err := ui.ScanResults(output.Vulnerabilities); err != nil {
 						return err
 					}
 				}
 			} else {
-				ui.Info("DEBUG: vulns is NIL")
+				ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
 			}
 
 			elapsedTime := time.Since(startTime)
@@ -213,7 +191,7 @@ func getPurls(sbm *sbom.SBOM) []string {
 	return purls
 }
 
-func getVulns(purls []string, iterator func(cur int, total int)) (*[]models.ScanResultVulnerabilities, error) {
+func getVulns(purls []string, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
 
 	var vulns []models.ScanResultVulnerabilities
 
@@ -238,7 +216,7 @@ func getVulns(purls []string, iterator func(cur int, total int)) (*[]models.Scan
 		iterator(i, len(purls))
 	}
 
-	return &vulns, nil
+	return vulns, nil
 }
 
 func getMeta(vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulnerabilities, error) {
