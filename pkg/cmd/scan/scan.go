@@ -80,7 +80,7 @@ func Command() *cobra.Command {
 							return err
 						}
 						vulns = results
-						t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(*vulns))
+						t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(*vulns), len(purls))
 						return nil
 					},
 				},
