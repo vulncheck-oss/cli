@@ -41,7 +41,7 @@ func Command() *cobra.Command {
 
 			var sbm *sbom.SBOM
 			var purls []string
-			var vulns *[]models.ScanResultVulnerabilities
+			var vulns []models.ScanResultVulnerabilities
 
 			var output models.ScanResult
 
@@ -80,21 +80,21 @@ func Command() *cobra.Command {
 							return err
 						}
 						vulns = results
-						t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(*vulns))
+						t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(*vulns), len(purls))
 						return nil
 					},
 				},
 				{
 					Title: i18n.C.ScanVulnMetaStart,
 					Task: func(t *taskin.Task) error {
-						results, err := getMeta(*vulns)
+						results, err := getMeta(vulns)
 						if err != nil {
 							return err
 						}
-						*vulns = results
+						vulns = results
 						t.Title = i18n.C.ScanVulnMetaEnd
 						output = models.ScanResult{
-							Vulnerabilities: *vulns,
+							Vulnerabilities: vulns,
 						}
 						return nil
 					},
@@ -127,10 +127,10 @@ func Command() *cobra.Command {
 			}
 
 			if vulns != nil {
-				if len(*vulns) == 0 {
+				if len(vulns) == 0 {
 					ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
 				}
-				if len(*vulns) > 0 {
+				if len(vulns) > 0 {
 					if err := ui.ScanResults(output.Vulnerabilities); err != nil {
 						return err
 					}
@@ -187,7 +187,7 @@ func getPurls(sbm *sbom.SBOM) []string {
 	return purls
 }
 
-func getVulns(purls []string, iterator func(cur int, total int)) (*[]models.ScanResultVulnerabilities, error) {
+func getVulns(purls []string, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
 
 	var vulns []models.ScanResultVulnerabilities
 
@@ -212,7 +212,7 @@ func getVulns(purls []string, iterator func(cur int, total int)) (*[]models.Scan
 		iterator(i, len(purls))
 	}
 
-	return &vulns, nil
+	return vulns, nil
 }
 
 func getMeta(vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulnerabilities, error) {
