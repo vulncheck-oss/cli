@@ -67,11 +67,15 @@ func SaveToken(token string) error {
 	var res *sdk.UserResponse
 	var err error
 
-	_ = spinner.New().
-		Style(ui.Pantone).
-		Title(" Verifying token...").Action(func() {
+	if config.IsCI() {
 		res, err = session.CheckToken(token)
-	}).Run()
+	} else {
+		_ = spinner.New().
+			Style(ui.Pantone).
+			Title(" Verifying token...").Action(func() {
+			res, err = session.CheckToken(token)
+		}).Run()
+	}
 
 	if err != nil {
 		return ui.Error("Token verification failed: %v", err)
