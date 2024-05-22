@@ -223,6 +223,7 @@ func getMeta(vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulne
 			return nil, err
 		}
 
+		vulns[i].InKEV = nvd2Response.Data[0].VulncheckKEVExploitAdd != nil
 		vulns[i].CVSSBaseScore = baseScore(nvd2Response.Data[0])
 		vulns[i].CVSSTemporalScore = temporalScore(nvd2Response.Data[0])
 
