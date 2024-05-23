@@ -4,7 +4,7 @@ go 1.21.5
 
 require (
 	github.com/MakeNowJust/heredoc/v2 v2.0.1
-	github.com/alecthomas/chroma/v2 v2.13.0
+	github.com/alecthomas/chroma/v2 v2.14.0
 	github.com/anchore/syft v1.4.1
 	github.com/charmbracelet/bubbles v0.18.0
 	github.com/charmbracelet/bubbletea v0.26.2
