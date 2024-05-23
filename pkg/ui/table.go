@@ -173,7 +173,7 @@ func PurlVulns(vulns []sdk.PurlVulnerability) error {
 func ScanResults(results []models.ScanResultVulnerabilities) error {
 	t := ltable.New().
 		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
-		Headers("CVE", "Name", "Version", "In KEV", "CVSS Base", "CVSS Temporal", "Fixed").
+		Headers("CVE", "Name", "Version", "VulnCheck KEV", "CVSS Base", "CVSS Temporal", "Fixed").
 		Width(TermWidth())
 
 	for _, result := range results {
