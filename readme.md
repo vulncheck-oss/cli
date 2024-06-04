@@ -39,6 +39,7 @@
 - [Request vulnerabilities related to a PURL](#request-vulnerabilities-related-to-a-purl)
 - [Scan a repository for vulnerabilities](#scan-a-repository-for-vulnerabilities)
 
+
 ### Browse/list indices
 You can browse all available indices interactively or output them as a list
 
@@ -56,6 +57,7 @@ You can search for a specific index by passing a search term.
 | Flag | Description |
 |------|-------------|
 | --json | Output the list of indices in JSON format. |
+
 
 
 ### Browse/list an index
@@ -84,6 +86,7 @@ vci index browse|list <index> [flags]
 |  --threatactor `string` |        ThreatActor |
 
 
+
 ### Download a backup 
 
 Download a backup of a specified index either interactively or retrieve a signed temporary URL
@@ -100,6 +103,7 @@ vci backup download|url <index>
 
 
 
+
 ### Request vulnerabilities related to a CPE
 
 Based on the specified CPE (Common Platform Enumeration) URI string, this endpoint will return a list of vulnerabilities that are related to the package. We support v2.2 and v2.3
@@ -107,6 +111,7 @@ Based on the specified CPE (Common Platform Enumeration) URI string, this endpoi
 ```
 vci cpe <cpe>
 ```
+
 
 ### Request vulnerabilities related to a PURL
 
@@ -116,6 +121,7 @@ You can find a list of supported package managers [here](https://docs.vulncheck.
 ```
 vci purl <purl>
 ```
+
 
 ### Scan a repository for vulnerabilities
 This command will scan a directory for traces of packages via generating an SBOM and then check for vulnerabilities.
