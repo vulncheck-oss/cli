@@ -120,7 +120,10 @@ vci purl <purl>
 ### Scan a repository for vulnerabilities
 This command will scan a directory for traces of packages via generating an SBOM and then check for vulnerabilities.
 
-`vci scan <path>`
+```
+vci scan <path> [flags]
+
+```
 
 #### Flags
 | Flag | Description |
@@ -129,4 +132,4 @@ This command will scan a directory for traces of packages via generating an SBOM
 
 
 > [!TIP]
-> Looking to plug this into your Github Actions? Check out our own [Action](https://github.com/vulncheck-oss/action)
+> Looking to plug this into your Github Repository? Check out our own [Action](https://github.com/vulncheck-oss/action)
