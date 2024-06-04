@@ -127,9 +127,6 @@ This command will scan a directory for traces of packages via generating an SBOM
 | ---- | ----------- |
 | -f | Save scan results to `output.json` |
 
-```
 
-
-
-
-
+> [!TIP]
+> Looking to plug this into your Github Actions? Check out our own [Action](https://github.com/vulncheck-oss/action)
