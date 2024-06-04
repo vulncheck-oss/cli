@@ -32,6 +32,13 @@
 
 ## Available commands
 
+- [Browse/list indices](#browselist-indices)
+- [Browse/list an index](#browselist-an-index)
+- [Download a backup](#download-a-backup)
+- [Request vulnerabilities related to a CPE](#request-vulnerabilities-related-to-a-cpe)
+- [Request vulnerabilities related to a PURL](#request-vulnerabilities-related-to-a-purl)
+- [Scan a repository for vulnerabilities](#scan-a-repository-for-vulnerabilities)
+
 ### Browse/list indices
 You can browse all available indices interactively or output them as a list
 
@@ -109,6 +116,19 @@ You can find a list of supported package managers [here](https://docs.vulncheck.
 ```
 vci purl <purl>
 ```
+
+### Scan a repository for vulnerabilities
+This command will scan a directory for traces of packages via generating an SBOM and then check for vulnerabilities.
+
+`vci scan <path>`
+
+#### Flags
+| Flag | Description |
+| ---- | ----------- |
+| -f | Save scan results to `output.json` |
+
+```
+
 
 
 
