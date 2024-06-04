@@ -33,14 +33,17 @@
 ## Available commands
 
 ### Browse indices interactively or output a list
-`vci indices browse|list <search> [flags]`
+
+```
+vci indices browse|list <search> [flags]
+```
 
 You can search for a specific index by passing a search term.
 
 > [!TIP]
-> Hitting <Enter> on an index while browsing will begin browsing that particular index
+> Pressing `[Enter]` on an index while browsing will begin browsing that particular index
 
-* Flags (list only)
+#### Flags (list only)
 
 | Flag | Description |
 |------|-------------|
@@ -52,7 +55,7 @@ You can search for a specific index by passing a search term.
 `vci index browse|list <index> [flags]`
 
 
-* Flags
+#### Flags
  
 | Flag | Description |
 | ---- | ----------- | 
@@ -68,6 +71,11 @@ You can search for a specific index by passing a search term.
 |  --pubstartdate `string` |       PubStartDate |
 |  --ransomware `string` |         Ransomware |
 |  --threatactor `string` |        ThreatActor |
+
+
+### Look up a PURL scheme
+
+
 
 
 
