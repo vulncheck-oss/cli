@@ -32,7 +32,8 @@
 
 ## Available commands
 
-### Browse indices interactively or output a list
+### Browse/list indices
+You can browse all available indices interactively or output them as a list
 
 ```
 vci indices browse|list <search> [flags]
@@ -50,10 +51,13 @@ You can search for a specific index by passing a search term.
 | --json | Output the list of indices in JSON format. |
 
 
-### Browse an index interactively or output entries
+### Browse/list an index
 
-`vci index browse|list <index> [flags]`
+You can browse the contents of any index interactively or output some as JSON
 
+```
+vci index browse|list <index> [flags]
+```
 
 #### Flags
  
@@ -73,8 +77,38 @@ You can search for a specific index by passing a search term.
 |  --threatactor `string` |        ThreatActor |
 
 
-### Look up a PURL scheme
+### Download a backup 
 
+Download a backup of a specified index either interactively or retrieve a signed temporary URL
+
+```
+vci backup download|url <index>
+```
+
+#### Flags (url only)
+
+| Flag | Description |
+| ---- | ----------- |
+| --json | Output the download URL in JSON format. |
+
+
+
+### Request vulnerabilities related to a CPE
+
+Based on the specified CPE (Common Platform Enumeration) URI string, this endpoint will return a list of vulnerabilities that are related to the package. We support v2.2 and v2.3
+
+```
+vci cpe <cpe>
+```
+
+### Request vulnerabilities related to a PURL
+
+Based on the specified PURL, this command will return a list of vulnerabilities that are related to the package.
+You can find a list of supported package managers [here](https://docs.vulncheck.com/products/exploit-and-vulnerability-intelligence/package-manager-support)
+
+```
+vci purl <purl>
+```
 
 
 
