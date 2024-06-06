@@ -40,7 +40,7 @@ func Command() *cobra.Command {
 			}
 
 			var sbm *sbom.SBOM
-			var purls []string
+			var purls []models.PurlDetail
 			var vulns []models.ScanResultVulnerabilities
 
 			var output models.ScanResult
@@ -170,33 +170,41 @@ func getSbom(dir string) (*sbom.SBOM, error) {
 	return sbm, nil
 }
 
-func getPurls(sbm *sbom.SBOM) []string {
+func getPurls(sbm *sbom.SBOM) []models.PurlDetail {
 
 	if sbm == nil {
-		return []string{}
+		return []models.PurlDetail{}
 	}
 
-	var purls []string
+	var purls []models.PurlDetail
 
 	for p := range sbm.Artifacts.Packages.Enumerate() {
 		if p.PURL != "" && !strings.HasPrefix(p.PURL, "pkg:github") {
-			purls = append(purls, p.PURL)
+			locations := make([]string, len(p.Locations.ToSlice()))
+			for i, l := range p.Locations.ToSlice() {
+				locations[i] = l.RealPath
+			}
+			purls = append(purls, models.PurlDetail{
+				Purl:        p.PURL,
+				PackageType: string(p.Type),
+				Cataloger:   p.FoundBy,
+				Locations:   locations,
+			})
 		}
 	}
-
 	return purls
 }
 
-func getVulns(purls []string, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
+func getVulns(purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
 
 	var vulns []models.ScanResultVulnerabilities
 
 	i := 0
 	for _, purl := range purls {
 		i++
-		response, err := session.Connect(config.Token()).GetPurl(purl)
+		response, err := session.Connect(config.Token()).GetPurl(purl.Purl)
 		if err != nil {
-			return nil, fmt.Errorf("error fetching purl %s: %v", purl, err)
+			return nil, fmt.Errorf("error fetching purl %s: %v", purl.Purl, err)
 		}
 		if len(response.Data.Vulnerabilities) > 0 {
 			for _, vuln := range response.Data.Vulnerabilities {
@@ -205,8 +213,8 @@ func getVulns(purls []string, iterator func(cur int, total int)) ([]models.ScanR
 					Version:       response.PurlMeta().Version,
 					CVE:           vuln.Detection,
 					FixedVersions: vuln.FixedVersion,
+					PurlDetail:    purl,
 				})
-
 			}
 		}
 		iterator(i, len(purls))
