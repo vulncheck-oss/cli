@@ -48,7 +48,7 @@ func NewCmdRoot() *cobra.Command {
 			environment.Init()
 			config.Init()
 
-			if session.IsAuthCheckEnabled(cmd) && !session.CheckAuth() {
+			if session.IsAuthCheckEnabled(cmd) && cmd.Parent().Name() != "completion" && !session.CheckAuth() {
 				fmt.Println(authHelp())
 				return ui.Error(i18n.C.ErrorNoToken)
 			}
