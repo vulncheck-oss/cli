@@ -37,9 +37,8 @@ import (
 var tasks = map[string]func(string) error{
 	"bin/vci": func(exe string) error {
 		ldflags := os.Getenv("GO_LDFLAGS")
-		ldflags = fmt.Sprintf("-X github.com/vulncheck-oss/cli/pkg/build.Version=%s %s", version(), ldflags)
-		ldflags = fmt.Sprintf("-X github.com/vulncheck-oss/cli/pkg/build.Date=%s %s", date(), ldflags)
-
+		ldflags = fmt.Sprintf("-X github.com/vulncheck-oss/cli/internal/build.Version=%s %s", version(), ldflags)
+		ldflags = fmt.Sprintf("-X github.com/vulncheck-oss/cli/internal/build.Date=%s %s", date(), ldflags)
 		return run("go", "build", "-trimpath", "-ldflags", ldflags, "-o", exe, "./cmd/vci")
 	},
 	"manpages": func(_ string) error {
