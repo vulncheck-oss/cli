@@ -64,7 +64,9 @@ func Command() *cobra.Command {
 			queryParameters := sdk.IndexQueryParameters{}
 			for i := 0; i < keys.NumField(); i++ {
 				flag := utils.NormalizeString(keys.Field(i).Name)
-				reflect.ValueOf(&queryParameters).Elem().Field(i).SetString(cmd.Flag(flag).Value.String())
+				if cmd.Flag(flag).Value.String() != "" {
+					reflect.ValueOf(&queryParameters).Elem().Field(i).SetString(cmd.Flag(flag).Value.String())
+				}
 			}
 
 			response, err := session.Connect(config.Token()).GetIndex(args[0], queryParameters)
