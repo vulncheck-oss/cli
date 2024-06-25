@@ -128,7 +128,7 @@ var En = Copy{
 	SavingResultsStart: "Saving Results to %s",
 	SavingResultsEnd:   "Results saved to %s",
 
-	IndicesShort: "View indices",
+	IndicesShort: "View VulnCheck indices",
 
 	ListIndicesShort:  "List indices",
 	ListIndicesSearch: "Listing %d indices searching for \"%s\"",

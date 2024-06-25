@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/anchore/syft/syft"
+	"github.com/anchore/syft/syft/pkg"
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/fumeapp/taskin"
+	"github.com/octoper/go-ray"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
@@ -72,7 +74,7 @@ func Command() *cobra.Command {
 					Title: i18n.C.ScanScanPurlStart,
 					Task: func(t *taskin.Task) error {
 						vulns = []models.ScanResultVulnerabilities{}
-						results, err := getVulns(purls, func(cur int, total int) {
+						results, err := getVulns(sbm, purls, func(cur int, total int) {
 							t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgress, cur, total)
 							t.Progress(cur, total)
 						})
@@ -179,6 +181,7 @@ func getPurls(sbm *sbom.SBOM) []models.PurlDetail {
 	var purls []models.PurlDetail
 
 	for p := range sbm.Artifacts.Packages.Enumerate() {
+		ray.Ray(sbm.RelationshipsForPackage(p))
 		if p.PURL != "" && !strings.HasPrefix(p.PURL, "pkg:github") {
 			locations := make([]string, len(p.Locations.ToSlice()))
 			for i, l := range p.Locations.ToSlice() {
@@ -195,7 +198,17 @@ func getPurls(sbm *sbom.SBOM) []models.PurlDetail {
 	return purls
 }
 
-func getVulns(purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
+func getPackageFromPURL(sbom *sbom.SBOM, purl string) *pkg.Package {
+	for p := range sbom.Artifacts.Packages.Enumerate() {
+		if p.PURL == purl {
+			return &p
+		}
+
+	}
+	return nil
+}
+
+func getVulns(sbom *sbom.SBOM, purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
 
 	var vulns []models.ScanResultVulnerabilities
 
@@ -207,6 +220,8 @@ func getVulns(purls []models.PurlDetail, iterator func(cur int, total int)) ([]m
 			return nil, fmt.Errorf("error fetching purl %s: %v", purl.Purl, err)
 		}
 		if len(response.Data.Vulnerabilities) > 0 {
+			p := getPackageFromPURL(sbom, purl.Purl)
+			ray.Ray(p)
 			for _, vuln := range response.Data.Vulnerabilities {
 				vulns = append(vulns, models.ScanResultVulnerabilities{
 					Name:          response.PurlMeta().Name,
