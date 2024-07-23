@@ -18,7 +18,7 @@ func ChooseAuthMethod() (string, error) {
 			huh.NewSelect[string]().
 				Title("Select an authentication method").
 				Options(
-					huh.NewOption("Login with a web browser", "web"),
+					huh.NewOption("Login with a web browser (Does not work with Safari)", "web"),
 					huh.NewOption("Paste an authentication token", "token"),
 				).Value(&choice),
 		),

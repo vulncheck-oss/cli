@@ -157,7 +157,7 @@ var En = Copy{
 	CpeCvesFound:           "%d CVEs were found for cpe %s",
 	CpeErrorSchemeRequired: "cpe scheme is required",
 
-	PurlShort:               "Look up a specified PURL for any CVES or vulnerabilities",
+	PurlShort:               "Look up a specified PURL for any CVEs or vulnerabilities",
 	PurlExample:             "vci purl \"%s\"",
 	PurlErrorSchemeRequired: "purl scheme is required",
 
