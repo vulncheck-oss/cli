@@ -19,7 +19,8 @@ type Options struct {
 func Command() *cobra.Command {
 
 	opts := &Options{
-		Json: false,
+		Json:  false,
+		Table: false,
 	}
 
 	cmd := &cobra.Command{
