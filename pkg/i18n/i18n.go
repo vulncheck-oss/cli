@@ -62,6 +62,9 @@ type Copy struct {
 	PurlVulnsFound          string
 	PurlErrorSchemeRequired string
 
+	TagShort   string
+	TagExample string
+
 	ScanShort                  string
 	ScanExample                string
 	ScanErrorDirectoryRequired string
@@ -165,9 +168,11 @@ var En = Copy{
 	PurlVulnFound:  "1 Vulnerability were found for purl %s",
 	PurlVulnsFound: "%d Vulnerabilities were found for purl %s",
 
-	ScanShort:   "Scan a directory for vulnerabilities",
-	ScanExample: "vci scan /path/to/directory",
+	TagShort:   "List IP Intelligence Tags",
+	TagExample: "vci tag",
 
+	ScanShort:            "Scan a directory for vulnerabilities",
+	ScanExample:          "vci scan /path/to/directory",
 	ScanSbomStart:        "Generating SBOM",
 	ScanSbomEnd:          "SBOM created",
 	ScanExtractPurlStart: "Extracting PURLs",
