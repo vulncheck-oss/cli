@@ -190,10 +190,10 @@ func ScanResults(results []models.ScanResultVulnerabilities) error {
 	return nil
 }
 
-func RuleResults(results []string) error {
+func SingleColumnResults(results []string, title string) error {
 	t := ltable.New().
 		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
-		Headers("Results").
+		Headers(title).
 		Width(TermWidth())
 
 	for _, result := range results {

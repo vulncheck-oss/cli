@@ -45,7 +45,7 @@ func Command() *cobra.Command {
 			}
 
 			if opts.Table {
-				if err := ui.RuleResults(rulesList); err != nil {
+				if err := ui.SingleColumnResults(rulesList, "Results"); err != nil {
 					return err
 				}
 
