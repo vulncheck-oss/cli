@@ -2,6 +2,8 @@ package ui
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -9,7 +11,6 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/models"
 	"github.com/vulncheck-oss/sdk"
 	"golang.org/x/term"
-	"strings"
 )
 
 var baseStyle = lipgloss.NewStyle().
@@ -183,6 +184,20 @@ func ScanResults(results []models.ScanResultVulnerabilities) error {
 		}
 
 		t.Row(result.CVE, result.Name, result.Version, inKev, result.CVSSBaseScore, result.CVSSTemporalScore, result.FixedVersions)
+	}
+
+	fmt.Println(t)
+	return nil
+}
+
+func RuleResults(results []string) error {
+	t := ltable.New().
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
+		Headers("Results").
+		Width(TermWidth())
+
+	for _, result := range results {
+		t.Row(result)
 	}
 
 	fmt.Println(t)
