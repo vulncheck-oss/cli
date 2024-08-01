@@ -62,6 +62,11 @@ type Copy struct {
 	PurlVulnsFound          string
 	PurlErrorSchemeRequired string
 
+	RuleShort                 string
+	RuleErrorRequired         string
+	RuleExample               string
+	RuleErrorRuleNameRequired string
+
 	ScanShort                  string
 	ScanExample                string
 	ScanErrorDirectoryRequired string
@@ -164,6 +169,11 @@ var En = Copy{
 	PurlNoVulns:    "No Vulnerabilities were found for purl %s",
 	PurlVulnFound:  "1 Vulnerability were found for purl %s",
 	PurlVulnsFound: "%d Vulnerabilities were found for purl %s",
+
+	RuleShort:                 "Look up a specified rule for Initial Access Intelligence",
+	RuleErrorRequired:         "rule name is required",
+	RuleExample:               "vci rule \"%s\" \nvci rule \"%s\"",
+	RuleErrorRuleNameRequired: "rule name is required",
 
 	ScanShort:   "Scan a directory for vulnerabilities",
 	ScanExample: "vci scan /path/to/directory",
