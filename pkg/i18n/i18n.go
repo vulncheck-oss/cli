@@ -62,6 +62,9 @@ type Copy struct {
 	PurlVulnsFound          string
 	PurlErrorSchemeRequired string
 
+	PdnsShort   string
+	PdnsExample string
+
 	ScanShort                  string
 	ScanExample                string
 	ScanErrorDirectoryRequired string
@@ -164,6 +167,9 @@ var En = Copy{
 	PurlNoVulns:    "No Vulnerabilities were found for purl %s",
 	PurlVulnFound:  "1 Vulnerability were found for purl %s",
 	PurlVulnsFound: "%d Vulnerabilities were found for purl %s",
+
+	PdnsShort:   "List IP Intelligence Protective DNS records",
+	PdnsExample: "vci pdns",
 
 	ScanShort:   "Scan a directory for vulnerabilities",
 	ScanExample: "vci scan /path/to/directory",
