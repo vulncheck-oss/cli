@@ -4,6 +4,8 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"os"
+
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cmd/about"
@@ -12,8 +14,11 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cmd/cpe"
 	"github.com/vulncheck-oss/cli/pkg/cmd/index"
 	"github.com/vulncheck-oss/cli/pkg/cmd/indices"
+	"github.com/vulncheck-oss/cli/pkg/cmd/pdns"
 	"github.com/vulncheck-oss/cli/pkg/cmd/purl"
+	"github.com/vulncheck-oss/cli/pkg/cmd/rule"
 	"github.com/vulncheck-oss/cli/pkg/cmd/scan"
+	"github.com/vulncheck-oss/cli/pkg/cmd/tag"
 	"github.com/vulncheck-oss/cli/pkg/cmd/version"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/environment"
@@ -21,7 +26,6 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk"
-	"os"
 )
 
 type AuthError struct {
@@ -77,6 +81,9 @@ func NewCmdRoot() *cobra.Command {
 	cmd.AddCommand(cpe.Command())
 	cmd.AddCommand(purl.Command())
 	cmd.AddCommand(scan.Command())
+	cmd.AddCommand(rule.Command())
+	cmd.AddCommand(tag.Command())
+	cmd.AddCommand(pdns.Command())
 
 	return cmd
 }
