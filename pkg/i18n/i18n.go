@@ -67,6 +67,9 @@ type Copy struct {
 	RuleExample               string
 	RuleErrorRuleNameRequired string
 
+	PdnsShort   string
+	PdnsExample string
+
 	ScanShort                  string
 	ScanExample                string
 	ScanErrorDirectoryRequired string
@@ -174,6 +177,9 @@ var En = Copy{
 	RuleErrorRequired:         "rule name is required",
 	RuleExample:               "vci rule \"%s\" \nvci rule \"%s\"",
 	RuleErrorRuleNameRequired: "rule name is required",
+
+	PdnsShort:   "List IP Intelligence Protective DNS records",
+	PdnsExample: "vci pdns",
 
 	ScanShort:   "Scan a directory for vulnerabilities",
 	ScanExample: "vci scan /path/to/directory",
