@@ -14,7 +14,9 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cmd/cpe"
 	"github.com/vulncheck-oss/cli/pkg/cmd/index"
 	"github.com/vulncheck-oss/cli/pkg/cmd/indices"
+	"github.com/vulncheck-oss/cli/pkg/cmd/pdns"
 	"github.com/vulncheck-oss/cli/pkg/cmd/purl"
+	"github.com/vulncheck-oss/cli/pkg/cmd/rule"
 	"github.com/vulncheck-oss/cli/pkg/cmd/scan"
 	"github.com/vulncheck-oss/cli/pkg/cmd/tag"
 	"github.com/vulncheck-oss/cli/pkg/cmd/version"
@@ -79,7 +81,9 @@ func NewCmdRoot() *cobra.Command {
 	cmd.AddCommand(cpe.Command())
 	cmd.AddCommand(purl.Command())
 	cmd.AddCommand(scan.Command())
+	cmd.AddCommand(rule.Command())
 	cmd.AddCommand(tag.Command())
+	cmd.AddCommand(pdns.Command())
 
 	return cmd
 }
