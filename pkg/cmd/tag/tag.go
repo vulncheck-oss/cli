@@ -27,7 +27,7 @@ func Command() *cobra.Command {
 		Example: i18n.C.TagExample,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			response, err := session.Connect(config.Token()).GetTag("vulncheck-c2")
+			response, err := session.Connect(config.Token()).GetTag()
 			if err != nil {
 				return err
 			}
