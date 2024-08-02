@@ -22,12 +22,15 @@ func Command() *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:     "pdns",
+		Use:     "pdns <list>",
 		Short:   i18n.C.PdnsShort,
-		Example: i18n.C.PdnsExample,
+		Example: fmt.Sprintf(i18n.C.PdnsExample, "vulncheck-c2"),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return ui.Error(i18n.C.PdnsErrorListNameRequired)
+			}
 
-			response, err := session.Connect(config.Token()).GetPdns()
+			response, err := session.Connect(config.Token()).GetPdns(args[0])
 			if err != nil {
 				return err
 			}

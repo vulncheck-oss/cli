@@ -67,11 +67,13 @@ type Copy struct {
 	RuleExample               string
 	RuleErrorRuleNameRequired string
 
-	TagShort   string
-	TagExample string
+	TagShort                string
+	TagExample              string
+	TagErrorTagNameRequired string
 
-	PdnsShort   string
-	PdnsExample string
+	PdnsShort                 string
+	PdnsExample               string
+	PdnsErrorListNameRequired string
 
 	ScanShort                  string
 	ScanExample                string
@@ -181,11 +183,13 @@ var En = Copy{
 	RuleExample:               "vci rule \"%s\" \nvci rule \"%s\"",
 	RuleErrorRuleNameRequired: "rule name is required",
 
-	TagShort:   "List IP Intelligence Tags",
-	TagExample: "vci tag",
+	TagShort:                "List IP Intelligence Tags",
+	TagExample:              "vci tag \"%s\"",
+	TagErrorTagNameRequired: "tag name is required",
 
-	PdnsShort:   "List IP Intelligence Protective DNS records",
-	PdnsExample: "vci pdns",
+	PdnsShort:                 "List IP Intelligence Protective DNS records",
+	PdnsExample:               "vci pdns \"%s\"",
+	PdnsErrorListNameRequired: "list name is required",
 
 	ScanShort:            "Scan a directory for vulnerabilities",
 	ScanExample:          "vci scan /path/to/directory",
