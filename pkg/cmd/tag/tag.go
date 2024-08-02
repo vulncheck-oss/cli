@@ -24,10 +24,12 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "tag",
 		Short:   i18n.C.TagShort,
-		Example: i18n.C.TagExample,
+		Example: fmt.Sprintf(i18n.C.TagExample, "vulncheck-c2"),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
-			response, err := session.Connect(config.Token()).GetTag()
+			if len(args) != 1 {
+				return ui.Error(i18n.C.TagErrorTagNameRequired)
+			}
+			response, err := session.Connect(config.Token()).GetTag(args[0])
 			if err != nil {
 				return err
 			}
