@@ -54,8 +54,8 @@ You can search for a specific index by passing a search term.
 
 #### Flags (list only)
 
-| Flag | Description |
-|------|-------------|
+| Flag   | Description                                |
+|--------|--------------------------------------------|
 | --json | Output the list of indices in JSON format. |
 
 
@@ -70,20 +70,33 @@ vci index browse|list <index> [flags]
 
 #### Flags
  
-| Flag | Description |
-| ---- | ----------- | 
-|  --alias `string` |              Alias |
-|  --botnet `string` |             Botnet |
-|  --cve `string` |                Cve |
-|  --iava `string` |               Iava |
-|  --lastmodenddate `string` |     LastModEndDate |
-|  --lastmodstartdate `string` |   LastModStartDate |
-|  --mispid `string` |             MispId |
-|  --mitreid `string` |            MitreId |
-|  --pubenddate `string` |         PubEndDate |
-|  --pubstartdate `string` |       PubStartDate |
-|  --ransomware `string` |         Ransomware |
-|  --threatactor `string` |        ThreatActor |
+| Flag               | Type   | Description           |
+|--------------------|--------|-----------------------|
+| --alias            | string | Alias                 |
+| --asn              | string | Asn                   |
+| --botnet           | string | Botnet                |
+| --country          | string | Country               |
+| --countrycode      | string | CountryCode           |
+| --cursor           | string | Cursor                |
+| --cve              | string | Cve                   |
+| --hostname         | string | Hostname              |
+| --iava             | string | Iava                  |
+| --id               | string | ID                    |
+| --lastmodenddate   | string | LastModEndDate        |
+| --lastmodstartdate | string | LastModStartDate      |
+| --limit            | string | Limit                 |
+| --mispid           | string | MispId                |
+| --mitreid          | string | MitreId               |
+| --nextcursor       | string | NextCursor            |
+| --order            | string | Order                 |
+| --page             | string | Page                  |
+| --prevcursor       | string | PrevCursor            |
+| --pubenddate       | string | PubEndDate            |
+| --pubstartdate     | string | PubStartDate          |
+| --ransomware       | string | Ransomware            |
+| --sort             | string | Sort                  |
+| --threatactor      | string | ThreatActor           |
+| --help             |        | Show help for command |
 
 
 
@@ -97,8 +110,8 @@ vci backup download|url <index>
 
 #### Flags (url only)
 
-| Flag | Description |
-| ---- | ----------- |
+| Flag   | Description                             |
+|--------|-----------------------------------------|
 | --json | Output the download URL in JSON format. |
 
 
@@ -132,9 +145,9 @@ vci scan <path> [flags]
 ```
 
 #### Flags
-| Flag | Description |
-| ---- | ----------- |
-| -f | Save scan results to `output.json` |
+| Flag | Description                        |
+|------|------------------------------------|
+| -f   | Save scan results to `output.json` |
 
 
 > [!TIP]
