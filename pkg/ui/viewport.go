@@ -127,7 +127,7 @@ func Viewport(index string, data interface{}) {
 
 	var buf strings.Builder
 
-	err = quick.Highlight(&buf, string(marshaled), "json", "terminal16m", "nord")
+	err = quick.Highlight(&buf, string(marshaled), "json", "terminal256", "catppuccin-mocha")
 
 	if err != nil {
 		panic(err)
