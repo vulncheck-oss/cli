@@ -63,19 +63,15 @@ if [[ "$FILENAME" == *.tar.gz ]]; then
     EXTRACTED_FOLDER="${EXTRACTED_FOLDER%.tar}"
 fi
 
-# Explain sudo usage and ask for confirmation
+# Explain sudo usage
 if [[ "$OS" != "Windows" ]]; then
     echo "To install vulncheck system-wide, we need to copy the binary to $INSTALL_DIR."
     echo "This requires administrator privileges."
     echo "You will be prompted for your password to perform this action."
     echo "This allows all users on this system to use the vulncheck command."
-    read -p "Do you want to proceed with the installation? (y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "Installation cancelled."
-        exit 1
-    fi
+    echo "Press Ctrl+C to cancel the installation if you don't want to proceed."
 fi
+
 
 # Copy the binary to the install directory
 echo "Installing vulncheck to $INSTALL_DIR..."
