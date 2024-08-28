@@ -296,8 +296,8 @@ github.com/frankban/quicktest v1.14.6/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7z
 github.com/fsnotify/fsnotify v1.5.1/go.mod h1:T3375wBYaZdLLcVNkcVbzGHY7f1l/uK5T5Ai1i3InKU=
 github.com/fsnotify/fsnotify v1.7.0 h1:8JEhPFa5W2WU7YfeZzPNqzMP6Lwt7L2715Ggo0nosvA=
 github.com/fsnotify/fsnotify v1.7.0/go.mod h1:40Bi/Hjc2AVfZrqy+aj+yEI+/bRxZnMJyTJwOpGvigM=
-github.com/fumeapp/taskin v0.1.7 h1:Xtp1fZVwxPC22X/NjSYEl9+uvIljjj/XSSTPfd7pbwU=
-github.com/fumeapp/taskin v0.1.7/go.mod h1:hg8jUBtOs5BVdPHI/kmUTY0mDV26PhuDhklKVc6eIlE=
+github.com/fumeapp/taskin v0.1.8 h1:hlY/2u6+FUOHNcq21RG9mzjfF/rhoksasqB0d+GoWBU=
+github.com/fumeapp/taskin v0.1.8/go.mod h1:ybZg9sEq8kPJ4Xkw97S1rAiDx4A/sVnPsaBv4hb1n7s=
 github.com/gabriel-vasile/mimetype v1.4.2 h1:w5qFW6JKBz9Y393Y4q372O9A7cUSequkh1Q7OhCmWKU=
 github.com/gabriel-vasile/mimetype v1.4.2/go.mod h1:zApsH/mKG4w07erKIaJPFiX0Tsq9BFQgN3qGY5GnNgA=
 github.com/getkin/kin-openapi v0.124.0 h1:VSFNMB9C9rTKBnQ/fpyDU8ytMTr4dWI9QovSKj9kz/M=

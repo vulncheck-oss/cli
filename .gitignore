@@ -3,7 +3,7 @@
 /share/fish/vendor_completions.d
 /share/man/man1
 /share/zsh/site-functions
-/vci-cli
+/vulncheck-cli
 .envrc
 /dist
 /site

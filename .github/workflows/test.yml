@@ -37,4 +37,4 @@ jobs:
         run: go test -race ./...
 
       - name: Build
-        run: go build -v ./cmd/vci
+        run: go build -v ./cmd/vulncheck

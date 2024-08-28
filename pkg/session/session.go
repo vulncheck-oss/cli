@@ -50,7 +50,7 @@ func VersionFormat(version, buildDate string) string {
 		dateStr = fmt.Sprintf(" (%s)", buildDate)
 	}
 
-	return fmt.Sprintf("vci version %s%s\n%s\n", version, dateStr, ChangelogURL(version))
+	return fmt.Sprintf("vulncheck version %s%s\n%s\n", version, dateStr, ChangelogURL(version))
 }
 
 func Connect(token string) *sdk.Client {

@@ -5,7 +5,7 @@ import (
 )
 
 func TestVersionFormat(t *testing.T) {
-	expects := "vci version 1.4.0 (2020-12-15)\nhttps://github.com/vulncheck-oss/cli/releases/tag/v1.4.0\n"
+	expects := "vulncheck version 1.4.0 (2020-12-15)\nhttps://github.com/vulncheck-oss/cli/releases/tag/v1.4.0\n"
 	if got := VersionFormat("1.4.0", "2020-12-15"); got != expects {
 		t.Errorf("Format() = %q, wants %q", got, expects)
 	}

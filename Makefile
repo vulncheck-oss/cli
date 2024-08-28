@@ -7,8 +7,8 @@ endif
 
 ## The following tasks delegate to `script/build.go` so they can be run cross-platform.
 
-.PHONY: bin/vci$(EXE)
-bin/vci$(EXE): script/build$(EXE)
+.PHONY: bin/vulncheck$(EXE)
+bin/vulncheck$(EXE): script/build$(EXE)
 	@script/build$(EXE) $@
 
 script/build$(EXE): script/build.go
