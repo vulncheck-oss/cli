@@ -1,4 +1,4 @@
-project_name: vci
+project_name: vulncheck
 
 release:
   prerelease: auto
@@ -20,8 +20,8 @@ builds:
       post:
         - cmd: ./script/sign '{{ .Path }}'
           output: true
-    binary: bin/vci
-    main: ./cmd/vci
+    binary: bin/vulncheck
+    main: ./cmd/vulncheck
     ldflags:
       - -s -w -X github.com/vulncheck-oss/cli/internal/build.Version={{.Version}} -X github.com/vulncheck-oss/cli/internal/build.Date={{time "2006-01-02"}}
 
@@ -30,8 +30,8 @@ builds:
     goarch: [386, arm, amd64, arm64]
     env:
       - CGO_ENABLED=0
-    binary: bin/vci
-    main: ./cmd/vci
+    binary: bin/vulncheck
+    main: ./cmd/vulncheck
     ldflags:
       - -s -w -X github.com/vulncheck-oss/cli/internal/build.Version={{.Version}} -X github.com/vulncheck-oss/cli/internal/build.Date={{time "2006-01-02"}}
 
@@ -43,31 +43,31 @@ builds:
         - cmd: >-
             {{ if eq .Runtime.Goos "windows" }}pwsh .\script\sign.ps1{{ else }}./script/sign{{ end }} '{{ .Path }}'
           output: true
-    binary: bin/vci
-    main: ./cmd/vci
+    binary: bin/vulncheck
+    main: ./cmd/vulncheck
     ldflags:
       - -s -w -X github.com/vulncheck-oss/cli/internal/build.Version={{.Version}} -X github.com/vulncheck-oss/cli/internal/build.Date={{time "2006-01-02"}}
 
 archives:
   - id: linux-archive
     builds: [linux]
-    name_template: "vci_{{ .Version }}_linux_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    name_template: "vulncheck_{{ .Version }}_linux_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     wrap_in_directory: true
     format: tar.gz
     files:
       - LICENSE
-      - ./share/man/man1/vci*.1
+      - ./share/man/man1/vulncheck*.1
   - id: macos-archive
     builds: [macos]
-    name_template: "vci_{{ .Version }}_macOS_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    name_template: "vulncheck_{{ .Version }}_macOS_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     wrap_in_directory: true
     format: zip
     files:
       - LICENSE
-      - ./share/man/man1/vci*.1
+      - ./share/man/man1/vulncheck*.1
   - id: windows-archive
     builds: [windows]
-    name_template: "vci_{{ .Version }}_windows_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    name_template: "vulncheck_{{ .Version }}_windows_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     wrap_in_directory: false
     format: zip
     files:
@@ -85,11 +85,11 @@ nfpms: #build:linux
       - deb
       - rpm
     contents:
-      - src: "./share/man/man1/vci*.1"
+      - src: "./share/man/man1/vulncheck*.1"
         dst: "/usr/share/man/man1"
-      - src: "./share/bash-completion/completions/vci"
-        dst: "/usr/share/bash-completion/completions/vci"
-      - src: "./share/fish/vendor_completions.d/vci.fish"
-        dst: "/usr/share/fish/vendor_completions.d/vci.fish"
-      - src: "./share/zsh/site-functions/_vci"
-        dst: "/usr/share/zsh/site-functions/_vci"
+      - src: "./share/bash-completion/completions/vulncheck"
+        dst: "/usr/share/bash-completion/completions/vulncheck"
+      - src: "./share/fish/vendor_completions.d/vulncheck.fish"
+        dst: "/usr/share/fish/vendor_completions.d/vulncheck.fish"
+      - src: "./share/zsh/site-functions/_vulncheck"
+        dst: "/usr/share/zsh/site-functions/_vulncheck"

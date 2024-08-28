@@ -105,7 +105,7 @@ var En = Copy{
 	InteractiveOnly: "This command is interactive and cannot run in a CI environment, please try %s instead",
 	RootLong:        "Work seamlessly with the VulnCheck API.",
 
-	AuthShort:       "Authenticate vci with the VulnCheck portal",
+	AuthShort:       "Authenticate vulncheck with the VulnCheck portal",
 	AuthStatusShort: "Check authentication status",
 	AuthStatusLong:  "Check if you're currently authenticated and if so, display the account information",
 	AuthLoginShort:  "Authenticate with the VulnCheck portal",
@@ -116,15 +116,15 @@ var En = Copy{
 
 			Alternatively, use %[1]stoken%[1]s to specify an issued token directly.
 
-			Alternatively, vci will use the authentication token found in the %[1]sVC_TOKEN%[1]s environment variable.
-			This method is most suitable for "headless" use of vci such as in automation.
+			Alternatively, vulncheck will use the authentication token found in the %[1]sVC_TOKEN%[1]s environment variable.
+			This method is most suitable for "headless" use of vulncheck such as in automation.
 		`, "`"),
 	AuthLoginExample: heredoc.Doc(`
 			# Start interactive authentication
-			$ vci auth login
+			$ vulncheck auth login
 
 			# Authenticate with vulncheck.com by passing in a token
-			$ vci auth login token vulncheck_******************
+			$ vulncheck auth login token vulncheck_******************
 	`),
 	AuthLoginErrorCI: "This command is interactive and cannot be run in a CI environment, use the VC_TOKEN environment variable instead",
 
@@ -165,13 +165,13 @@ var En = Copy{
 	BackupDownloadComplete: "Backup downloaded successfully",
 
 	CpeShort:               "Look up a specified cpe for any related CVEs",
-	CpeExample:             "vci cpe \"%s\"",
+	CpeExample:             "vulncheck cpe \"%s\"",
 	CpeNoCves:              "No CVEs were found for cpe %s",
 	CpeCvesFound:           "%d CVEs were found for cpe %s",
 	CpeErrorSchemeRequired: "cpe scheme is required",
 
 	PurlShort:               "Look up a specified PURL for any CVEs or vulnerabilities",
-	PurlExample:             "vci purl \"%s\"",
+	PurlExample:             "vulncheck purl \"%s\"",
 	PurlErrorSchemeRequired: "purl scheme is required",
 
 	PurlNoVulns:    "No Vulnerabilities were found for purl %s",
@@ -180,19 +180,19 @@ var En = Copy{
 
 	RuleShort:                 "Look up a specified rule for Initial Access Intelligence",
 	RuleErrorRequired:         "rule name is required",
-	RuleExample:               "vci rule \"%s\" \nvci rule \"%s\"",
+	RuleExample:               "vulncheck rule \"%s\" \nvulncheck rule \"%s\"",
 	RuleErrorRuleNameRequired: "rule name is required",
 
 	TagShort:                "List IP Intelligence Tags",
-	TagExample:              "vci tag \"%s\"",
+	TagExample:              "vulncheck tag \"%s\"",
 	TagErrorTagNameRequired: "tag name is required",
 
 	PdnsShort:                 "List IP Intelligence Protective DNS records",
-	PdnsExample:               "vci pdns \"%s\"",
+	PdnsExample:               "vulncheck pdns \"%s\"",
 	PdnsErrorListNameRequired: "list name is required",
 
 	ScanShort:            "Scan a directory for vulnerabilities",
-	ScanExample:          "vci scan /path/to/directory",
+	ScanExample:          "vulncheck scan /path/to/directory",
 	ScanSbomStart:        "Generating SBOM",
 	ScanSbomEnd:          "SBOM created",
 	ScanExtractPurlStart: "Extracting PURLs",
@@ -208,8 +208,8 @@ var En = Copy{
 	ScanBenchmark:              "Scan completed in %s",
 	ScanErrorDirectoryRequired: "Error: Directory is required",
 
-	ErrorUnauthorized: "Error: Unauthorized, Try authenticating with: vci auth login",
-	ErrorNoToken:      "No token found. Please run `vci auth login` to authenticate or populate the environment variable `VC_TOKEN`.",
+	ErrorUnauthorized: "Error: Unauthorized, Try authenticating with: vulncheck auth login",
+	ErrorNoToken:      "No token found. Please run `vulncheck auth login` to authenticate or populate the environment variable `VC_TOKEN`.",
 }
 
 func Init() {

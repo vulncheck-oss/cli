@@ -30,7 +30,7 @@ func loadConfig() (*Config, error) {
 	}
 
 	viper.AddConfigPath(dir)
-	viper.SetConfigName("vci")
+	viper.SetConfigName("vulncheck")
 	viper.SetConfigType("yaml")
 	err = viper.ReadInConfig()
 	if err != nil {
@@ -51,11 +51,11 @@ func saveConfig(config *Config) error {
 		return err
 	}
 	viper.AddConfigPath(dir)
-	viper.SetConfigName("vci")
+	viper.SetConfigName("vulncheck")
 	viper.SetConfigPermissions(0600)
 	viper.SetConfigType("yaml")
 	viper.Set("Token", config.Token)
-	return viper.WriteConfigAs(fmt.Sprintf("%s/vci.yaml", dir))
+	return viper.WriteConfigAs(fmt.Sprintf("%s/vulncheck.yaml", dir))
 }
 
 func configDir() (string, error) {
@@ -63,7 +63,7 @@ func configDir() (string, error) {
 	if err != nil {
 		return "", nil
 	}
-	dir := fmt.Sprintf("%s/.config/vci", homeDir)
+	dir := fmt.Sprintf("%s/.config/vulncheck", homeDir)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			return "", err

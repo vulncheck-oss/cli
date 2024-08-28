@@ -3,10 +3,10 @@
 </p>
 
 # The VulnCheck CLI
-`vci` is access to the VulnCheck API on the command line. It brings index browsing, backup management, and vulnerability scanning to the terminal.
+`vulncheck` is access to the VulnCheck API on the command line. It brings index browsing, backup management, and vulnerability scanning to the terminal.
 
 <p align="center">
-    <img src="/vci-scan.gif" />
+    <img src="/vulncheck-scan.gif" />
 </p>
 
 [![Release](https://img.shields.io/github/v/release/vulncheck-oss/cli)](https://github.com/vulncheck-oss/cli/releases)
@@ -18,16 +18,16 @@
 
 ## Installation 
 
-`vci` is available for MacOS, Linux, and Windows. You can download precompiled binaries from our [releases page](https://github.com/vulncheck-oss/cli/releases/latest)
+`vulncheck` is available for MacOS, Linux, and Windows. You can download precompiled binaries from our [releases page](https://github.com/vulncheck-oss/cli/releases/latest)
 
 > [!NOTE]
 > Support for package managers is coming soon.
 
 
 ## Configuration
-* Run `vci auth login` to authenticate with your VulnCheck account.
-* Alternatively `vci` will respect the `VC_TOKEN` environment variable.
-* `vci auth` by itself will show other options like checking your status and logging out.
+* Run `vulncheck auth login` to authenticate with your VulnCheck account.
+* Alternatively `vulncheck` will respect the `VC_TOKEN` environment variable.
+* `vulncheck auth` by itself will show other options like checking your status and logging out.
 
 
 ## Available commands
@@ -44,7 +44,7 @@
 You can browse all available indices interactively or output them as a list
 
 ```
-vci indices browse|list <search> [flags]
+vulncheck indices browse|list <search> [flags]
 ```
 
 You can search for a specific index by passing a search term.
@@ -65,7 +65,7 @@ You can search for a specific index by passing a search term.
 You can browse the contents of any index interactively or output some as JSON
 
 ```
-vci index browse|list <index> [flags]
+vulncheck index browse|list <index> [flags]
 ```
 
 #### Flags
@@ -105,7 +105,7 @@ vci index browse|list <index> [flags]
 Download a backup of a specified index either interactively or retrieve a signed temporary URL
 
 ```
-vci backup download|url <index>
+vulncheck backup download|url <index>
 ```
 
 #### Flags (url only)
@@ -122,7 +122,7 @@ vci backup download|url <index>
 Based on the specified CPE (Common Platform Enumeration) URI string, this endpoint will return a list of vulnerabilities that are related to the package. We support v2.2 and v2.3
 
 ```
-vci cpe <cpe>
+vulncheck cpe <cpe>
 ```
 
 
@@ -132,7 +132,7 @@ Based on the specified PURL, this command will return a list of vulnerabilities 
 You can find a list of supported package managers [here](https://docs.vulncheck.com/products/exploit-and-vulnerability-intelligence/package-manager-support)
 
 ```
-vci purl <purl>
+vulncheck purl <purl>
 ```
 
 
@@ -140,7 +140,7 @@ vci purl <purl>
 This command will scan a directory for traces of packages via generating an SBOM and then check for vulnerabilities.
 
 ```
-vci scan <path> [flags]
+vulncheck scan <path> [flags]
 
 ```
 
