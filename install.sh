@@ -27,11 +27,11 @@ fi
 
 # Set the appropriate filename based on the OS and architecture
 if [[ "$OS" == "macOS" ]]; then
-    FILENAME="vci_${VERSION}_macOS_${ARCH}.zip"
+    FILENAME="vulncheck_${VERSION}_macOS_${ARCH}.zip"
 elif [[ "$OS" == "Linux" ]]; then
-    FILENAME="vci_${VERSION}_Linux_${ARCH}.tar.gz"
+    FILENAME="vulncheck_${VERSION}_Linux_${ARCH}.tar.gz"
 elif [[ "$OS" == "Windows" ]]; then
-    FILENAME="vci_${VERSION}_Windows_${ARCH}.zip"
+    FILENAME="vulncheck_${VERSION}_Windows_${ARCH}.zip"
 fi
 
 # Download URL
