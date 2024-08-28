@@ -1,7 +1,9 @@
 package index
 
 import (
+	"fmt"
 	"reflect"
+	"strconv"
 
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
@@ -41,7 +43,18 @@ func Command() *cobra.Command {
 			for i := 0; i < keys.NumField(); i++ {
 				flag := utils.NormalizeString(keys.Field(i).Name)
 				if cmd.Flag(flag).Value.String() != "" {
-					reflect.ValueOf(&queryParameters).Elem().Field(i).SetString(cmd.Flag(flag).Value.String())
+					field := reflect.ValueOf(&queryParameters).Elem().Field(i)
+					switch field.Kind() {
+					case reflect.String:
+						field.SetString(cmd.Flag(flag).Value.String())
+					case reflect.Int:
+						intValue, err := strconv.Atoi(cmd.Flag(flag).Value.String())
+						if err != nil {
+							fmt.Println(err)
+							continue
+						}
+						field.SetInt(int64(intValue))
+					}
 				}
 			}
 
@@ -67,7 +80,18 @@ func Command() *cobra.Command {
 			for i := 0; i < keys.NumField(); i++ {
 				flag := utils.NormalizeString(keys.Field(i).Name)
 				if cmd.Flag(flag).Value.String() != "" {
-					reflect.ValueOf(&queryParameters).Elem().Field(i).SetString(cmd.Flag(flag).Value.String())
+					field := reflect.ValueOf(&queryParameters).Elem().Field(i)
+					switch field.Kind() {
+					case reflect.String:
+						field.SetString(cmd.Flag(flag).Value.String())
+					case reflect.Int:
+						intValue, err := strconv.Atoi(cmd.Flag(flag).Value.String())
+						if err != nil {
+							fmt.Println(err)
+							continue
+						}
+						field.SetInt(int64(intValue))
+					}
 				}
 			}
 
