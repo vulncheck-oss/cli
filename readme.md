@@ -18,9 +18,7 @@
 
 ## Installation 
 
-# vulncheck Installation
-
-## Installation Instructions
+### Provided bash script 
 
 You can easily install vulncheck using our install script. Choose the method that matches your operating system:
 
@@ -34,7 +32,6 @@ Open a terminal and run the following command:
 ```bash
 curl -sSL https://raw.githubusercontent.com/vulncheck-oss/cli/main/install.sh | bash
 ```
-
 
 ### Windows
 Option 1: Using PowerShell
