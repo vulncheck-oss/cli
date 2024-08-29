@@ -18,12 +18,12 @@
 
 ## Installation 
 
-### Provided bash script 
+### Provided install scripts
 
-You can easily install vulncheck using our install script. Choose the method that matches your operating system:
+You can easily install vulncheck using an install script. Choose the script and method that matches your operating system:
 
 > [!NOTE]
-> The installation script will require administrator privileges to install vulncheck system-wide. You may be prompted for your password during the installation process.
+> The installation script may require administrator privileges to install vulncheck system-wide. You may be prompted for your password during the installation process.
 
 ### macOS and Linux
 
