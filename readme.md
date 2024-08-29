@@ -18,12 +18,12 @@
 
 ## Installation 
 
-### Provided bash script 
+### Provided install scripts
 
-You can easily install vulncheck using our install script. Choose the method that matches your operating system:
+You can easily install vulncheck using an install script. Choose the script and method that matches your operating system:
 
 > [!NOTE]
-> The installation script will require administrator privileges to install vulncheck system-wide. You may be prompted for your password during the installation process.
+> The installation script may require administrator privileges to install vulncheck system-wide. You may be prompted for your password during the installation process.
 
 ### macOS and Linux
 
@@ -38,14 +38,7 @@ Option 1: Using PowerShell
 Open PowerShell and run:
 
 ```
-Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/vulncheck-oss/cli/main/install.sh')
-```
-
-Option 2: Using Git Bash or WSL
-If you have Git Bash or Windows Subsystem for Linux (WSL) installed, you can use the same method as macOS and Linux:
-
-```
-curl -sSL https://raw.githubusercontent.com/vulncheck-oss/cli/main/install.sh | bash
+iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/vulncheck-oss/cli/windows-install/install.ps1'))
 ```
 
 `vulncheck` binaries are also available for MacOS, Linux, and Windows. You can download precompiled binaries from our [releases page](https://github.com/vulncheck-oss/cli/releases/latest)
