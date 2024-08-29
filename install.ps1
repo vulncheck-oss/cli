@@ -35,4 +35,4 @@ if ($envPath -notlike "*$installPath*") {
 }
 
 Write-Host "Vulncheck CLI has been installed to $installPath"
-Write-Host "Please restart your terminal or run 'refreshenv' to update your PATH"
+Write-Host "You may need to restart your shell for the changes to take effect"
