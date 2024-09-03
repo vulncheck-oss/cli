@@ -109,6 +109,20 @@ func IndicesBrowse(indices []sdk.IndicesMeta, search string, action func(index s
 
 	return nil
 }
+func TokensList(tokens []sdk.TokenData) error {
+
+	t := ltable.New().
+		Border(lipgloss.NormalBorder()).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
+		Headers("Source", "Location", "Last Activity").Width(TermWidth())
+
+	for _, token := range tokens {
+		t.Row(token.Source, token.Location.City+", "+token.Location.Region+" "+token.Location.Country, token.UpdatedAt)
+	}
+
+	fmt.Println(t)
+	return nil
+}
 
 func IndicesList(indices []sdk.IndicesMeta, search string) error {
 

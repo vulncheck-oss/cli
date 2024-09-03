@@ -2,6 +2,9 @@ module github.com/vulncheck-oss/cli
 
 go 1.21.5
 
+
+replace github.com/vulncheck-oss/sdk => /Users/k/vc/oss/sdk
+
 require (
 	github.com/MakeNowJust/heredoc/v2 v2.0.1
 	github.com/alecthomas/chroma/v2 v2.14.0

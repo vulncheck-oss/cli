@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"github.com/vulncheck-oss/cli/pkg/cmd/token"
 	"os"
 
 	"github.com/MakeNowJust/heredoc/v2"
@@ -75,6 +76,7 @@ func NewCmdRoot() *cobra.Command {
 	cmd.AddCommand(version.Command())
 	cmd.AddCommand(about.Command())
 	cmd.AddCommand(auth.Command())
+	cmd.AddCommand(token.Command())
 	cmd.AddCommand(indices.Command())
 	cmd.AddCommand(index.Command())
 	cmd.AddCommand(backup.Command())

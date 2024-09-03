@@ -27,6 +27,11 @@ type Copy struct {
 	SavingResultsStart string
 	SavingResultsEnd   string
 
+	TokenShort string
+
+	ListTokensShort string
+	ListTokensFull  string
+
 	IndicesShort string
 
 	ListIndicesShort  string
@@ -140,6 +145,11 @@ var En = Copy{
 	FlagSpecifyFile:    "Specify the file to save the results to",
 	SavingResultsStart: "Saving Results to %s",
 	SavingResultsEnd:   "Results saved to %s",
+
+	TokenShort: "Manage Tokens",
+
+	ListTokensShort: "List tokens",
+	ListTokensFull:  "Listing %d tokens",
 
 	IndicesShort: "View indices",
 
