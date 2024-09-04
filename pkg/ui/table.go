@@ -117,7 +117,7 @@ func TokensList(tokens []sdk.TokenData) error {
 		Headers("Source", "Location", "Last Activity").Width(TermWidth())
 
 	for _, token := range tokens {
-		t.Row(token.Source, token.Location.City+", "+token.Location.Region+" "+token.Location.Country, token.UpdatedAt)
+		t.Row(token.Source, token.GetLocationString(), token.GetHumanUpdatedAt())
 	}
 
 	fmt.Println(t)
