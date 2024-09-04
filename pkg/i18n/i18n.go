@@ -32,6 +32,14 @@ type Copy struct {
 	ListTokensShort string
 	ListTokensFull  string
 
+	CreateTokenShort         string
+	CreateTokenLabelRequired string
+	CreateTokenSuccess       string
+
+	RemoveTokenShort      string
+	RemoveTokenSuccess    string
+	RemoveTokenIDRequired string
+
 	IndicesShort string
 
 	ListIndicesShort  string
@@ -150,6 +158,14 @@ var En = Copy{
 
 	ListTokensShort: "List tokens",
 	ListTokensFull:  "Listing %d tokens",
+
+	CreateTokenShort:         "Create a token",
+	CreateTokenSuccess:       "Token %s created successfully: %s",
+	CreateTokenLabelRequired: "Token Label missing or invalid",
+
+	RemoveTokenShort:      "Remove a token",
+	RemoveTokenSuccess:    "Token %s removed successfully",
+	RemoveTokenIDRequired: "Token ID missing or invalid",
 
 	IndicesShort: "View indices",
 

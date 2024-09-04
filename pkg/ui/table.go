@@ -114,10 +114,10 @@ func TokensList(tokens []sdk.TokenData) error {
 	t := ltable.New().
 		Border(lipgloss.NormalBorder()).
 		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
-		Headers("Source", "Location", "Last Activity").Width(TermWidth())
+		Headers("ID", "Source", "Location", "Last Activity").Width(TermWidth())
 
 	for _, token := range tokens {
-		t.Row(token.Source, token.GetLocationString(), token.GetHumanUpdatedAt())
+		t.Row(token.ID, token.GetSourceLabel(), token.GetLocationString(), token.GetHumanUpdatedAt())
 	}
 
 	fmt.Println(t)

@@ -16,13 +16,56 @@ func Command() *cobra.Command {
 	}
 
 	cmd.AddCommand(List())
-	// cmd.AddCommand(Browse())
+	cmd.AddCommand(Create())
+	cmd.AddCommand(Remove())
 
 	return cmd
 }
 
 type ListOptions struct {
 	Json bool
+}
+
+func Create() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create <label>",
+		Short: i18n.C.CreateTokenShort,
+		Args:  cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return fmt.Errorf(i18n.C.CreateTokenLabelRequired)
+			}
+
+			response, err := session.Connect(config.Token()).CreateToken(args[0])
+			if err != nil {
+				return err
+			}
+			ui.Success(fmt.Sprintf(i18n.C.CreateTokenSuccess, args[0], response.Data.Token))
+			return nil
+		},
+	}
+	return cmd
+}
+
+func Remove() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "remove <id>",
+		Short: i18n.C.RemoveTokenShort,
+		Args:  cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return fmt.Errorf(i18n.C.RemoveTokenIDRequired)
+			}
+
+			_, err := session.Connect(config.Token()).DeleteToken(args[0])
+			if err != nil {
+				return err
+			}
+			ui.Success(fmt.Sprintf(i18n.C.RemoveTokenSuccess, args[0]))
+			return nil
+		},
+	}
+	return cmd
 }
 
 func List() *cobra.Command {
