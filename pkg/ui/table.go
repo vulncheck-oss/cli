@@ -19,7 +19,7 @@ var baseStyle = lipgloss.NewStyle().
 
 type tableModel struct {
 	table  table.Model
-	action func(index string) error
+	action func(id string) error
 }
 
 func (m tableModel) Init() tea.Cmd { return nil }
@@ -109,6 +109,59 @@ func IndicesBrowse(indices []sdk.IndicesMeta, search string, action func(index s
 
 	return nil
 }
+
+func TokensRows(tokens []sdk.TokenData) []table.Row {
+	var rows []table.Row
+	for _, token := range tokens {
+		rows = append(rows, table.Row{
+			token.ID,
+			token.GetSourceLabel(),
+			token.GetLocationString(),
+			token.GetHumanUpdatedAt(),
+		})
+	}
+	return rows
+}
+
+func TokensBrowse(tokens []sdk.TokenData, action func(id string) error) error {
+	columns := []table.Column{
+		{Title: "ID", Width: 10},
+		{Title: "Source", Width: 20},
+		{Title: "Location", Width: TermWidth() - 57},
+		{Title: "Last Activity", Width: 15},
+	}
+
+	rows := TokensRows(tokens)
+
+	t := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(TermHeight()-10),
+		table.WithWidth(TermWidth()-5),
+	)
+
+	s := table.DefaultStyles()
+	s.Header = s.Header.
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color("#6667ab")).
+		BorderBottom(true).
+		Bold(false)
+	s.Selected = s.Selected.
+		Foreground(lipgloss.Color("#000000")).
+		Background(lipgloss.Color("#34d399")).
+		Bold(false)
+	t.SetStyles(s)
+
+	m := tableModel{t, action}
+	p := tea.NewProgram(m)
+	if _, err := p.Run(); err != nil {
+		return fmt.Errorf("error running program: %v", err)
+	}
+
+	return nil
+}
+
 func TokensList(tokens []sdk.TokenData) error {
 
 	t := ltable.New().

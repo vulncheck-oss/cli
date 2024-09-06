@@ -32,6 +32,8 @@ type Copy struct {
 	ListTokensShort string
 	ListTokensFull  string
 
+	BrowseTokensShort string
+
 	CreateTokenShort         string
 	CreateTokenLabelRequired string
 	CreateTokenSuccess       string
@@ -158,6 +160,8 @@ var En = Copy{
 
 	ListTokensShort: "List tokens",
 	ListTokensFull:  "Listing %d tokens",
+
+	BrowseTokensShort: "Browse tokens interactively",
 
 	CreateTokenShort:         "Create a token",
 	CreateTokenSuccess:       "Token %s created successfully: %s",

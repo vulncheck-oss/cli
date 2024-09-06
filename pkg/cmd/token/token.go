@@ -2,11 +2,14 @@ package token
 
 import (
 	"fmt"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/huh"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
+	"github.com/vulncheck-oss/sdk"
 )
 
 func Command() *cobra.Command {
@@ -18,6 +21,7 @@ func Command() *cobra.Command {
 	cmd.AddCommand(List())
 	cmd.AddCommand(Create())
 	cmd.AddCommand(Remove())
+	cmd.AddCommand(Browse())
 
 	return cmd
 }
@@ -97,4 +101,83 @@ func List() *cobra.Command {
 
 	cmd.Flags().BoolVarP(&opts.Json, "json", "j", false, "Output as JSON")
 	return cmd
+}
+
+func tokenFromId(tokens []sdk.TokenData, tokenId string) *sdk.TokenData {
+	for _, token := range tokens {
+		if token.ID == tokenId {
+			return &token
+		}
+	}
+	return nil
+}
+
+func Browse() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "browse",
+		Short: i18n.C.BrowseTokensShort,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			response, err := session.Connect(config.Token()).GetTokens()
+			if err != nil {
+				return err
+			}
+			ui.Info(fmt.Sprintf(i18n.C.ListTokensFull, len(response.GetData())))
+
+			tokens := response.GetData()
+
+			return BrowseTokens(tokens)
+		},
+	}
+
+	return cmd
+}
+
+func BrowseTokens(tokens []sdk.TokenData) error {
+	action := func(tokenId string) error {
+		token := tokenFromId(tokens, tokenId)
+		if token == nil {
+			return fmt.Errorf("token not found")
+		}
+		return BrowseActions(*token, tokens)
+	}
+
+	return ui.TokensBrowse(tokens, action)
+}
+
+func clearScreen() {
+	tea.EnterAltScreen()
+}
+
+func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
+	clearScreen()
+	var action string
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("Choose an action").
+				Options(
+					huh.NewOption("Delete token", "delete"),
+					huh.NewOption("Go back to token list", "back"),
+				).
+				Value(&action),
+		),
+	)
+
+	err := form.Run()
+	if err != nil {
+		return err
+	}
+
+	switch action {
+	case "delete":
+		clearScreen()
+		ui.Info("chosen to delete")
+		return nil
+	case "back":
+		clearScreen()
+		BrowseTokens(tokens)
+		return nil // This will return to the token list
+	default:
+		return fmt.Errorf("invalid action")
+	}
 }
