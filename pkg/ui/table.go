@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/table"
@@ -18,8 +19,9 @@ var baseStyle = lipgloss.NewStyle().
 	BorderForeground(lipgloss.Color("#6667ab"))
 
 type tableModel struct {
-	table  table.Model
-	action func(id string) error
+	table      table.Model
+	selectedID string
+	quitting   bool
 }
 
 func (m tableModel) Init() tea.Cmd { return nil }
@@ -29,24 +31,12 @@ func (m tableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "esc":
-			if m.table.Focused() {
-				m.table.Blur()
-			} else {
-				m.table.Focus()
-			}
 		case "q", "ctrl+c":
+			os.Exit(0)
 			return m, tea.Quit
 		case "enter":
-			if err := m.action(m.table.SelectedRow()[0]); err != nil {
-				return m, tea.Quit
-			}
+			m.selectedID = m.table.SelectedRow()[0]
 			return m, tea.Quit
-			/*
-				return m, tea.Batch(
-					m.action(m.table.SelectedRow()[0]),
-				)
-			*/
 		}
 	}
 	m.table, cmd = m.table.Update(msg)
@@ -101,7 +91,7 @@ func IndicesBrowse(indices []sdk.IndicesMeta, search string, action func(index s
 		Bold(false)
 	t.SetStyles(s)
 
-	m := tableModel{t, action}
+	m := tableModel{table: t}
 	p := tea.NewProgram(m)
 	if _, err := p.Run(); err != nil {
 		return fmt.Errorf("error running program: %v", err)
@@ -123,7 +113,7 @@ func TokensRows(tokens []sdk.TokenData) []table.Row {
 	return rows
 }
 
-func TokensBrowse(tokens []sdk.TokenData, action func(id string) error) error {
+func TokensBrowse(tokens []sdk.TokenData) (string, error) {
 	columns := []table.Column{
 		{Title: "ID", Width: 10},
 		{Title: "Source", Width: 20},
@@ -153,13 +143,21 @@ func TokensBrowse(tokens []sdk.TokenData, action func(id string) error) error {
 		Bold(false)
 	t.SetStyles(s)
 
-	m := tableModel{t, action}
+	m := tableModel{table: t}
 	p := tea.NewProgram(m)
-	if _, err := p.Run(); err != nil {
-		return fmt.Errorf("error running program: %v", err)
+	finalModel, err := p.Run()
+	if err != nil {
+		return "", fmt.Errorf("error running program: %v", err)
 	}
 
-	return nil
+	if finalModel, ok := finalModel.(tableModel); ok {
+		if finalModel.quitting {
+			return "", nil
+		}
+		return finalModel.selectedID, nil
+	}
+
+	return "", fmt.Errorf("unexpected model type")
 }
 
 func TokensList(tokens []sdk.TokenData) error {
