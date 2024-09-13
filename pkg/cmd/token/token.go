@@ -126,7 +126,8 @@ func Browse() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				ui.Info(fmt.Sprintf(i18n.C.ListTokensFull, len(response.GetData())))
+				ui.ClearScreen()
+				ui.Info(fmt.Sprintf(i18n.C.BrowseTokens, len(response.GetData())))
 				tokens := response.GetData()
 				selectedID, err := ui.TokensBrowse(tokens)
 				if err != nil {
@@ -136,6 +137,10 @@ func Browse() *cobra.Command {
 				if selectedID == "" {
 					// User quit the browse view
 					return nil
+				}
+
+				if selectedID == "createEntry" {
+					return fmt.Errorf("here we create a token")
 				}
 
 				token := tokenFromId(tokens, selectedID)
@@ -206,6 +211,7 @@ func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
 	tabWriter.Flush()
 
 	// Render the box with all content
+	ui.ClearScreen()
 	fmt.Println(boxStyle.Render(buf.String()))
 	fmt.Println() // Add a newline after the box
 

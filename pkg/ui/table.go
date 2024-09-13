@@ -19,10 +19,10 @@ var baseStyle = lipgloss.NewStyle().
 	BorderForeground(lipgloss.Color("#6667ab"))
 
 type tableModel struct {
-	table      table.Model
-	selectedID string
-	quitting   bool
-	footer     string
+	table       table.Model
+	selectedID  string
+	quitting    bool
+	createEntry bool
 }
 
 func (m tableModel) Init() tea.Cmd { return nil }
@@ -38,6 +38,11 @@ func (m tableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			m.selectedID = m.table.SelectedRow()[0]
 			return m, tea.Quit
+		case "c":
+			if m.createEntry {
+				m.selectedID = "createEntry"
+				return m, tea.Quit
+			}
 		}
 	}
 	m.table, cmd = m.table.Update(msg)
@@ -72,7 +77,7 @@ func IndicesBrowse(indices []sdk.IndicesMeta, search string) (string, error) {
 
 	rows := IndicesRows(indices, search)
 
-	m := newTableModel(columns, rows)
+	m := newTableModel(columns, rows, false)
 
 	p := tea.NewProgram(m)
 	finalModel, err := p.Run()
@@ -104,12 +109,12 @@ func TokensRows(tokens []sdk.TokenData) []table.Row {
 	return rows
 }
 
-func newTableModel(columns []table.Column, rows []table.Row) tableModel {
+func newTableModel(columns []table.Column, rows []table.Row, createEntry bool) tableModel {
 	t := table.New(
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(true),
-		table.WithHeight(TermHeight()-11), // Reduced height to accommodate footer
+		table.WithHeight(TermHeight()-11),
 		table.WithWidth(TermWidth()-5),
 	)
 
@@ -125,11 +130,7 @@ func newTableModel(columns []table.Column, rows []table.Row) tableModel {
 		Bold(false)
 	t.SetStyles(s)
 
-	footer := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6667ab")).
-		Render("q/ESC to quit")
-
-	return tableModel{table: t, footer: footer}
+	return tableModel{table: t, createEntry: createEntry}
 }
 
 func TokensBrowse(tokens []sdk.TokenData) (string, error) {
@@ -142,7 +143,7 @@ func TokensBrowse(tokens []sdk.TokenData) (string, error) {
 
 	rows := TokensRows(tokens)
 
-	m := newTableModel(columns, rows)
+	m := newTableModel(columns, rows, true)
 	p := tea.NewProgram(m)
 	finalModel, err := p.Run()
 	if err != nil {

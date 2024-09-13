@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/charmbracelet/lipgloss"
 	"os"
+	"os/exec"
+	"runtime"
 )
 
 var format = "%s %s\n"
@@ -15,6 +17,15 @@ var White = lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff"))
 var Gray = lipgloss.NewStyle().Foreground(lipgloss.Color("#dddddd"))
 var Emerald = lipgloss.NewStyle().Foreground(lipgloss.Color("#34d399"))
 var Red = lipgloss.NewStyle().Foreground(lipgloss.Color("#ff0000"))
+
+func ClearScreen() {
+	cmd := exec.Command("clear") // for Linux and macOS
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd", "/c", "cls")
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Run()
+}
 
 func Success(str string) {
 	fmt.Printf(

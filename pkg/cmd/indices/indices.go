@@ -77,12 +77,15 @@ func Browse() *cobra.Command {
 				search = args[0]
 			}
 			indices := response.GetData()
-			if search != "" {
-				ui.Info(fmt.Sprintf(i18n.C.BrowseIndicesSearch, len(ui.IndicesRows(indices, search)), search))
-			} else {
-				ui.Info(fmt.Sprintf(i18n.C.BrowseIndicesFull, len(ui.IndicesRows(indices, search))))
-			}
+
 			for {
+				ui.ClearScreen()
+
+				if search != "" {
+					ui.Info(fmt.Sprintf(i18n.C.BrowseIndicesSearch, len(ui.IndicesRows(indices, search)), search))
+				} else {
+					ui.Info(fmt.Sprintf(i18n.C.BrowseIndicesFull, len(ui.IndicesRows(indices, search))))
+				}
 
 				selectedIndex, err := ui.IndicesBrowse(indices, search)
 
