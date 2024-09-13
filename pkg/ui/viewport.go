@@ -7,10 +7,13 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/vulncheck-oss/sdk"
 	"strings"
 )
 
 const useHighPerformanceRenderer = false
+
+var subtle = lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}
 
 var (
 	titleStyle = func() lipgloss.Style {
@@ -27,11 +30,24 @@ var (
 )
 
 type model struct {
-	index    string
-	content  string
-	ready    bool
-	viewport viewport.Model
+	index      string
+	content    string
+	ready      bool
+	viewport   viewport.Model
+	paginated  bool
+	page       int
+	totalPages int
+	showHelp   bool
+	loadPage   func(index string, page int) (*sdk.IndexResponse, error)
 }
+
+type newPageMsg struct {
+	content    string
+	page       int
+	totalPages int
+}
+
+type errMsg struct{ error }
 
 func (m model) Init() tea.Cmd {
 	return nil
@@ -45,9 +61,39 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if k := msg.String(); k == "ctrl+c" || k == "q" || k == "esc" {
+		switch msg.String() {
+		case "ctrl+c", "q", "esc":
+			if m.showHelp {
+				m.showHelp = false
+				return m, nil
+			}
 			return m, tea.Quit
+		case "?":
+			m.showHelp = !m.showHelp
+			return m, nil
 		}
+
+		if m.paginated {
+			switch msg.String() {
+			case "left", "[":
+				if m.page > 1 {
+					m.page--
+					return m, loadPage(m)
+				}
+			case "right", "]":
+				if m.page < m.totalPages {
+					m.page++
+					return m, loadPage(m)
+				}
+			}
+		}
+
+	case newPageMsg:
+		m.content = msg.content
+		m.page = msg.page
+		m.totalPages = msg.totalPages
+		m.viewport.SetContent(m.content)
+		return m, nil
 
 	case tea.WindowSizeMsg:
 		headerHeight := lipgloss.Height(m.headerView())
@@ -92,10 +138,41 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+func loadPage(m model) tea.Cmd {
+	return func() tea.Msg {
+		response, err := m.loadPage(m.index, m.page)
+		if err != nil {
+			return errMsg{err}
+		}
+
+		marshaled, err := json.MarshalIndent(response.GetData(), "", "  ")
+		if err != nil {
+			return errMsg{err}
+		}
+
+		var buf strings.Builder
+		err = quick.Highlight(&buf, string(marshaled), "json", "terminal256", "nord")
+		if err != nil {
+			return errMsg{err}
+		}
+
+		return newPageMsg{
+			content:    buf.String(),
+			page:       response.Meta.Page,
+			totalPages: response.Meta.TotalPages,
+		}
+	}
+}
+
 func (m model) View() string {
 	if !m.ready {
 		return "\n  Initializing..."
 	}
+
+	if m.showHelp {
+		return fmt.Sprintf("%s\n%s\n%s", m.headerView(), m.helpView(), m.footerView())
+	}
+
 	return fmt.Sprintf("%s\n%s\n%s", m.headerView(), m.viewport.View(), m.footerView())
 }
 
@@ -106,9 +183,45 @@ func (m model) headerView() string {
 }
 
 func (m model) footerView() string {
-	info := infoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
+	var info string
+	if m.paginated {
+		info = infoStyle.Render(fmt.Sprintf("%3.f%% | Page %d of %d | ? for help", m.viewport.ScrollPercent()*100, m.page, m.totalPages))
+	} else {
+		info = infoStyle.Render(fmt.Sprintf("%3.f%% | ? for help", m.viewport.ScrollPercent()*100))
+	}
 	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(info)))
 	return lipgloss.JoinHorizontal(lipgloss.Center, line, info)
+}
+
+func (m model) helpView() string {
+	helpContent := `
+Hot Keys:
+
+q, esc         : Close help / Quit
+?              : Toggle help
+left, [        : Previous page
+right, ]       : Next page
+`
+
+	// Create a style for the help content
+	helpStyle := lipgloss.NewStyle().
+		Width(42). // Increased width to accommodate border
+		Align(lipgloss.Left).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("240")).
+		Padding(1, 2)
+
+	// Render the help content
+	renderedHelp := helpStyle.Render(helpContent)
+
+	// Center the rendered help in the viewport
+	return lipgloss.Place(
+		m.viewport.Width,
+		m.viewport.Height,
+		lipgloss.Center,
+		lipgloss.Center,
+		renderedHelp,
+	)
 }
 
 func max(a, b int) int {
@@ -135,6 +248,38 @@ func Viewport(index string, data interface{}) {
 
 	p := tea.NewProgram(
 		model{index: index, content: buf.String()},
+		tea.WithAltScreen(),
+		tea.WithMouseCellMotion(),
+	)
+
+	if _, err := p.Run(); err != nil {
+		fmt.Println("could not run program:", err)
+	}
+}
+
+func ViewportPaginated(index string, initialData interface{}, initialMeta sdk.IndexMeta, loadPageFunc func(index string, page int) (*sdk.IndexResponse, error)) {
+	marshaled, err := json.MarshalIndent(initialData, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+
+	var buf strings.Builder
+	err = quick.Highlight(&buf, string(marshaled), "json", "terminal256", "nord")
+	if err != nil {
+		panic(err)
+	}
+
+	m := model{
+		index:      index,
+		content:    buf.String(),
+		paginated:  true,
+		page:       initialMeta.Page,
+		totalPages: initialMeta.TotalPages,
+		loadPage:   loadPageFunc,
+	}
+
+	p := tea.NewProgram(
+		m,
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),
 	)

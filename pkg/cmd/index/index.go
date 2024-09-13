@@ -15,7 +15,6 @@ import (
 )
 
 func Command() *cobra.Command {
-
 	cmd := &cobra.Command{
 		Use:   "index <command>",
 		Short: i18n.C.IndexShort,
@@ -34,31 +33,7 @@ func Command() *cobra.Command {
 		Use:   "list <index>",
 		Short: i18n.C.IndexListShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 1 {
-				return ui.Error(i18n.C.IndexErrorRequired)
-			}
-
-			// Create a new IndexQueryParameters struct and set the values from the flags
-			queryParameters := sdk.IndexQueryParameters{}
-			for i := 0; i < keys.NumField(); i++ {
-				flag := utils.NormalizeString(keys.Field(i).Name)
-				if cmd.Flag(flag).Value.String() != "" {
-					field := reflect.ValueOf(&queryParameters).Elem().Field(i)
-					switch field.Kind() {
-					case reflect.String:
-						field.SetString(cmd.Flag(flag).Value.String())
-					case reflect.Int:
-						intValue, err := strconv.Atoi(cmd.Flag(flag).Value.String())
-						if err != nil {
-							fmt.Println(err)
-							continue
-						}
-						field.SetInt(int64(intValue))
-					}
-				}
-			}
-
-			response, err := session.Connect(config.Token()).GetIndex(args[0], queryParameters)
+			response, err := getIndexResponse(cmd, args)
 			if err != nil {
 				return err
 			}
@@ -71,35 +46,18 @@ func Command() *cobra.Command {
 		Use:   "browse <index>",
 		Short: i18n.C.IndexBrowseShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 1 {
-				return ui.Error(i18n.C.IndexErrorRequired)
-			}
-
-			// Create a new IndexQueryParameters struct and set the values from the flags
-			queryParameters := sdk.IndexQueryParameters{}
-			for i := 0; i < keys.NumField(); i++ {
-				flag := utils.NormalizeString(keys.Field(i).Name)
-				if cmd.Flag(flag).Value.String() != "" {
-					field := reflect.ValueOf(&queryParameters).Elem().Field(i)
-					switch field.Kind() {
-					case reflect.String:
-						field.SetString(cmd.Flag(flag).Value.String())
-					case reflect.Int:
-						intValue, err := strconv.Atoi(cmd.Flag(flag).Value.String())
-						if err != nil {
-							fmt.Println(err)
-							continue
-						}
-						field.SetInt(int64(intValue))
-					}
-				}
-			}
-
-			response, err := session.Connect(config.Token()).GetIndex(args[0], queryParameters)
+			response, err := getIndexResponse(cmd, args)
 			if err != nil {
 				return err
 			}
-			ui.Viewport(args[0], response.GetData())
+
+			loadPageFunc := func(index string, page int) (*sdk.IndexResponse, error) {
+				queryParams := buildQueryParameters(cmd)
+				queryParams.Page = page
+				return session.Connect(config.Token()).GetIndex(index, queryParams)
+			}
+
+			ui.ViewportPaginated(args[0], response.GetData(), response.Meta, loadPageFunc)
 			return nil
 		},
 	}
@@ -108,4 +66,39 @@ func Command() *cobra.Command {
 	cmd.AddCommand(cmdBrowse)
 
 	return cmd
+}
+
+func getIndexResponse(cmd *cobra.Command, args []string) (*sdk.IndexResponse, error) {
+	if len(args) != 1 {
+		return nil, ui.Error(i18n.C.IndexErrorRequired)
+	}
+
+	queryParameters := buildQueryParameters(cmd)
+
+	return session.Connect(config.Token()).GetIndex(args[0], queryParameters)
+}
+
+func buildQueryParameters(cmd *cobra.Command) sdk.IndexQueryParameters {
+	queryParameters := sdk.IndexQueryParameters{}
+	keys := reflect.TypeOf(sdk.IndexQueryParameters{})
+
+	for i := 0; i < keys.NumField(); i++ {
+		flag := utils.NormalizeString(keys.Field(i).Name)
+		if cmd.Flag(flag).Value.String() != "" {
+			field := reflect.ValueOf(&queryParameters).Elem().Field(i)
+			switch field.Kind() {
+			case reflect.String:
+				field.SetString(cmd.Flag(flag).Value.String())
+			case reflect.Int:
+				intValue, err := strconv.Atoi(cmd.Flag(flag).Value.String())
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
+				field.SetInt(int64(intValue))
+			}
+		}
+	}
+
+	return queryParameters
 }
