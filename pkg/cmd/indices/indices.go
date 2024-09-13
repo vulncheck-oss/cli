@@ -67,27 +67,41 @@ func Browse() *cobra.Command {
 		Short: i18n.C.BrowseIndicesShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			action := func(index string) error {
-				indexCommand := cmd.Root()
-				indexCommand.SetArgs([]string{"index", "browse", index})
-				if err := indexCommand.Execute(); err != nil {
-					return err
-				}
-				return nil
-			}
-
 			response, err := session.Connect(config.Token()).GetIndices()
+
 			if err != nil {
 				return err
 			}
+			search := ""
 			if len(args) > 0 && args[0] != "" {
-				indices := response.GetData()
-				ui.Info(fmt.Sprintf(i18n.C.BrowseIndicesSearch, len(ui.IndicesRows(indices, args[0])), args[0]))
-				return ui.IndicesBrowse(indices, args[0], action)
+				search = args[0]
+			}
+			indices := response.GetData()
+			if search != "" {
+				ui.Info(fmt.Sprintf(i18n.C.BrowseIndicesSearch, len(ui.IndicesRows(indices, search)), search))
+			} else {
+				ui.Info(fmt.Sprintf(i18n.C.BrowseIndicesFull, len(ui.IndicesRows(indices, search))))
+			}
+			for {
+
+				selectedIndex, err := ui.IndicesBrowse(indices, search)
+
+				if err != nil {
+					return err
+				}
+
+				if selectedIndex == "" {
+					// User quit the browse view
+					return nil
+				}
+
+				indexCommand := cmd.Root()
+				indexCommand.SetArgs([]string{"index", "browse", selectedIndex})
+				if err := indexCommand.Execute(); err != nil {
+					return err
+				}
 			}
 
-			ui.Info(fmt.Sprintf(i18n.C.BrowseIndicesFull, len(response.GetData())))
-			return ui.IndicesBrowse(response.GetData(), "", action)
 		},
 	}
 

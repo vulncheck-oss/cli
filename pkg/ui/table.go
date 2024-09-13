@@ -22,6 +22,7 @@ type tableModel struct {
 	table      table.Model
 	selectedID string
 	quitting   bool
+	footer     string
 }
 
 func (m tableModel) Init() tea.Cmd { return nil }
@@ -44,7 +45,7 @@ func (m tableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m tableModel) View() string {
-	return baseStyle.Render(m.table.View()) + "\n"
+	return baseStyle.Render(m.table.View())
 }
 
 func IndicesRows(indices []sdk.IndicesMeta, search string) []table.Row {
@@ -62,7 +63,7 @@ func IndicesRows(indices []sdk.IndicesMeta, search string) []table.Row {
 	return rows
 }
 
-func IndicesBrowse(indices []sdk.IndicesMeta, search string, action func(index string) error) error {
+func IndicesBrowse(indices []sdk.IndicesMeta, search string) (string, error) {
 	columns := []table.Column{
 		{Title: "Name", Width: 20},
 		{Title: "Description", Width: TermWidth() - 52},
@@ -71,33 +72,23 @@ func IndicesBrowse(indices []sdk.IndicesMeta, search string, action func(index s
 
 	rows := IndicesRows(indices, search)
 
-	t := table.New(
-		table.WithColumns(columns),
-		table.WithRows(rows),
-		table.WithFocused(true),
-		table.WithHeight(TermHeight()-10),
-		table.WithWidth(TermWidth()-5),
-	)
+	m := newTableModel(columns, rows)
 
-	s := table.DefaultStyles()
-	s.Header = s.Header.
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("#6667ab")).
-		BorderBottom(true).
-		Bold(false)
-	s.Selected = s.Selected.
-		Foreground(lipgloss.Color("#000000")).
-		Background(lipgloss.Color("#34d399")).
-		Bold(false)
-	t.SetStyles(s)
-
-	m := tableModel{table: t}
 	p := tea.NewProgram(m)
-	if _, err := p.Run(); err != nil {
-		return fmt.Errorf("error running program: %v", err)
+	finalModel, err := p.Run()
+
+	if err != nil {
+		return "", fmt.Errorf("error running program: %v", err)
 	}
 
-	return nil
+	if finalModel, ok := finalModel.(tableModel); ok {
+		if finalModel.quitting {
+			return "", nil
+		}
+		return finalModel.selectedID, nil
+	}
+
+	return "", fmt.Errorf("unexpected model type")
 }
 
 func TokensRows(tokens []sdk.TokenData) []table.Row {
@@ -113,21 +104,12 @@ func TokensRows(tokens []sdk.TokenData) []table.Row {
 	return rows
 }
 
-func TokensBrowse(tokens []sdk.TokenData) (string, error) {
-	columns := []table.Column{
-		{Title: "ID", Width: 10},
-		{Title: "Source", Width: 20},
-		{Title: "Location", Width: TermWidth() - 57},
-		{Title: "Last Activity", Width: 15},
-	}
-
-	rows := TokensRows(tokens)
-
+func newTableModel(columns []table.Column, rows []table.Row) tableModel {
 	t := table.New(
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(true),
-		table.WithHeight(TermHeight()-10),
+		table.WithHeight(TermHeight()-11), // Reduced height to accommodate footer
 		table.WithWidth(TermWidth()-5),
 	)
 
@@ -143,7 +125,24 @@ func TokensBrowse(tokens []sdk.TokenData) (string, error) {
 		Bold(false)
 	t.SetStyles(s)
 
-	m := tableModel{table: t}
+	footer := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#6667ab")).
+		Render("q/ESC to quit")
+
+	return tableModel{table: t, footer: footer}
+}
+
+func TokensBrowse(tokens []sdk.TokenData) (string, error) {
+	columns := []table.Column{
+		{Title: "ID", Width: 10},
+		{Title: "Source", Width: 20},
+		{Title: "Location", Width: TermWidth() - 57},
+		{Title: "Last Activity", Width: 15},
+	}
+
+	rows := TokensRows(tokens)
+
+	m := newTableModel(columns, rows)
 	p := tea.NewProgram(m)
 	finalModel, err := p.Run()
 	if err != nil {

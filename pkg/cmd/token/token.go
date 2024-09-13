@@ -120,15 +120,14 @@ func Browse() *cobra.Command {
 		Use:   "browse",
 		Short: i18n.C.BrowseTokensShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			response, err := session.Connect(config.Token()).GetTokens()
-			if err != nil {
-				return err
-			}
-			ui.Info(fmt.Sprintf(i18n.C.ListTokensFull, len(response.GetData())))
-
-			tokens := response.GetData()
 
 			for {
+				response, err := session.Connect(config.Token()).GetTokens()
+				if err != nil {
+					return err
+				}
+				ui.Info(fmt.Sprintf(i18n.C.ListTokensFull, len(response.GetData())))
+				tokens := response.GetData()
 				selectedID, err := ui.TokensBrowse(tokens)
 				if err != nil {
 					return err
@@ -217,8 +216,8 @@ func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
 				Title("Choose an action").
 				Options(
 					huh.NewOption("Go back to token list", "back"),
-					huh.NewOption("Quit", "quit"),
 					huh.NewOption("Delete token", "delete"),
+					huh.NewOption("Quit", "quit"),
 				).
 				Value(&action),
 		),
@@ -231,7 +230,18 @@ func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
 
 	switch action {
 	case "delete":
-		ui.Info("chosen to delete")
+		confirmed, err := BrowseActionConfirm(token.ID)
+		if err != nil {
+			return err
+		}
+		if confirmed {
+			// Proceed with token deletion
+			_, err := session.Connect(config.Token()).DeleteToken(token.ID)
+			if err != nil {
+				return err
+			}
+			ui.Success(fmt.Sprintf(i18n.C.RemoveTokenSuccess, token.ID))
+		}
 		return nil
 	case "back":
 		return nil
@@ -241,4 +251,24 @@ func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
 	default:
 		return fmt.Errorf("invalid action")
 	}
+}
+
+func BrowseActionConfirm(tokenID string) (bool, error) {
+	var confirmed bool
+
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewConfirm().
+				Title(fmt.Sprintf("Are you sure you want to delete token %s?", tokenID)).
+				Description("This action cannot be undone.").
+				Value(&confirmed),
+		),
+	)
+
+	err := form.Run()
+	if err != nil {
+		return false, err
+	}
+
+	return confirmed, nil
 }
