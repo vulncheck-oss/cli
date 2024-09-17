@@ -24,7 +24,9 @@ func ClearScreen() {
 		cmd = exec.Command("cmd", "/c", "cls")
 	}
 	cmd.Stdout = os.Stdout
-	cmd.Run()
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
 }
 
 func Success(str string) {
