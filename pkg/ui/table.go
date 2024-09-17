@@ -136,8 +136,8 @@ func newTableModel(columns []table.Column, rows []table.Row, createEntry bool) t
 func TokensBrowse(tokens []sdk.TokenData) (string, error) {
 	columns := []table.Column{
 		{Title: "ID", Width: 10},
-		{Title: "Source", Width: 20},
-		{Title: "Location", Width: TermWidth() - 57},
+		{Title: "Source", Width: 30},
+		{Title: "Location", Width: TermWidth() - 67},
 		{Title: "Last Activity", Width: 15},
 	}
 

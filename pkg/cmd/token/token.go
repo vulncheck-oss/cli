@@ -140,7 +140,10 @@ func Browse() *cobra.Command {
 				}
 
 				if selectedID == "createEntry" {
-					return fmt.Errorf("here we create a token")
+					if err := BrowseCreate(); err != nil {
+						return err
+					}
+					continue
 				}
 
 				token := tokenFromId(tokens, selectedID)
@@ -158,6 +161,58 @@ func Browse() *cobra.Command {
 	}
 
 	return cmd
+}
+
+func BrowseCreate() error {
+	var label string
+
+	// Prompt user for token label
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewInput().
+				Title("Enter a label for the new token").
+				Value(&label),
+		),
+	)
+
+	err := form.Run()
+	if err != nil {
+		return err
+	}
+
+	if label == "" {
+		return fmt.Errorf(i18n.C.CreateTokenLabelRequired)
+	}
+
+	// Create the token
+	response, err := session.Connect(config.Token()).CreateToken(label)
+	if err != nil {
+		return err
+	}
+
+	// Display the created token
+	ui.ClearScreen()
+	boxStyle := lipgloss.NewStyle().
+		Border(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color("#6667ab")).
+		Padding(1, 1)
+
+	tokenStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#34d399")).
+		Bold(true)
+
+	content := fmt.Sprintf(
+		"%s\n\n%s\n\n%s",
+		"Token created",
+		"Your new token (copy it now, it won't be shown again):",
+		tokenStyle.Render(response.Data.Token),
+	)
+
+	fmt.Println(boxStyle.Render(content))
+	fmt.Println("\nPress Enter to continue...")
+	fmt.Scanln() // Wait for user to press Enter
+
+	return nil
 }
 
 func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
