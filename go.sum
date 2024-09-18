@@ -802,8 +802,8 @@ github.com/vbatts/tar-split v0.11.3 h1:hLFqsOLQ1SsppQNTMpkpPXClLDfC2A3Zgy9OUU+RV
 github.com/vbatts/tar-split v0.11.3/go.mod h1:9QlHN18E+fEH7RdG+QAJJcuya3rqT7eXSTY7wGrAokY=
 github.com/vifraa/gopom v1.0.0 h1:L9XlKbyvid8PAIK8nr0lihMApJQg/12OBvMA28BcWh0=
 github.com/vifraa/gopom v1.0.0/go.mod h1:oPa1dcrGrtlO37WPDBm5SqHAT+wTgF8An1Q71Z6Vv4o=
-github.com/vulncheck-oss/sdk v1.6.0 h1:c4cbdG0/vj4vl1gbvwnMZbwUROpgrmtWO/vjsL8tHjc=
-github.com/vulncheck-oss/sdk v1.6.0/go.mod h1:KTYQxypnS2wFhU7Uep1d2XVyIWhPha+PQp+0jZwkGHI=
+github.com/vulncheck-oss/sdk v1.6.2 h1:yp3Pj0EK3izRBzEv5Jqj6GudhRO8ExwKdpD5hN/AOpg=
+github.com/vulncheck-oss/sdk v1.6.2/go.mod h1:z7vEA/CRPu6K7uWLXMXzyIzVncSUeEN8w1L1nakspds=
 github.com/wagoodman/go-partybus v0.0.0-20230516145632-8ccac152c651 h1:jIVmlAFIqV3d+DOxazTR9v+zgj8+VYuQBzPgBZvWBHA=
 github.com/wagoodman/go-partybus v0.0.0-20230516145632-8ccac152c651/go.mod h1:b26F2tHLqaoRQf8DywqzVaV1MQ9yvjb0OMcNl7Nxu20=
 github.com/wagoodman/go-progress v0.0.0-20230925121702-07e42b3cdba0 h1:0KGbf+0SMg+UFy4e1A/CPVvXn21f1qtWdeJwxZFoQG8=
