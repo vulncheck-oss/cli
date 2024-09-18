@@ -2,6 +2,7 @@ package indices
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
@@ -44,7 +45,11 @@ func List() *cobra.Command {
 				ui.Info(fmt.Sprintf(i18n.C.ListIndicesSearch, len(ui.IndicesRows(indices, args[0])), args[0]))
 				return ui.IndicesList(indices, args[0])
 			}
-			ui.Info(fmt.Sprintf(i18n.C.ListIndicesFull, len(response.GetData())))
+
+			if !opts.Json {
+				ui.Info(fmt.Sprintf(i18n.C.ListIndicesFull, len(response.GetData())))
+			}
+
 			if opts.Json {
 				ui.Json(response.GetData())
 				return nil
