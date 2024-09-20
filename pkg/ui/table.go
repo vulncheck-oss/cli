@@ -10,7 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	ltable "github.com/charmbracelet/lipgloss/table"
 	"github.com/vulncheck-oss/cli/pkg/models"
-	"github.com/vulncheck-oss/sdk"
+	"github.com/vulncheck-oss/sdk-go"
 	"golang.org/x/term"
 )
 

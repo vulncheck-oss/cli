@@ -3,6 +3,9 @@ package scan
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/charmbracelet/bubbles/progress"
@@ -13,10 +16,8 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/models"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
-	"github.com/vulncheck-oss/sdk"
-	"github.com/vulncheck-oss/sdk/pkg/client"
-	"strings"
-	"time"
+	"github.com/vulncheck-oss/sdk-go"
+	"github.com/vulncheck-oss/sdk-go/pkg/client"
 )
 
 type Options struct {
