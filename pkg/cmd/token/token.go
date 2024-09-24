@@ -3,6 +3,9 @@ package token
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"text/tabwriter"
+
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
@@ -10,9 +13,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
-	"github.com/vulncheck-oss/sdk"
-	"os"
-	"text/tabwriter"
+	"github.com/vulncheck-oss/sdk-go"
 )
 
 func Command() *cobra.Command {
