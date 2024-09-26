@@ -109,7 +109,7 @@ func extractZipFile(f *zip.File, dest string) error {
 }
 
 // GetDirectorySize calculates the total size of a directory and returns it as a human-readable string
-func GetDirectorySize(path string) (string, error) {
+func GetDirectorySize(path string) (uint64, error) {
 	var size int64
 	err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -121,7 +121,11 @@ func GetDirectorySize(path string) (string, error) {
 		return err
 	})
 	if err != nil {
-		return "", err
+		return 0, err
 	}
-	return humanize.Bytes(uint64(size)), nil
+	return uint64(size), nil
+}
+
+func GetSizeHuman(size uint64) string {
+	return humanize.Bytes(size)
 }
