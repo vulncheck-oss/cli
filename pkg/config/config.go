@@ -24,7 +24,7 @@ func Init() {
 }
 
 func loadConfig() (*Config, error) {
-	dir, err := configDir()
+	dir, err := Dir()
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func loadConfig() (*Config, error) {
 }
 
 func saveConfig(config *Config) error {
-	dir, err := configDir()
+	dir, err := Dir()
 	if err != nil {
 		return err
 	}
@@ -58,12 +58,26 @@ func saveConfig(config *Config) error {
 	return viper.WriteConfigAs(fmt.Sprintf("%s/vulncheck.yaml", dir))
 }
 
-func configDir() (string, error) {
+func Dir() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", nil
 	}
 	dir := fmt.Sprintf("%s/.config/vulncheck", homeDir)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return "", err
+		}
+	}
+	return dir, nil
+}
+
+func IndicesDir() (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", nil
+	}
+	dir := fmt.Sprintf("%s/.config/vulncheck/indices", homeDir)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			return "", err
