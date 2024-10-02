@@ -1,10 +1,12 @@
 package ipintel
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"github.com/itchyny/gojq"
 	"github.com/spf13/cobra"
+	"github.com/tidwall/gjson"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/ui"
@@ -13,6 +15,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -146,6 +149,7 @@ func buildQuery(country, asn, cidr, countryCode, hostname, id string) string {
 	return strings.Join(conditions, " and ")
 }
 
+/*
 func searchIndex(indexName, query string) ([]Entry, *SearchStats, error) {
 	startTime := time.Now()
 	var stats SearchStats
@@ -224,4 +228,168 @@ func searchIndex(indexName, query string) ([]Entry, *SearchStats, error) {
 	stats.Duration = time.Since(startTime)
 
 	return results, &stats, nil
+}
+*/
+
+func searchIndex(indexName, query string) ([]Entry, *SearchStats, error) {
+	startTime := time.Now()
+	var stats SearchStats
+
+	configDir, err := config.IndicesDir()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	indexDir := filepath.Join(configDir, indexName)
+
+	files, err := listIndexFiles(indexDir)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	jq, err := gojq.Parse(fmt.Sprintf("select(%s)", query))
+	code, err := gojq.Compile(jq)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to parse query: %w", err)
+	}
+
+	ui.Info(fmt.Sprintf("Using query: select(%s)", query))
+
+	resultsChan := make(chan Entry)
+	errorsChan := make(chan error)
+	var wg sync.WaitGroup
+
+	// Start worker goroutines
+	for _, file := range files {
+		wg.Add(1)
+		go processFile(file, query, code, resultsChan, errorsChan, &wg, &stats)
+	}
+
+	// Collect results
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+		close(errorsChan)
+	}()
+
+	var results []Entry
+	for result := range resultsChan {
+		results = append(results, result)
+	}
+
+	// Check for errors
+	for err := range errorsChan {
+		ui.Error(fmt.Sprintf("Error during processing: %v", err))
+	}
+
+	stats.Duration = time.Since(startTime)
+
+	return results, &stats, nil
+}
+
+func listIndexFiles(dir string) ([]string, error) {
+	var files []string
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && filepath.Ext(path) == ".json" {
+			files = append(files, path)
+		}
+		return nil
+	})
+	return files, err
+}
+
+func processFile(filePath, query string, code *gojq.Code, resultsChan chan<- Entry, errorsChan chan<- error, wg *sync.WaitGroup, stats *SearchStats) {
+	defer wg.Done()
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		errorsChan <- fmt.Errorf("failed to open file %s: %w", filePath, err)
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	atomic.AddInt64(&stats.TotalFiles, 1)
+
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		atomic.AddInt64(&stats.TotalLines, 1)
+
+		if !quickFilter(line, query) {
+			continue
+		}
+
+		entry, err := fullProcess(line, code)
+		if err != nil {
+			errorsChan <- fmt.Errorf("error processing line in file %s: %w", filePath, err)
+			continue
+		}
+		if entry != nil {
+			resultsChan <- *entry
+			atomic.AddInt64(&stats.MatchedLines, 1)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		errorsChan <- fmt.Errorf("error reading file %s: %w", filePath, err)
+	}
+}
+
+func quickFilter(line []byte, query string) bool {
+	// Parse the query to extract key fields and values
+	queryFields := parseQuery(query)
+
+	// Check if any of the query fields match the JSON data
+	for field, value := range queryFields {
+		result := gjson.GetBytes(line, field)
+		if result.Exists() && strings.Contains(strings.ToLower(result.String()), strings.ToLower(value)) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func parseQuery(query string) map[string]string {
+	fields := make(map[string]string)
+	// This is a simple parser and should be adjusted based on your actual query format
+	parts := strings.Split(query, " and ")
+	for _, part := range parts {
+		kv := strings.Split(part, " == ")
+		if len(kv) == 2 {
+			key := strings.Trim(kv[0], ". ")
+			value := strings.Trim(kv[1], "\"")
+			fields[key] = value
+		}
+	}
+	return fields
+}
+
+func fullProcess(line []byte, code *gojq.Code) (*Entry, error) {
+	var input map[string]interface{}
+	if err := json.Unmarshal(line, &input); err != nil {
+		return nil, fmt.Errorf("error parsing JSON: %w", err)
+	}
+
+	iter := code.Run(input)
+	v, ok := iter.Next()
+	if !ok {
+		return nil, nil
+	}
+	if err, ok := v.(error); ok {
+		return nil, fmt.Errorf("error processing line: %w", err)
+	}
+
+	if _, ok := v.(map[string]interface{}); ok {
+		var entry Entry
+		if err := json.Unmarshal(line, &entry); err != nil {
+			return nil, fmt.Errorf("error unmarshaling entry: %w", err)
+		}
+		return &entry, nil
+	}
+
+	return nil, nil
 }
