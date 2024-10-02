@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-type IPIntelEntry struct {
+type Entry struct {
 	IP          string   `json:"ip"`
 	Port        int      `json:"port"`
 	SSL         bool     `json:"ssl"`
@@ -146,7 +146,7 @@ func buildQuery(country, asn, cidr, countryCode, hostname, id string) string {
 	return strings.Join(conditions, " and ")
 }
 
-func searchIndex(indexName, query string) ([]IPIntelEntry, *SearchStats, error) {
+func searchIndex(indexName, query string) ([]Entry, *SearchStats, error) {
 	startTime := time.Now()
 	var stats SearchStats
 
@@ -161,7 +161,7 @@ func searchIndex(indexName, query string) ([]IPIntelEntry, *SearchStats, error) 
 		return nil, nil, fmt.Errorf("failed to read index directory: %w", err)
 	}
 
-	var results []IPIntelEntry
+	var results []Entry
 
 	jq, err := gojq.Parse(fmt.Sprintf("select(%s)", query))
 	code, err := gojq.Compile(jq)
@@ -210,7 +210,7 @@ func searchIndex(indexName, query string) ([]IPIntelEntry, *SearchStats, error) 
 			}
 
 			if _, ok := v.(map[string]interface{}); ok {
-				var entry IPIntelEntry
+				var entry Entry
 				if err := json.Unmarshal([]byte(line), &entry); err == nil {
 					results = append(results, entry)
 					atomic.AddInt64(&stats.MatchedLines, 1)
