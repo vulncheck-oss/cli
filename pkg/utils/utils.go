@@ -50,7 +50,6 @@ func ParseDate(date string) string {
 	)
 }
 
-// Unzip extracts a zip file to a destination directory
 func Unzip(src, dest string) error {
 	r, err := zip.OpenReader(src)
 	if err != nil {
@@ -87,14 +86,14 @@ func extractZipFile(f *zip.File, dest string) error {
 	}
 
 	if f.FileInfo().IsDir() {
-		if err := os.MkdirAll(path, f.Mode()); err != nil {
+		if err := os.MkdirAll(path, 0755); err != nil {
 			return err
 		}
 	} else {
-		if err := os.MkdirAll(filepath.Dir(path), f.Mode()); err != nil {
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 			return err
 		}
-		f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+		f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			return err
 		}

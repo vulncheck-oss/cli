@@ -16,7 +16,8 @@ type Environment struct {
 }
 
 type Config struct {
-	Token string
+	Token      string
+	IndicesDir string
 }
 
 func Init() {
@@ -55,6 +56,7 @@ func saveConfig(config *Config) error {
 	viper.SetConfigPermissions(0600)
 	viper.SetConfigType("yaml")
 	viper.Set("Token", config.Token)
+	viper.Set("IndicesDir", config.IndicesDir)
 	return viper.WriteConfigAs(fmt.Sprintf("%s/vulncheck.yaml", dir))
 }
 
@@ -73,6 +75,12 @@ func Dir() (string, error) {
 }
 
 func IndicesDir() (string, error) {
+
+	config, err := loadConfig()
+	if err == nil && config.IndicesDir != "" {
+		return config.IndicesDir, nil
+	}
+
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", nil
@@ -84,6 +92,15 @@ func IndicesDir() (string, error) {
 		}
 	}
 	return dir, nil
+}
+
+func SetIndicesDir(dir string) error {
+	config, err := loadConfig()
+	if err != nil {
+		config = &Config{}
+	}
+	config.IndicesDir = dir
+	return saveConfig(config)
 }
 
 func HasConfig() bool {

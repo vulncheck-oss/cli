@@ -187,8 +187,12 @@ func TestUnzip(t *testing.T) {
 		t.Fatalf("Failed to create test zip: %v", err)
 	}
 
-	// Create a destination directory
+	// Create a destination directory with appropriate permissions
 	destDir := filepath.Join(tempDir, "dest")
+	err = os.MkdirAll(destDir, 0755)
+	if err != nil {
+		t.Fatalf("Failed to create destination directory: %v", err)
+	}
 
 	// Test the Unzip function
 	err = Unzip(zipPath, destDir)
