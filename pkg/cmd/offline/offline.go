@@ -11,7 +11,9 @@ func Command() *cobra.Command {
 		Use:   "offline <command>",
 		Short: "Offline commands",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Help()
+			if err := cmd.Help(); err != nil {
+				panic(err)
+			}
 		},
 	}
 

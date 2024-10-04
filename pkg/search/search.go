@@ -61,9 +61,12 @@ func Index(indexName, query string) ([]Entry, *Stats, error) {
 	}
 
 	jq, err := gojq.Parse(fmt.Sprintf("select(%s)", query))
-	code, err := gojq.Compile(jq)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to parse query: %w", err)
+	}
+	code, err := gojq.Compile(jq)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to compile query: %w", err)
 	}
 
 	stats.Query = query
@@ -92,7 +95,7 @@ func Index(indexName, query string) ([]Entry, *Stats, error) {
 
 	// Check for errors
 	for err := range errorsChan {
-		ui.Error(fmt.Sprintf("Error during processing: %v", err))
+		_ = ui.Error(fmt.Sprintf("Error during processing: %v", err))
 	}
 
 	stats.Duration = time.Since(startTime)
@@ -181,7 +184,7 @@ func parseQuery(query string) map[string]string {
 		parts := strings.Split(query, " | ")
 		if len(parts) == 2 {
 			key := strings.Trim(parts[0], ".[]")
-			value := strings.Trim(parts[1], ". ==")
+			value := strings.Trim(parts[1], ". =")
 			value = strings.Trim(value, "\"")
 			fields[key] = value
 		}

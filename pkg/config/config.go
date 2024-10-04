@@ -78,7 +78,11 @@ func IndicesDir() (string, error) {
 
 	config, err := loadConfig()
 	if err == nil && config.IndicesDir != "" {
-		return config.IndicesDir, nil
+		dir := config.IndicesDir
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return "", fmt.Errorf("failed to create indices directory: %w", err)
+		}
+		return dir, nil
 	}
 
 	homeDir, err := os.UserHomeDir()
@@ -86,10 +90,8 @@ func IndicesDir() (string, error) {
 		return "", nil
 	}
 	dir := fmt.Sprintf("%s/.config/vulncheck/indices", homeDir)
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		if err := os.MkdirAll(dir, 0755); err != nil {
-			return "", err
-		}
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create indices directory: %w", err)
 	}
 	return dir, nil
 }

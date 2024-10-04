@@ -153,7 +153,7 @@ func IndicesSync(indices []string) error {
 		// Calculate and display the size of the extracted index
 		size, err := utils.GetDirectorySize(indexDir)
 		if err != nil {
-			ui.Error(fmt.Sprintf("Failed to calculate size of index directory: %s", err))
+			_ = ui.Error(fmt.Sprintf("Failed to calculate size of index directory: %s", err))
 		}
 
 		// Update or add sync info for this specific index
@@ -180,7 +180,7 @@ func IndicesSync(indices []string) error {
 
 		// Optionally, remove the downloaded zip file
 		if err := os.Remove(filePath); err != nil {
-			ui.Error(fmt.Sprintf("Failed to remove downloaded zip file: %s", err))
+			_ = ui.Error(fmt.Sprintf("Failed to remove downloaded zip file: %s", err))
 		}
 	}
 

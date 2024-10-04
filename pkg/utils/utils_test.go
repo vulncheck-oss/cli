@@ -2,7 +2,6 @@ package utils
 
 import (
 	"archive/zip"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -175,11 +174,7 @@ func TestParseDate(t *testing.T) {
 
 func TestUnzip(t *testing.T) {
 	// Create a temporary directory for the test
-	tempDir, err := ioutil.TempDir("", "unzip_test")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tempDir)
+	tempDir := os.TempDir()
 
 	// Create a test zip file
 	zipPath := filepath.Join(tempDir, "test.zip")
@@ -189,7 +184,7 @@ func TestUnzip(t *testing.T) {
 
 	// Create a destination directory with appropriate permissions
 	destDir := filepath.Join(tempDir, "dest")
-	err = os.MkdirAll(destDir, 0755)
+	err := os.MkdirAll(destDir, 0755)
 	if err != nil {
 		t.Fatalf("Failed to create destination directory: %v", err)
 	}
