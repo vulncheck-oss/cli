@@ -11,14 +11,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestCachedIndices(t *testing.T) {
+func TestIndices(t *testing.T) {
 	// Setup
 	tempDir := t.TempDir()
 	err := config.SetIndicesDir(tempDir)
 	assert.NoError(t, err)
 
 	// Test when no sync_info.yaml exists
-	info, err := CachedIndices()
+	info, err := Indices()
 	assert.NoError(t, err)
 	assert.Empty(t, info.Indices)
 
@@ -35,7 +35,7 @@ func TestCachedIndices(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test reading existing sync_info.yaml
-	info, err = CachedIndices()
+	info, err = Indices()
 	assert.NoError(t, err)
 	assert.Len(t, info.Indices, 2)
 	assert.Equal(t, "test1", info.Indices[0].Name)
@@ -77,31 +77,5 @@ func TestInfoFile_GetIndex(t *testing.T) {
 	assert.Nil(t, index)
 }
 
-func TestIndicesCurrent(t *testing.T) {
-	// Setup
-	tempDir := t.TempDir()
-	err := config.SetIndicesDir(tempDir)
-	assert.NoError(t, err)
-
-	// Create a mock sync_info.yaml
-	mockInfo := InfoFile{
-		Indices: []IndexInfo{
-			{Name: "test1", LastSync: time.Now(), Size: 1000, LastUpdated: "2023-05-01"},
-			{Name: "test2", LastSync: time.Now(), Size: 2000, LastUpdated: "2023-05-02"},
-		},
-	}
-	data, err := yaml.Marshal(mockInfo)
-	assert.NoError(t, err)
-	err = os.WriteFile(filepath.Join(tempDir, "sync_info.yaml"), data, 0644)
-	assert.NoError(t, err)
-
-	// Test IndicesCurrent
-	indices, err := IndicesCurrent()
-	assert.NoError(t, err)
-	assert.Len(t, indices, 2)
-	assert.Contains(t, indices, "test1")
-	assert.Contains(t, indices, "test2")
-}
-
-// Note: TestIndicesSync is not included as it requires mocking external API calls.
+// TestIndicesSync is not included as it requires mocking external API calls.
 // Consider writing an integration test for IndicesSync or mocking the session.Connect function.
