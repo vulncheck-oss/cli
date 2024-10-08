@@ -9,6 +9,7 @@ import (
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 )
 
@@ -23,7 +24,7 @@ type InfoFile struct {
 	Indices []IndexInfo `yaml:"indices"`
 }
 
-func CachedIndices() (InfoFile, error) {
+func Indices() (InfoFile, error) {
 	configDir, err := config.IndicesDir()
 	if err != nil {
 		return InfoFile{}, err
@@ -64,38 +65,6 @@ func (i *InfoFile) GetIndex(name string) *IndexInfo {
 	return nil
 }
 
-func IndicesCurrent() ([]string, error) {
-	indexInfo, err := CachedIndices()
-	if err != nil {
-		return nil, err
-	}
-
-	indices := make([]string, 0, len(indexInfo.Indices))
-	if len(indexInfo.Indices) != 0 {
-		ui.Info(fmt.Sprintf("Found %d currently cached indices", len(indexInfo.Indices)))
-
-		// Find the longest index name for proper alignment
-		maxNameLength := 0
-		for _, info := range indexInfo.Indices {
-			if len(info.Name) > maxNameLength {
-				maxNameLength = len(info.Name)
-			}
-		}
-
-		// Print each index info
-		for _, info := range indexInfo.Indices {
-			ui.Info(fmt.Sprintf("%-*s  Last updated: %-19s  Size: %s",
-				maxNameLength,
-				info.Name,
-				utils.ParseDate(info.LastUpdated),
-				utils.GetSizeHuman(info.Size)))
-			indices = append(indices, info.Name)
-		}
-	}
-
-	return indices, nil
-}
-
 func IndicesSync(indices []string) error {
 	configDir, err := config.IndicesDir()
 	if err != nil {
@@ -103,9 +72,22 @@ func IndicesSync(indices []string) error {
 	}
 
 	infoPath := filepath.Join(configDir, "sync_info.yaml")
-	indexInfo, err := CachedIndices()
+	indexInfo, err := Indices()
 	if err != nil {
 		return fmt.Errorf("failed to get cached indices: %w", err)
+	}
+
+	// Remove indices not in the provided list
+	for i := len(indexInfo.Indices) - 1; i >= 0; i-- {
+		if !slices.Contains(indices, indexInfo.Indices[i].Name) {
+			// Remove the index folder
+			indexDir := filepath.Join(configDir, indexInfo.Indices[i].Name)
+			if err := os.RemoveAll(indexDir); err != nil {
+				return fmt.Errorf("failed to remove index directory: %w", err)
+			}
+			// Remove the index from the list
+			indexInfo.Indices = append(indexInfo.Indices[:i], indexInfo.Indices[i+1:]...)
+		}
 	}
 
 	for _, index := range indices {

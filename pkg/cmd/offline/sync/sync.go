@@ -27,7 +27,12 @@ func Command() *cobra.Command {
 			}
 			indices := response.GetData()
 
-			selectedIndices, err := cache.IndicesCurrent()
+			indexInfo, err := cache.Indices()
+			selectedIndices := make([]string, 0, len(indexInfo.Indices))
+
+			for _, info := range indexInfo.Indices {
+				selectedIndices = append(selectedIndices, info.Name)
+			}
 			if err != nil {
 				return err
 			}

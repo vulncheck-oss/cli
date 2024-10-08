@@ -40,7 +40,7 @@ func Command() *cobra.Command {
 				return fmt.Errorf("requires at least one filter flag\n\nUsage:\n  %s", cmd.UseLine())
 			}
 
-			indices, err := cache.CachedIndices()
+			indices, err := cache.Indices()
 			if err != nil {
 				return err
 			}
