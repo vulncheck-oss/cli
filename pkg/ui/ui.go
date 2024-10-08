@@ -14,7 +14,7 @@ var statFormat = "%s %s: %s\n"
 
 var Pantone = lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))
 var White = lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff"))
-var Gray = lipgloss.NewStyle().Foreground(lipgloss.Color("#dddddd"))
+var Gray = lipgloss.NewStyle().Foreground(lipgloss.Color("#cccccc"))
 var Emerald = lipgloss.NewStyle().Foreground(lipgloss.Color("#34d399"))
 var Red = lipgloss.NewStyle().Foreground(lipgloss.Color("#ff0000"))
 

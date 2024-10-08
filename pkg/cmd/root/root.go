@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"github.com/vulncheck-oss/cli/pkg/cmd/offline"
 	"os"
 
 	"github.com/vulncheck-oss/cli/pkg/cmd/token"
@@ -87,6 +88,7 @@ func NewCmdRoot() *cobra.Command {
 	cmd.AddCommand(rule.Command())
 	cmd.AddCommand(tag.Command())
 	cmd.AddCommand(pdns.Command())
+	cmd.AddCommand(offline.Command())
 
 	return cmd
 }

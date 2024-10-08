@@ -1,6 +1,7 @@
 package backup
 
 import (
+	"github.com/vulncheck-oss/cli/pkg/utils"
 	"testing"
 )
 
@@ -33,7 +34,7 @@ func TestExtractFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := extractFile(tt.urlStr)
+			got, err := utils.ExtractFile(tt.urlStr)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("extractFile() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -65,7 +66,7 @@ func TestParseDate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := parseDate(tt.date); got != tt.expected {
+			if got := utils.ParseDate(tt.date); got != tt.expected {
 				t.Errorf("parseDate(%v) = %v, want %v", tt.date, got, tt.expected)
 			}
 		})
