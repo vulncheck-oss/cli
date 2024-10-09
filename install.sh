@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the version
-VERSION="0.7.0"
+VERSION="0.7.1"
 
 # Detect the operating system and architecture
 if [[ "$OSTYPE" == "darwin"* ]]; then
