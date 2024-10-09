@@ -9,7 +9,6 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"net"
 	"net/http"
-	"net/url"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -121,7 +120,7 @@ func Shutdown(server *http.Server) {
 func UpdateInquiry(hash string) error {
 	var responseJSON *Response
 	response, err := session.Connect("").
-		Form("name", url.QueryEscape(GetName())).
+		Form("name", GetName()).
 		Request("PUT", fmt.Sprintf("/inquiry/%s", hash))
 
 	if err != nil {
