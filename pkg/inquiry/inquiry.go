@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"unicode"
 )
 
 type Inquiry struct {
@@ -132,6 +133,7 @@ func UpdateInquiry(hash string) error {
 
 // GetName returns the ComputerName and/or hostname of the machine
 func GetName() string {
+
 	var out []byte
 	var err error
 
@@ -144,7 +146,25 @@ func GetName() string {
 		return ""
 	}
 
-	return strings.TrimSpace(string(out))
+	return filterASCII(strings.TrimSpace(string(out)))
+}
+
+// filterASCII removes non-ASCII characters from the input string
+// and converts high ASCII apostrophes to standard ASCII apostrophes
+func filterASCII(input string) string {
+	return strings.Map(func(r rune) rune {
+		switch r {
+		case '\u2018', '\u2019', '\u201B', '\u0060', '\u00B4': // Left single quotation mark, right single quotation mark, single high-reversed-9 quotation mark, grave accent, acute accent
+			return '\''
+		case '\u201C', '\u201D', '\u201F': // Left double quotation mark, right double quotation mark, double high-reversed-9 quotation mark
+			return '"'
+		default:
+			if r > unicode.MaxASCII {
+				return -1
+			}
+			return r
+		}
+	}, input)
 }
 
 // IsPortAvailable checks if a port is available by trying to listen on it
