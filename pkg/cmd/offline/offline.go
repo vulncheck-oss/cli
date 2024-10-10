@@ -19,6 +19,7 @@ func Command() *cobra.Command {
 
 	cmd.AddCommand(sync.Command())
 	cmd.AddCommand(ipintel.Command())
+	cmd.AddCommand(ipintel.AliasCommands()...)
 
 	return cmd
 }
