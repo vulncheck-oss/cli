@@ -3,6 +3,7 @@ package ipintel
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/search"
@@ -92,6 +93,51 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Output results in JSON format")
 
 	return cmd
+}
+
+func AliasCommands() []*cobra.Command {
+	timeframes := []struct {
+		short string
+		long  string
+	}{
+		{"3d", "3 days"},
+		{"10d", "10 days"},
+		{"30d", "30 days"},
+	}
+	var commands []*cobra.Command
+
+	for _, tf := range timeframes {
+		shortTf := tf.short
+		longTf := tf.long
+		aliasCmd := &cobra.Command{
+			Use:     fmt.Sprintf("ipintel-%s [flags]", shortTf),
+			Short:   fmt.Sprintf("IP Intel offline search for %s timeframe", longTf),
+			Long:    fmt.Sprintf("Search offline IP Intel data for %s timeframe", longTf),
+			Example: fmt.Sprintf("vulncheck offline ipintel-%s --country=Sweden", shortTf),
+			RunE: func(cmd *cobra.Command, args []string) error {
+				mainCmd := Command()
+
+				// Transfer all flags from the alias command to the main command
+				cmd.Flags().VisitAll(func(f *pflag.Flag) {
+					if f.Changed {
+						_ = mainCmd.Flags().Set(f.Name, f.Value.String())
+					}
+				})
+
+				// Set the timeframe argument
+				mainCmd.SetArgs(append([]string{shortTf}, args...))
+				return mainCmd.Execute()
+			},
+		}
+
+		// Copy flags from the main command
+		mainCmd := Command()
+		aliasCmd.Flags().AddFlagSet(mainCmd.Flags())
+
+		commands = append(commands, aliasCmd)
+	}
+
+	return commands
 }
 
 func buildQuery(country, asn, cidr, countryCode, hostname, id string) string {
