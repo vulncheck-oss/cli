@@ -1,14 +1,11 @@
 package sync
 
 import (
-	"fmt"
 	"github.com/charmbracelet/huh"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
-	"github.com/vulncheck-oss/cli/pkg/ui"
-	"strings"
 )
 
 func Command() *cobra.Command {
@@ -64,8 +61,6 @@ func Command() *cobra.Command {
 					return err
 				}
 			}
-
-			ui.Info(fmt.Sprintf("Syncing indices: %s", strings.Join(selectedIndices, ", ")))
 
 			if err := cache.IndicesSync(selectedIndices); err != nil {
 				return err
