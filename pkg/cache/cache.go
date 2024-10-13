@@ -5,7 +5,6 @@ import (
 	"github.com/fumeapp/taskin"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
-	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/cli/pkg/utils"
 	"gopkg.in/yaml.v3"
 	"io"
@@ -68,82 +67,83 @@ func (i *InfoFile) GetIndex(name string) *IndexInfo {
 	return nil
 }
 
-func syncSingleIndex(index string, configDir string, indexInfo *InfoFile) func(t *taskin.Task) error {
-	return func(t *taskin.Task) error {
-		response, err := session.Connect(config.Token()).GetIndexBackup(index)
-		if err != nil {
-			return err
-		}
-
-		file, err := utils.ExtractFile(response.GetData()[0].URL)
-		if err != nil {
-			return err
-		}
-
-		filePath := filepath.Join(configDir, file)
-		indexDir := filepath.Join(configDir, index)
-
-		lastUpdated := response.GetData()[0].DateAdded
-		date := utils.ParseDate(lastUpdated)
-
-		t.Title = fmt.Sprintf("[%s] Downloading %s (last updated %s)", index, file, date)
-
-		if err := DownloadWithProgress(response.GetData()[0].URL, filePath, t); err != nil {
-			return err
-		}
-
-		// Check if the index directory exists
-		if _, err := os.Stat(indexDir); !os.IsNotExist(err) {
-			// Remove the existing directory and its contents
-			if err := os.RemoveAll(indexDir); err != nil {
-				return fmt.Errorf("failed to remove existing index directory: %w", err)
+func syncSingleIndex(index string, configDir string, indexInfo *InfoFile) taskin.Task {
+	return taskin.Task{
+		Title: fmt.Sprintf("Syncing index: %s", index),
+		Task: func(t *taskin.Task) error {
+			response, err := session.Connect(config.Token()).GetIndexBackup(index)
+			if err != nil {
+				return err
 			}
-		}
 
-		// Create the index directory
-		if err := os.MkdirAll(indexDir, 0755); err != nil {
-			return fmt.Errorf("failed to create index directory: %w", err)
-		}
-
-		// Unzip the downloaded file into the index directory
-		if err := utils.Unzip(filePath, indexDir); err != nil {
-			return fmt.Errorf("failed to unzip index file: %w", err)
-		}
-
-		// Calculate and display the size of the extracted index
-		size, err := utils.GetDirectorySize(indexDir)
-		if err != nil {
-			_ = ui.Error(fmt.Sprintf("Failed to calculate size of index directory: %s", err))
-		}
-
-		// Update or add sync info for this specific index
-		updatedInfo := IndexInfo{
-			Name:        index,
-			LastSync:    time.Now(),
-			Size:        size,
-			LastUpdated: lastUpdated,
-		}
-
-		found := false
-		for i, info := range indexInfo.Indices {
-			if info.Name == index {
-				indexInfo.Indices[i] = updatedInfo
-				found = true
-				break
+			if len(response.GetData()) == 0 {
+				return fmt.Errorf("no data received for index %s", index)
 			}
-		}
-		if !found {
-			indexInfo.Indices = append(indexInfo.Indices, updatedInfo)
-		}
 
-		t.Title = fmt.Sprintf("Successfully synced %s (Size: %s)", index, utils.GetSizeHuman(size))
+			file, err := utils.ExtractFile(response.GetData()[0].URL)
+			if err != nil {
+				return err
+			}
 
-		// Optionally, remove the downloaded zip file
-		if err := os.Remove(filePath); err != nil {
-			_ = ui.Error(fmt.Sprintf("Failed to remove downloaded zip file: %s", err))
-		}
+			filePath := filepath.Join(configDir, file)
+			lastUpdated := response.GetData()[0].DateAdded
+			date := utils.ParseDate(lastUpdated)
 
-		return nil
+			// Downloading
+			t.Title = fmt.Sprintf("Downloading %s (last updated %s)", file, date)
+			if err := DownloadWithProgress(response.GetData()[0].URL, filePath, t); err != nil {
+				return err
+			}
+
+			// Extracting
+			t.Title = "Extracting"
+			indexDir := filepath.Join(configDir, index)
+			if _, err := os.Stat(indexDir); !os.IsNotExist(err) {
+				if err := os.RemoveAll(indexDir); err != nil {
+					return fmt.Errorf("failed to remove existing index directory: %w", err)
+				}
+			}
+			if err := os.MkdirAll(indexDir, 0755); err != nil {
+				return fmt.Errorf("failed to create index directory: %w", err)
+			}
+			if err := utils.Unzip(filePath, indexDir); err != nil {
+				return fmt.Errorf("failed to unzip index file: %w", err)
+			}
+
+			// Finalizing
+			t.Title = "Finalizing"
+			size, err := utils.GetDirectorySize(indexDir)
+			if err != nil {
+				return fmt.Errorf("failed to calculate size of index directory: %s", err)
+			}
+
+			updatedInfo := IndexInfo{
+				Name:        index,
+				LastSync:    time.Now(),
+				Size:        size,
+				LastUpdated: lastUpdated,
+			}
+
+			found := false
+			for i, info := range indexInfo.Indices {
+				if info.Name == index {
+					indexInfo.Indices[i] = updatedInfo
+					found = true
+					break
+				}
+			}
+			if !found {
+				indexInfo.Indices = append(indexInfo.Indices, updatedInfo)
+			}
+
+			t.Title = fmt.Sprintf("Synced %s (Size: %s)", index, utils.GetSizeHuman(size))
+
+			if err := os.Remove(filePath); err != nil {
+				return fmt.Errorf("failed to remove downloaded zip file: %s", err)
+			}
+
+			return nil
+		},
 	}
 }
 
@@ -172,12 +172,15 @@ func IndicesSync(indices []string) error {
 		}
 	}
 
-	var tasks taskin.Tasks
-	for _, index := range indices {
-		tasks = append(tasks, taskin.Task{
-			Title: fmt.Sprintf("Syncing index: %s", index),
-			Task:  syncSingleIndex(index, configDir, &indexInfo),
-		})
+	tasks := taskin.Tasks{
+		{
+			Title: fmt.Sprintf("Syncing %d indices", len(indices)),
+			Tasks: make(taskin.Tasks, len(indices)),
+		},
+	}
+
+	for i, index := range indices {
+		tasks[0].Tasks[i] = syncSingleIndex(index, configDir, &indexInfo)
 	}
 
 	runner := taskin.New(tasks, taskin.Defaults)
@@ -249,7 +252,7 @@ func DownloadWithProgress(url, filename string, task *taskin.Task) error {
 
 		progress := float64(written) / float64(size)
 		task.Progress(int(progress*100), 100)
-		task.Title = fmt.Sprintf("Downloading... %.2f%%", progress*100)
+		task.Title = fmt.Sprintf("Downloading %.2f%%", progress*100)
 	}
 
 	if err != nil {
