@@ -2,11 +2,14 @@ package cache
 
 import (
 	"fmt"
+	"github.com/fumeapp/taskin"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/cli/pkg/utils"
 	"gopkg.in/yaml.v3"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"slices"
@@ -65,32 +68,8 @@ func (i *InfoFile) GetIndex(name string) *IndexInfo {
 	return nil
 }
 
-func IndicesSync(indices []string) error {
-	configDir, err := config.IndicesDir()
-	if err != nil {
-		return err
-	}
-
-	infoPath := filepath.Join(configDir, "sync_info.yaml")
-	indexInfo, err := Indices()
-	if err != nil {
-		return fmt.Errorf("failed to get cached indices: %w", err)
-	}
-
-	// Remove indices not in the provided list
-	for i := len(indexInfo.Indices) - 1; i >= 0; i-- {
-		if !slices.Contains(indices, indexInfo.Indices[i].Name) {
-			// Remove the index folder
-			indexDir := filepath.Join(configDir, indexInfo.Indices[i].Name)
-			if err := os.RemoveAll(indexDir); err != nil {
-				return fmt.Errorf("failed to remove index directory: %w", err)
-			}
-			// Remove the index from the list
-			indexInfo.Indices = append(indexInfo.Indices[:i], indexInfo.Indices[i+1:]...)
-		}
-	}
-
-	for _, index := range indices {
+func syncSingleIndex(index string, configDir string, indexInfo *InfoFile) func(t *taskin.Task) error {
+	return func(t *taskin.Task) error {
 		response, err := session.Connect(config.Token()).GetIndexBackup(index)
 		if err != nil {
 			return err
@@ -101,16 +80,15 @@ func IndicesSync(indices []string) error {
 			return err
 		}
 
-		filePath := fmt.Sprintf("%s/%s", configDir, file)
-		indexDir := fmt.Sprintf("%s/%s", configDir, index)
+		filePath := filepath.Join(configDir, file)
+		indexDir := filepath.Join(configDir, index)
 
 		lastUpdated := response.GetData()[0].DateAdded
 		date := utils.ParseDate(lastUpdated)
 
-		ui.Info(fmt.Sprintf("[%s] last updated %s", index, date))
-		ui.Info(fmt.Sprintf("[%s] Downloading %s", index, file))
+		t.Title = fmt.Sprintf("[%s] Downloading %s (last updated %s)", index, file, date)
 
-		if err := ui.Download(response.GetData()[0].URL, filePath); err != nil {
+		if err := DownloadWithProgress(response.GetData()[0].URL, filePath, t); err != nil {
 			return err
 		}
 
@@ -158,12 +136,53 @@ func IndicesSync(indices []string) error {
 			indexInfo.Indices = append(indexInfo.Indices, updatedInfo)
 		}
 
-		ui.Info(fmt.Sprintf("Successfully synced %s (Size: %s)", index, utils.GetSizeHuman(size)))
+		t.Title = fmt.Sprintf("Successfully synced %s (Size: %s)", index, utils.GetSizeHuman(size))
 
 		// Optionally, remove the downloaded zip file
 		if err := os.Remove(filePath); err != nil {
 			_ = ui.Error(fmt.Sprintf("Failed to remove downloaded zip file: %s", err))
 		}
+
+		return nil
+	}
+}
+
+func IndicesSync(indices []string) error {
+	configDir, err := config.IndicesDir()
+	if err != nil {
+		return err
+	}
+
+	infoPath := filepath.Join(configDir, "sync_info.yaml")
+	indexInfo, err := Indices()
+	if err != nil {
+		return fmt.Errorf("failed to get cached indices: %w", err)
+	}
+
+	// Remove indices not in the provided list
+	for i := len(indexInfo.Indices) - 1; i >= 0; i-- {
+		if !slices.Contains(indices, indexInfo.Indices[i].Name) {
+			// Remove the index folder
+			indexDir := filepath.Join(configDir, indexInfo.Indices[i].Name)
+			if err := os.RemoveAll(indexDir); err != nil {
+				return fmt.Errorf("failed to remove index directory: %w", err)
+			}
+			// Remove the index from the list
+			indexInfo.Indices = append(indexInfo.Indices[:i], indexInfo.Indices[i+1:]...)
+		}
+	}
+
+	var tasks taskin.Tasks
+	for _, index := range indices {
+		tasks = append(tasks, taskin.Task{
+			Title: fmt.Sprintf("Syncing index: %s", index),
+			Task:  syncSingleIndex(index, configDir, &indexInfo),
+		})
+	}
+
+	runner := taskin.New(tasks, taskin.Defaults)
+	if err := runner.Run(); err != nil {
+		return err
 	}
 
 	// Save updated sync info
@@ -174,6 +193,67 @@ func IndicesSync(indices []string) error {
 
 	if err := os.WriteFile(infoPath, data, 0644); err != nil {
 		return fmt.Errorf("failed to write sync info: %w", err)
+	}
+
+	return nil
+}
+
+// DownloadWithProgress downloads a file from the given URL and saves it to the specified filename,
+// updating the progress on the provided taskin.Task.
+func DownloadWithProgress(url, filename string, task *taskin.Task) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return fmt.Errorf("failed to get URL: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("received non-200 status code: %d", resp.StatusCode)
+	}
+
+	file, err := os.Create(filename)
+	if err != nil {
+		return fmt.Errorf("failed to create file: %w", err)
+	}
+	defer file.Close()
+
+	size := resp.ContentLength
+	if size <= 0 {
+		return fmt.Errorf("unknown content length")
+	}
+
+	written := int64(0)
+	buffer := make([]byte, 32*1024)
+	for {
+		nr, er := resp.Body.Read(buffer)
+		if nr > 0 {
+			nw, ew := file.Write(buffer[0:nr])
+			if nw > 0 {
+				written += int64(nw)
+			}
+			if ew != nil {
+				err = ew
+				break
+			}
+			if nr != nw {
+				err = io.ErrShortWrite
+				break
+			}
+		}
+		if er != nil {
+			if er != io.EOF {
+				err = er
+			}
+			break
+		}
+
+		progress := float64(written) / float64(size)
+		task.Progress(int(progress*100), 100)
+		task.Title = fmt.Sprintf("Downloading... %.2f%%", progress*100)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error during download: %w", err)
 	}
 
 	return nil
