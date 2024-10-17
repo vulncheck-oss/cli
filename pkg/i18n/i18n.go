@@ -27,6 +27,22 @@ type Copy struct {
 	SavingResultsStart string
 	SavingResultsEnd   string
 
+	TokenShort string
+
+	ListTokensShort string
+	ListTokensFull  string
+
+	BrowseTokensShort string
+	BrowseTokens      string
+
+	CreateTokenShort         string
+	CreateTokenLabelRequired string
+	CreateTokenSuccess       string
+
+	RemoveTokenShort      string
+	RemoveTokenSuccess    string
+	RemoveTokenIDRequired string
+
 	IndicesShort string
 
 	ListIndicesShort  string
@@ -140,6 +156,22 @@ var En = Copy{
 	FlagSpecifyFile:    "Specify the file to save the results to",
 	SavingResultsStart: "Saving Results to %s",
 	SavingResultsEnd:   "Results saved to %s",
+
+	TokenShort: "Manage Tokens",
+
+	ListTokensShort: "List tokens",
+	ListTokensFull:  "Listing %d tokens",
+	BrowseTokens:    "Browsing %d tokens, ESC or q to quit, c to create a token",
+
+	BrowseTokensShort: "Browse tokens interactively",
+
+	CreateTokenShort:         "Create a token",
+	CreateTokenSuccess:       "Token %s created successfully: %s",
+	CreateTokenLabelRequired: "Token Label missing or invalid",
+
+	RemoveTokenShort:      "Remove a token",
+	RemoveTokenSuccess:    "Token %s removed successfully",
+	RemoveTokenIDRequired: "Token ID missing or invalid",
 
 	IndicesShort: "View indices",
 
