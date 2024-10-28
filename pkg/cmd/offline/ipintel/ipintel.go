@@ -2,6 +2,7 @@ package ipintel
 
 import (
 	"fmt"
+	"github.com/package-url/packageurl-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/vulncheck-oss/cli/pkg/cache"
@@ -167,5 +168,20 @@ func buildQuery(country, asn, cidr, countryCode, hostname, id string) string {
 	if len(conditions) == 0 {
 		return "true"
 	}
+	return strings.Join(conditions, " and ")
+}
+
+func BuildPurlQuery(instance packageurl.PackageURL) string {
+	conditions := []string{}
+
+	conditions = append(conditions, fmt.Sprintf(".name == %q", fmt.Sprintf("%s/%s", instance.Namespace, instance.Name)))
+
+	if instance.Version != "" {
+		conditions = append(conditions, fmt.Sprintf(".version == %q", instance.Version))
+	}
+
+	// purlStr := instance.ToString()
+	// conditions = append(conditions, fmt.Sprintf(".purl | any(. == %q)", purlStr))
+
 	return strings.Join(conditions, " and ")
 }

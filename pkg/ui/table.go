@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"github.com/package-url/packageurl-go"
 	"os"
 	"strings"
 
@@ -217,6 +218,17 @@ func PurlMeta(purl sdk.PurlMeta) error {
 		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
 		Headers("Type", "Namespace", "Nme", "Version", "Qualifiers", "Subpath").
 		Row(purl.Type, purl.Namespace, purl.Name, purl.Version, strings.Join(purl.Qualifiers, ","), purl.Subpath).
+		Width(TermWidth())
+	fmt.Println(t)
+	return nil
+}
+
+func PurlInstance(purl packageurl.PackageURL) error {
+	qualifiers := make([]string, 0, len(purl.Qualifiers))
+	t := ltable.New().
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
+		Headers("Type", "Namespace", "Nme", "Version", "Qualifiers", "Subpath").
+		Row(purl.Type, purl.Namespace, purl.Name, purl.Version, strings.Join(qualifiers, ","), purl.Subpath).
 		Width(TermWidth())
 	fmt.Println(t)
 	return nil
