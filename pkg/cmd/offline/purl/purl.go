@@ -61,7 +61,9 @@ func Command() *cobra.Command {
 			query := ipintel.BuildPurlQuery(instance)
 
 			if !jsonOutput && !config.IsCI() {
-				ui.PurlInstance(instance)
+				if err := ui.PurlInstance(instance); err != nil {
+					return err
+				}
 				ui.Info(fmt.Sprintf("Searching index %s, last updated on %s", index.Name, utils.ParseDate(index.LastUpdated)))
 			}
 
