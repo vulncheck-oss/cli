@@ -2,7 +2,6 @@ package purl
 
 import (
 	"fmt"
-	"github.com/octoper/go-ray"
 	"github.com/package-url/packageurl-go"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cache"
@@ -33,8 +32,6 @@ func Command() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
-			ray.Ray(instance)
 
 			if packages.IsOS(instance) {
 				return fmt.Errorf("Operating System package support coming soon")

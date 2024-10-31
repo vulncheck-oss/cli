@@ -14,7 +14,6 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fumeapp/taskin v0.1.8
 	github.com/itchyny/gojq v0.12.16
-	github.com/octoper/go-ray v0.1.5
 	github.com/package-url/packageurl-go v0.1.3
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/spf13/cobra v1.8.1
@@ -110,7 +109,6 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/gomarkdown/markdown v0.0.0-20230922112808-5421fefb8386 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/go-containerregistry v0.19.1 // indirect
 	github.com/google/licensecheck v0.3.1 // indirect
