@@ -190,11 +190,14 @@ func BuildPurlQuery(instance packageurl.PackageURL) string {
 	}
 
 	if instance.Version != "" {
-		conditions = append(conditions, fmt.Sprintf(".version == %q", instance.Version))
+		if instance.Type == "golang" {
+			// For golang, match the version at the end of the string
+			// conditions = append(conditions, fmt.Sprintf(".version | contains(%q)", instance.Version))
+			conditions = append(conditions, fmt.Sprintf("(.version | index(%q)) != null and (.version | rindex(%q)) == (.version | length - %d)", instance.Version, instance.Version, len(instance.Version)))
+		} else {
+			// For other types, keep the contains check
+			conditions = append(conditions, fmt.Sprintf(".version == %q", instance.Version))
+		}
 	}
-
-	// purlStr := instance.ToString()
-	// conditions = append(conditions, fmt.Sprintf(".purl | any(. == %q)", purlStr))
-
 	return strings.Join(conditions, " and ")
 }
