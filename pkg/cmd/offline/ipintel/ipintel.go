@@ -2,6 +2,7 @@ package ipintel
 
 import (
 	"fmt"
+	"github.com/package-url/packageurl-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/vulncheck-oss/cli/pkg/cache"
@@ -141,7 +142,7 @@ func AliasCommands() []*cobra.Command {
 }
 
 func buildQuery(country, asn, cidr, countryCode, hostname, id string) string {
-	conditions := []string{}
+	var conditions []string
 
 	if country != "" {
 		conditions = append(conditions, fmt.Sprintf(".country == %q", country))
@@ -167,5 +168,33 @@ func buildQuery(country, asn, cidr, countryCode, hostname, id string) string {
 	if len(conditions) == 0 {
 		return "true"
 	}
+	return strings.Join(conditions, " and ")
+}
+
+func BuildPurlQuery(instance packageurl.PackageURL) string {
+	seperator := "/"
+	var conditions []string
+
+	if instance.Type == "maven" {
+		seperator = ":"
+	}
+
+	if instance.Namespace == "alpine" {
+		conditions = append(conditions, fmt.Sprintf(".package_name == %q", instance.Name))
+	} else {
+		if instance.Namespace != "" {
+			conditions = append(conditions, fmt.Sprintf(".name == %q", fmt.Sprintf("%s%s%s", instance.Namespace, seperator, instance.Name)))
+		} else {
+			conditions = append(conditions, fmt.Sprintf(".name == %q", instance.Name))
+		}
+	}
+
+	if instance.Version != "" {
+		conditions = append(conditions, fmt.Sprintf(".version == %q", instance.Version))
+	}
+
+	// purlStr := instance.ToString()
+	// conditions = append(conditions, fmt.Sprintf(".purl | any(. == %q)", purlStr))
+
 	return strings.Join(conditions, " and ")
 }

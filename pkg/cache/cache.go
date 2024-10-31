@@ -91,7 +91,7 @@ func syncSingleIndex(index string, configDir string, indexInfo *InfoFile) taskin
 
 			// Downloading
 			t.Title = fmt.Sprintf("Downloading %s (last updated %s)", file, date)
-			if err := DownloadWithProgress(response.GetData()[0].URL, filePath, t); err != nil {
+			if err := DownloadWithProgress(response.GetData()[0].URL, index, filePath, t); err != nil {
 				return err
 			}
 
@@ -145,6 +145,25 @@ func syncSingleIndex(index string, configDir string, indexInfo *InfoFile) taskin
 			return nil
 		},
 	}
+}
+
+func PurgeIndices() error {
+	configDir, err := config.IndicesDir()
+	if err != nil {
+		return fmt.Errorf("failed to get indices directory: %w", err)
+	}
+
+	// Remove the entire indices directory
+	if err := os.RemoveAll(configDir); err != nil {
+		return fmt.Errorf("failed to remove indices directory: %w", err)
+	}
+
+	// Recreate an empty indices directory
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return fmt.Errorf("failed to recreate indices directory: %w", err)
+	}
+
+	return nil
 }
 
 func IndicesSync(indices []string) error {
@@ -203,7 +222,7 @@ func IndicesSync(indices []string) error {
 
 // DownloadWithProgress downloads a file from the given URL and saves it to the specified filename,
 // updating the progress on the provided taskin.Task.
-func DownloadWithProgress(url, filename string, task *taskin.Task) error {
+func DownloadWithProgress(url string, index string, filename string, task *taskin.Task) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return fmt.Errorf("failed to get URL: %w", err)
@@ -252,7 +271,7 @@ func DownloadWithProgress(url, filename string, task *taskin.Task) error {
 
 		progress := float64(written) / float64(size)
 		task.Progress(int(progress*100), 100)
-		task.Title = fmt.Sprintf("Downloading %.2f%%", progress*100)
+		task.Title = fmt.Sprintf("Downloading %s %.2f%%", index, progress*100)
 	}
 
 	if err != nil {

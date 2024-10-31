@@ -3,6 +3,7 @@ package offline
 import (
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/ipintel"
+	"github.com/vulncheck-oss/cli/pkg/cmd/offline/purl"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
 )
 
@@ -20,6 +21,7 @@ func Command() *cobra.Command {
 	cmd.AddCommand(sync.Command())
 	cmd.AddCommand(ipintel.Command())
 	cmd.AddCommand(ipintel.AliasCommands()...)
+	cmd.AddCommand(purl.Command())
 
 	return cmd
 }

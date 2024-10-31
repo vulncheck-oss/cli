@@ -8,6 +8,7 @@ import (
 	"github.com/tidwall/gjson"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/ui"
+	"github.com/vulncheck-oss/sdk-go"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,6 +16,27 @@ import (
 	"sync/atomic"
 	"time"
 )
+
+type PurlEntry struct {
+	Name            string                  `json:"name"`
+	Version         string                  `json:"version"`
+	Purl            []string                `json:"purl"`
+	Licenses        []string                `json:"licenses"`
+	CVEs            []string                `json:"cves"`
+	Vulnerabilities []sdk.PurlVulnerability `json:"vulnerabilities"`
+	Artifacts       struct {
+		Source []struct {
+			Type      string `json:"type"`
+			URL       string `json:"url"`
+			Reference string `json:"reference,omitempty"`
+		} `json:"source"`
+		Binary []struct {
+			Type string `json:"type"`
+			URL  string `json:"url"`
+		} `json:"binary"`
+	} `json:"artifacts"`
+	PublishedDate string `json:"published_date"`
+}
 
 type Entry struct {
 	IP          string   `json:"ip"`
@@ -101,6 +123,131 @@ func Index(indexName, query string) ([]Entry, *Stats, error) {
 	stats.Duration = time.Since(startTime)
 
 	return results, &stats, nil
+}
+
+// IndexPurl - for PURL searches
+func IndexPurl(indexName, query string) ([]PurlEntry, *Stats, error) {
+	startTime := time.Now()
+	var stats Stats
+
+	configDir, err := config.IndicesDir()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	indexDir := filepath.Join(configDir, indexName)
+
+	files, err := listIndexFiles(indexDir)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	jq, err := gojq.Parse(fmt.Sprintf("select(%s)", query))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to parse query: %w", err)
+	}
+	code, err := gojq.Compile(jq)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to compile query: %w", err)
+	}
+
+	stats.Query = query
+
+	resultsChan := make(chan PurlEntry)
+	errorsChan := make(chan error)
+	var wg sync.WaitGroup
+
+	// Start worker goroutines
+	for _, file := range files {
+		wg.Add(1)
+		go processPurlFile(file, query, code, resultsChan, errorsChan, &wg, &stats)
+	}
+
+	// Collect results
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+		close(errorsChan)
+	}()
+
+	var results []PurlEntry
+	for result := range resultsChan {
+		results = append(results, result)
+	}
+
+	// Check for errors
+	for err := range errorsChan {
+		_ = ui.Error(fmt.Sprintf("Error during processing: %v", err))
+	}
+
+	stats.Duration = time.Since(startTime)
+
+	return results, &stats, nil
+}
+
+// New function to process PURL files
+func processPurlFile(filePath, query string, code *gojq.Code, resultsChan chan<- PurlEntry, errorsChan chan<- error, wg *sync.WaitGroup, stats *Stats) {
+	defer wg.Done()
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		errorsChan <- fmt.Errorf("failed to open file %s: %w", filePath, err)
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	atomic.AddInt64(&stats.TotalFiles, 1)
+
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		atomic.AddInt64(&stats.TotalLines, 1)
+
+		if !quickFilter(line, query) {
+			continue
+		}
+
+		entry, err := processPurlLine(line, code)
+		if err != nil {
+			errorsChan <- fmt.Errorf("error processing line in file %s: %w", filePath, err)
+			continue
+		}
+		if entry != nil {
+			resultsChan <- *entry
+			atomic.AddInt64(&stats.MatchedLines, 1)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		errorsChan <- fmt.Errorf("error reading file %s: %w", filePath, err)
+	}
+}
+
+// New function to process a single PURL line
+func processPurlLine(line []byte, code *gojq.Code) (*PurlEntry, error) {
+	var input map[string]interface{}
+	if err := json.Unmarshal(line, &input); err != nil {
+		return nil, fmt.Errorf("error parsing JSON: %w", err)
+	}
+
+	iter := code.Run(input)
+	v, ok := iter.Next()
+	if !ok {
+		return nil, nil
+	}
+	if err, ok := v.(error); ok {
+		return nil, fmt.Errorf("error processing line: %w", err)
+	}
+
+	if _, ok := v.(map[string]interface{}); ok {
+		var entry PurlEntry
+		if err := json.Unmarshal(line, &entry); err != nil {
+			return nil, fmt.Errorf("error unmarshaling entry: %w", err)
+		}
+		return &entry, nil
+	}
+
+	return nil, nil
 }
 
 func listIndexFiles(dir string) ([]string, error) {
