@@ -20,7 +20,7 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	github.com/tidwall/gjson v1.18.0
-	github.com/vulncheck-oss/sdk-go v1.6.3
+	github.com/vulncheck-oss/sdk-go v1.6.4
 	golang.org/x/term v0.23.0
 	gopkg.in/yaml.v3 v3.0.1
 )
