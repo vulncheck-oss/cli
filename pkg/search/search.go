@@ -125,7 +125,7 @@ func Index(indexName, query string) ([]Entry, *Stats, error) {
 	return results, &stats, nil
 }
 
-// New function for PURL searches
+// IndexPurl - for PURL searches
 func IndexPurl(indexName, query string) ([]PurlEntry, *Stats, error) {
 	startTime := time.Now()
 	var stats Stats

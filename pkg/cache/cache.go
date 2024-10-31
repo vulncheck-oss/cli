@@ -147,6 +147,25 @@ func syncSingleIndex(index string, configDir string, indexInfo *InfoFile) taskin
 	}
 }
 
+func PurgeIndices() error {
+	configDir, err := config.IndicesDir()
+	if err != nil {
+		return fmt.Errorf("failed to get indices directory: %w", err)
+	}
+
+	// Remove the entire indices directory
+	if err := os.RemoveAll(configDir); err != nil {
+		return fmt.Errorf("failed to remove indices directory: %w", err)
+	}
+
+	// Recreate an empty indices directory
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return fmt.Errorf("failed to recreate indices directory: %w", err)
+	}
+
+	return nil
+}
+
 func IndicesSync(indices []string) error {
 	configDir, err := config.IndicesDir()
 	if err != nil {

@@ -142,7 +142,7 @@ func AliasCommands() []*cobra.Command {
 }
 
 func buildQuery(country, asn, cidr, countryCode, hostname, id string) string {
-	conditions := []string{}
+	var conditions []string
 
 	if country != "" {
 		conditions = append(conditions, fmt.Sprintf(".country == %q", country))
@@ -172,9 +172,22 @@ func buildQuery(country, asn, cidr, countryCode, hostname, id string) string {
 }
 
 func BuildPurlQuery(instance packageurl.PackageURL) string {
-	conditions := []string{}
+	seperator := "/"
+	var conditions []string
 
-	conditions = append(conditions, fmt.Sprintf(".name == %q", fmt.Sprintf("%s/%s", instance.Namespace, instance.Name)))
+	if instance.Type == "maven" {
+		seperator = ":"
+	}
+
+	if instance.Namespace == "alpine" {
+		conditions = append(conditions, fmt.Sprintf(".package_name == %q", instance.Name))
+	} else {
+		if instance.Namespace != "" {
+			conditions = append(conditions, fmt.Sprintf(".name == %q", fmt.Sprintf("%s%s%s", instance.Namespace, seperator, instance.Name)))
+		} else {
+			conditions = append(conditions, fmt.Sprintf(".name == %q", instance.Name))
+		}
+	}
 
 	if instance.Version != "" {
 		conditions = append(conditions, fmt.Sprintf(".version == %q", instance.Version))

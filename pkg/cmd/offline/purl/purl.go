@@ -2,14 +2,18 @@ package purl
 
 import (
 	"fmt"
+	"github.com/octoper/go-ray"
 	"github.com/package-url/packageurl-go"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/ipintel"
+	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
+	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/search"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/cli/pkg/utils"
+	"github.com/vulncheck-oss/sdk-go"
 )
 
 func Command() *cobra.Command {
@@ -30,21 +34,34 @@ func Command() *cobra.Command {
 				return err
 			}
 
+			ray.Ray(instance)
+
+			if packages.IsOS(instance) {
+				return fmt.Errorf("Operating System package support coming soon")
+			}
+
+			indexName := packages.IndexFromInstance(instance)
+
+			indexAvailable, err := sync.EnsureIndexSync(indexName)
+			if err != nil {
+				return err
+			}
+
+			if !indexAvailable {
+				return fmt.Errorf("index %s is required to proceed", instance.Type)
+			}
+
 			indices, err := cache.Indices()
 			if err != nil {
 				return err
 			}
 
-			index := indices.GetIndex(instance.Type)
-			if index == nil {
-				return fmt.Errorf("index %s is required for this command, and is not cached", instance.Type)
-			}
-
-			ui.PurlInstance(instance)
+			index := indices.GetIndex(indexName)
 
 			query := ipintel.BuildPurlQuery(instance)
 
 			if !jsonOutput && !config.IsCI() {
+				ui.PurlInstance(instance)
 				ui.Info(fmt.Sprintf("Searching index %s, last updated on %s", index.Name, utils.ParseDate(index.LastUpdated)))
 			}
 
@@ -54,7 +71,20 @@ func Command() *cobra.Command {
 			}
 
 			if jsonOutput || config.IsCI() {
-				ui.Json(results)
+
+				// Create a combined structure for JSON output
+				combinedOutput := struct {
+					Instance        packageurl.PackageURL   `json:"instance"`
+					Vulnerabilities []sdk.PurlVulnerability `json:"vulnerabilities"`
+				}{
+					Instance: instance,
+				}
+
+				// Collect all vulnerabilities
+				for _, result := range results {
+					combinedOutput.Vulnerabilities = append(combinedOutput.Vulnerabilities, result.Vulnerabilities...)
+				}
+				ui.Json(combinedOutput)
 				return nil
 			}
 
