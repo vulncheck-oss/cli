@@ -1,0 +1,25 @@
+name: Check go.mod to make sure go-ray is not present
+on:
+  push:
+    paths:
+      - go.mod
+  pull_request:
+    paths:
+      - go.mod
+
+
+jobs:
+  no-ray:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for go-ray in go.mod
+        run: |
+          if grep -q "github.com/octoper/go-ray" go.mod; then
+            echo "Error: github.com/octoper/go-ray found in go.mod"
+            exit 1
+          else
+            echo "Success: github.com/octoper/go-ray not found in go.mod"
+          fi
