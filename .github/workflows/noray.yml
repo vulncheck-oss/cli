@@ -1,4 +1,4 @@
-name: Check go.mod to make sure go-ray is not present
+name: No go-ray present
 on:
   push:
     paths:
