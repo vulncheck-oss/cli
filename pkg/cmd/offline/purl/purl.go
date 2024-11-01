@@ -5,7 +5,6 @@ import (
 	"github.com/package-url/packageurl-go"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cache"
-	"github.com/vulncheck-oss/cli/pkg/cmd/offline/ipintel"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
 	"github.com/vulncheck-oss/cli/pkg/config"
@@ -55,7 +54,7 @@ func Command() *cobra.Command {
 
 			index := indices.GetIndex(indexName)
 
-			query := ipintel.BuildPurlQuery(instance)
+			query := search.QueryPURL(instance)
 
 			if !jsonOutput && !config.IsCI() {
 				if err := ui.PurlInstance(instance); err != nil {

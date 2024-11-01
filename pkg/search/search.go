@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/itchyny/gojq"
+	"github.com/package-url/packageurl-go"
 	"github.com/tidwall/gjson"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/ui"
@@ -64,6 +65,67 @@ type Stats struct {
 	MatchedLines int64
 	Duration     time.Duration
 	Query        string
+}
+
+func QueryIPIntel(country, asn, cidr, countryCode, hostname, id string) string {
+	var conditions []string
+
+	if country != "" {
+		conditions = append(conditions, fmt.Sprintf(".country == %q", country))
+	}
+	if asn != "" {
+		conditions = append(conditions, fmt.Sprintf(".asn == %q", asn))
+	}
+	if cidr != "" {
+		// Note: CIDR matching would require additional logic
+		conditions = append(conditions, fmt.Sprintf(".ip == %q", cidr))
+		// conditions = append(conditions, fmt.Sprintf(".ip | startswith(%q)", strings.Split(cidr, "/")[0]))
+	}
+	if countryCode != "" {
+		conditions = append(conditions, fmt.Sprintf(".country_code == %q", countryCode))
+	}
+	if hostname != "" {
+		conditions = append(conditions, fmt.Sprintf(".hostnames | any(. == %q)", hostname))
+	}
+	if id != "" {
+		conditions = append(conditions, fmt.Sprintf(".type.id == %q", id))
+	}
+
+	if len(conditions) == 0 {
+		return "true"
+	}
+	return strings.Join(conditions, " and ")
+}
+
+func QueryPURL(instance packageurl.PackageURL) string {
+	seperator := "/"
+	var conditions []string
+
+	if instance.Type == "maven" {
+		seperator = ":"
+	}
+
+	if instance.Namespace == "alpine" {
+		conditions = append(conditions, fmt.Sprintf(".package_name == %q", instance.Name))
+	} else {
+		if instance.Namespace != "" {
+			conditions = append(conditions, fmt.Sprintf(".name == %q", fmt.Sprintf("%s%s%s", instance.Namespace, seperator, instance.Name)))
+		} else {
+			conditions = append(conditions, fmt.Sprintf(".name == %q", instance.Name))
+		}
+	}
+
+	if instance.Version != "" {
+		if instance.Type == "golang" {
+			// For golang, match the version at the end of the string
+			// conditions = append(conditions, fmt.Sprintf(".version | contains(%q)", instance.Version))
+			conditions = append(conditions, fmt.Sprintf("(.version | index(%q)) != null and (.version | rindex(%q)) == (.version | length - %d)", instance.Version, instance.Version, len(instance.Version)))
+		} else {
+			// For other types, keep the contains check
+			conditions = append(conditions, fmt.Sprintf(".version == %q", instance.Version))
+		}
+	}
+	return strings.Join(conditions, " and ")
 }
 
 func Index(indexName, query string) ([]Entry, *Stats, error) {

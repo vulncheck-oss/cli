@@ -2,7 +2,6 @@ package ipintel
 
 import (
 	"fmt"
-	"github.com/package-url/packageurl-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/vulncheck-oss/cli/pkg/cache"
@@ -11,7 +10,6 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/cli/pkg/utils"
 	"slices"
-	"strings"
 )
 
 func Command() *cobra.Command {
@@ -53,7 +51,7 @@ func Command() *cobra.Command {
 				return fmt.Errorf("index ipintel-%s is required for this command, and is not cached", args[0])
 			}
 
-			query := buildQuery(country, asn, cidr, countryCode, hostname, id)
+			query := search.QueryIPIntel(country, asn, cidr, countryCode, hostname, id)
 
 			if !jsonOutput && !config.IsCI() {
 				ui.Info(fmt.Sprintf("Searching index %s, last updated on %s", index.Name, utils.ParseDate(index.LastUpdated)))
@@ -139,65 +137,4 @@ func AliasCommands() []*cobra.Command {
 	}
 
 	return commands
-}
-
-func buildQuery(country, asn, cidr, countryCode, hostname, id string) string {
-	var conditions []string
-
-	if country != "" {
-		conditions = append(conditions, fmt.Sprintf(".country == %q", country))
-	}
-	if asn != "" {
-		conditions = append(conditions, fmt.Sprintf(".asn == %q", asn))
-	}
-	if cidr != "" {
-		// Note: CIDR matching would require additional logic
-		conditions = append(conditions, fmt.Sprintf(".ip == %q", cidr))
-		// conditions = append(conditions, fmt.Sprintf(".ip | startswith(%q)", strings.Split(cidr, "/")[0]))
-	}
-	if countryCode != "" {
-		conditions = append(conditions, fmt.Sprintf(".country_code == %q", countryCode))
-	}
-	if hostname != "" {
-		conditions = append(conditions, fmt.Sprintf(".hostnames | any(. == %q)", hostname))
-	}
-	if id != "" {
-		conditions = append(conditions, fmt.Sprintf(".type.id == %q", id))
-	}
-
-	if len(conditions) == 0 {
-		return "true"
-	}
-	return strings.Join(conditions, " and ")
-}
-
-func BuildPurlQuery(instance packageurl.PackageURL) string {
-	seperator := "/"
-	var conditions []string
-
-	if instance.Type == "maven" {
-		seperator = ":"
-	}
-
-	if instance.Namespace == "alpine" {
-		conditions = append(conditions, fmt.Sprintf(".package_name == %q", instance.Name))
-	} else {
-		if instance.Namespace != "" {
-			conditions = append(conditions, fmt.Sprintf(".name == %q", fmt.Sprintf("%s%s%s", instance.Namespace, seperator, instance.Name)))
-		} else {
-			conditions = append(conditions, fmt.Sprintf(".name == %q", instance.Name))
-		}
-	}
-
-	if instance.Version != "" {
-		if instance.Type == "golang" {
-			// For golang, match the version at the end of the string
-			// conditions = append(conditions, fmt.Sprintf(".version | contains(%q)", instance.Version))
-			conditions = append(conditions, fmt.Sprintf("(.version | index(%q)) != null and (.version | rindex(%q)) == (.version | length - %d)", instance.Version, instance.Version, len(instance.Version)))
-		} else {
-			// For other types, keep the contains check
-			conditions = append(conditions, fmt.Sprintf(".version == %q", instance.Version))
-		}
-	}
-	return strings.Join(conditions, " and ")
 }
