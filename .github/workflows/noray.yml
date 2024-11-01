@@ -3,11 +3,6 @@ on:
   push:
     paths:
       - go.mod
-  pull_request:
-    paths:
-      - go.mod
-
-
 jobs:
   no-ray:
     runs-on: ubuntu-latest
