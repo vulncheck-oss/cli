@@ -89,6 +89,14 @@ func syncSingleIndex(index string, configDir string, indexInfo *InfoFile) taskin
 			lastUpdated := response.GetData()[0].DateAdded
 			date := utils.ParseDate(lastUpdated)
 
+			// if lastUpdated is equal to LastUpdated inside indexInfo, bypass the download
+			if indexInfo.IndexExists(index) {
+				if indexInfo.GetIndex(index).LastUpdated == lastUpdated {
+					t.Title = fmt.Sprintf("Index %s is already up to date", index)
+					return nil
+				}
+			}
+
 			// Downloading
 			t.Title = fmt.Sprintf("Downloading %s (last updated %s)", file, date)
 			if err := DownloadWithProgress(response.GetData()[0].URL, index, filePath, t); err != nil {
