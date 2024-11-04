@@ -7,7 +7,7 @@ require (
 	github.com/alecthomas/chroma/v2 v2.14.0
 	github.com/anchore/syft v1.4.1
 	github.com/charmbracelet/bubbles v0.20.0
-	github.com/charmbracelet/bubbletea v1.1.0
+	github.com/charmbracelet/bubbletea v1.1.2
 	github.com/charmbracelet/huh v0.6.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20240404200615-66118a2cb3cf
 	github.com/charmbracelet/lipgloss v0.13.0
@@ -60,7 +60,7 @@ require (
 	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
 	github.com/catppuccin/go v0.2.0 // indirect
 	github.com/charmbracelet/harmonica v0.2.0 // indirect
-	github.com/charmbracelet/x/ansi v0.2.3 // indirect
+	github.com/charmbracelet/x/ansi v0.4.0 // indirect
 	github.com/charmbracelet/x/exp/strings v0.0.0-20240722160745-212f7b056ed0 // indirect
 	github.com/charmbracelet/x/term v0.2.0 // indirect
 	github.com/cloudflare/circl v1.3.8 // indirect
