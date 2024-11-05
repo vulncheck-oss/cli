@@ -3,10 +3,13 @@ package scan
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/anchore/syft/syft"
+	"github.com/anchore/syft/syft/format"
+	"github.com/anchore/syft/syft/format/cyclonedxjson"
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/fumeapp/taskin"
@@ -21,14 +24,17 @@ import (
 )
 
 type Options struct {
-	File     bool
-	FileName string
+	File      bool
+	FileName  string
+	SbomFile  string
+	SbomInput string
 }
 
 func Command() *cobra.Command {
 	opts := &Options{
 		File:     false,
 		FileName: "output.json",
+		SbomFile: "",
 	}
 
 	cmd := &cobra.Command{
@@ -102,6 +108,19 @@ func Command() *cobra.Command {
 				},
 			}
 
+			if opts.SbomFile != "" {
+				tasks = append(tasks, taskin.Task{
+					Title: fmt.Sprintf("Saving SBOM to %s", opts.SbomFile),
+					Task: func(t *taskin.Task) error {
+						if err := saveSbom(sbm, opts.SbomFile); err != nil {
+							return err
+						}
+						t.Title = fmt.Sprintf("SBOM saved to %s", opts.SbomFile)
+						return nil
+					},
+				})
+			}
+
 			if opts.File {
 				tasks = append(tasks, taskin.Task{
 					Title: fmt.Sprintf("Saving results to %s", opts.FileName),
@@ -150,6 +169,8 @@ func Command() *cobra.Command {
 
 	cmd.Flags().BoolVarP(&opts.File, "file", "f", false, i18n.C.FlagSaveResults)
 	cmd.Flags().StringVarP(&opts.FileName, "file-name", "n", "output.json", i18n.C.FlagSpecifyFile)
+	cmd.Flags().StringVarP(&opts.SbomFile, "sbom-output-file", "so", "", i18n.C.FlagSpecifySbomFile)
+	cmd.Flags().StringVarP(&opts.SbomInput, "sbom-input-file", "si", "", i18n.C.FlagSpecifySbomFile)
 
 	return cmd
 
@@ -169,6 +190,34 @@ func getSbom(dir string) (*sbom.SBOM, error) {
 	}
 
 	return sbm, nil
+}
+
+// saveSbom saves the SBOM to a specified file
+func saveSbom(sbm *sbom.SBOM, file string) error {
+
+	f, err := os.Create(file)
+	if err != nil {
+		return fmt.Errorf("unable to create file %s: %w", file, err)
+	}
+	defer f.Close()
+	encoder, err := cyclonedxjson.NewFormatEncoderWithConfig(cyclonedxjson.DefaultEncoderConfig())
+	if err != nil {
+		return err
+	}
+
+	data, err := format.Encode(*sbm, encoder)
+	if err != nil {
+		return fmt.Errorf("unable to encode SBOM: %w", err)
+	}
+
+	defer f.Close()
+
+	_, err = f.Write(data)
+	if err != nil {
+		return fmt.Errorf("unable to write to file %s: %w", file, err)
+	}
+
+	return nil
 }
 
 func getPurls(sbm *sbom.SBOM) []models.PurlDetail {
