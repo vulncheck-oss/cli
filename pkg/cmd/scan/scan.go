@@ -32,9 +32,10 @@ type Options struct {
 
 func Command() *cobra.Command {
 	opts := &Options{
-		File:     false,
-		FileName: "output.json",
-		SbomFile: "",
+		File:      false,
+		FileName:  "output.json",
+		SbomFile:  "",
+		SbomInput: "",
 	}
 
 	cmd := &cobra.Command{
@@ -54,19 +55,39 @@ func Command() *cobra.Command {
 
 			startTime := time.Now()
 
-			tasks := taskin.Tasks{
-				{
+			tasks := taskin.Tasks{}
+
+			// Conditionally add either the loadSbom or getSbom task
+			if opts.SbomInput != "" {
+				tasks = append(tasks, taskin.Task{
+					Title: fmt.Sprintf("Loading SBOM from %s", opts.SbomInput),
+					Task: func(t *taskin.Task) error {
+						var err error
+						sbm, err = loadSbom(opts.SbomInput)
+						if err != nil {
+							return err
+						}
+						t.Title = fmt.Sprintf("Loaded SBOM from %s", opts.SbomInput)
+						return nil
+					},
+				})
+			} else {
+				tasks = append(tasks, taskin.Task{
 					Title: i18n.C.ScanSbomStart,
 					Task: func(t *taskin.Task) error {
-						result, err := getSbom(args[0])
+						var err error
+						sbm, err = getSbom(args[0])
 						if err != nil {
 							return err
 						}
 						t.Title = i18n.C.ScanSbomEnd
-						sbm = result
 						return nil
 					},
-				},
+				})
+			}
+
+			// Add other necessary tasks after the SBOM task
+			tasks = append(tasks, taskin.Tasks{
 				{
 					Title: i18n.C.ScanExtractPurlStart,
 					Task: func(t *taskin.Task) error {
@@ -106,7 +127,7 @@ func Command() *cobra.Command {
 						return nil
 					},
 				},
-			}
+			}...)
 
 			if opts.SbomFile != "" {
 				tasks = append(tasks, taskin.Task{
@@ -169,8 +190,8 @@ func Command() *cobra.Command {
 
 	cmd.Flags().BoolVarP(&opts.File, "file", "f", false, i18n.C.FlagSaveResults)
 	cmd.Flags().StringVarP(&opts.FileName, "file-name", "n", "output.json", i18n.C.FlagSpecifyFile)
-	cmd.Flags().StringVarP(&opts.SbomFile, "sbom-output-file", "so", "", i18n.C.FlagSpecifySbomFile)
-	cmd.Flags().StringVarP(&opts.SbomInput, "sbom-input-file", "si", "", i18n.C.FlagSpecifySbomFile)
+	cmd.Flags().StringVarP(&opts.SbomFile, "sbom-output-file", "o", "", i18n.C.FlagSpecifySbomFile)
+	cmd.Flags().StringVarP(&opts.SbomInput, "sbom-input-file", "i", "", i18n.C.FlagSpecifySbomFile)
 
 	return cmd
 
@@ -218,6 +239,21 @@ func saveSbom(sbm *sbom.SBOM, file string) error {
 	}
 
 	return nil
+}
+
+func loadSbom(inputFile string) (*sbom.SBOM, error) {
+	file, err := os.Open(inputFile)
+	if err != nil {
+		return nil, fmt.Errorf("unable to open SBOM file %s: %w", inputFile, err)
+	}
+	defer file.Close()
+
+	sbm, _, _, err := format.Decode(file)
+	if err != nil {
+		return nil, fmt.Errorf("unable to decode SBOM from file %s: %w", inputFile, err)
+	}
+
+	return sbm, nil
 }
 
 func getPurls(sbm *sbom.SBOM) []models.PurlDetail {
