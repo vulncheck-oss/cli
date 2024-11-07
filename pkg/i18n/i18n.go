@@ -22,10 +22,12 @@ type Copy struct {
 	AuthLoginToken string
 	AuthLoginWeb   string
 
-	FlagSaveResults    string
-	FlagSpecifyFile    string
-	SavingResultsStart string
-	SavingResultsEnd   string
+	FlagSaveResults      string
+	FlagSpecifyFile      string
+	FlagSpecifySbomFile  string
+	FlagSpecifySbomInput string
+	SavingResultsStart   string
+	SavingResultsEnd     string
 
 	TokenShort string
 
@@ -95,7 +97,9 @@ type Copy struct {
 	ScanExample                string
 	ScanErrorDirectoryRequired string
 	ScanSbomStart              string
+	ScanSbomLoad               string
 	ScanSbomEnd                string
+	ScanSbomLoaded             string
 	ScanExtractPurlStart       string
 	ScanExtractPurlEnd         string
 	ScanScanPurlStart          string
@@ -152,10 +156,12 @@ var En = Copy{
 	AuthLogoutErrorFailed:       "Failed to remove token",
 	AuthLogoutErrorInvalidToken: "Token was invalid, removing from config",
 
-	FlagSaveResults:    "Save Results as a file",
-	FlagSpecifyFile:    "Specify the file to save the results to",
-	SavingResultsStart: "Saving Results to %s",
-	SavingResultsEnd:   "Results saved to %s",
+	FlagSaveResults:      "Save Results as a file",
+	FlagSpecifyFile:      "Specify the file to save the results to",
+	FlagSpecifySbomFile:  "Specify the file to save your SBOM scan to",
+	FlagSpecifySbomInput: "Specify an existing SBOM file to scan instead of creating one from a folder",
+	SavingResultsStart:   "Saving Results to %s",
+	SavingResultsEnd:     "Results saved to %s",
 
 	TokenShort: "Manage Tokens",
 
@@ -226,7 +232,9 @@ var En = Copy{
 	ScanShort:            "Scan a directory for vulnerabilities",
 	ScanExample:          "vulncheck scan /path/to/directory",
 	ScanSbomStart:        "Generating SBOM",
+	ScanSbomLoad:         "Loading SBOM file %s",
 	ScanSbomEnd:          "SBOM created",
+	ScanSbomLoaded:       "SBOM file loadded",
 	ScanExtractPurlStart: "Extracting PURLs",
 	ScanExtractPurlEnd:   "%d PURLs extracted",
 	ScanScanPurlStart:    "Scanning PURLs",
