@@ -15,10 +15,11 @@ import (
 )
 
 type Options struct {
-	File      bool
-	FileName  string
-	SbomFile  string
-	SbomInput string
+	File        bool
+	FileName    string
+	SbomFile    string
+	SbomInput   string
+	OfflinePurl bool
 }
 
 func Command() *cobra.Command {
@@ -86,22 +87,49 @@ func Command() *cobra.Command {
 						return nil
 					},
 				},
-				{
-					Title: i18n.C.ScanScanPurlStart,
-					Task: func(t *taskin.Task) error {
-						vulns = []models.ScanResultVulnerabilities{}
-						results, err := bill.GetVulns(purls, func(cur int, total int) {
-							t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgress, cur, total)
-							t.Progress(cur, total)
-						})
-						if err != nil {
-							return err
-						}
-						vulns = results
-						t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(vulns), len(purls))
-						return nil
+			}...)
+
+			if opts.OfflinePurl {
+				tasks = append(tasks, taskin.Tasks{
+					{
+						Title: i18n.C.ScanScanPurlStartOffline,
+						Task: func(t *taskin.Task) error {
+							vulns = []models.ScanResultVulnerabilities{}
+							results, err := bill.GetVulns(purls, func(cur int, total int) {
+								t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgressOffline, cur, total)
+								t.Progress(cur, total)
+							})
+							if err != nil {
+								return err
+							}
+							vulns = results
+							t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEndOffline, len(vulns), len(purls))
+							return nil
+						},
 					},
-				},
+				}...)
+			} else {
+				tasks = append(tasks, taskin.Tasks{
+					{
+						Title: i18n.C.ScanScanPurlStart,
+						Task: func(t *taskin.Task) error {
+							vulns = []models.ScanResultVulnerabilities{}
+							results, err := bill.GetVulns(purls, func(cur int, total int) {
+								t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgress, cur, total)
+								t.Progress(cur, total)
+							})
+							if err != nil {
+								return err
+							}
+							vulns = results
+							t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(vulns), len(purls))
+							return nil
+						},
+					},
+				}...)
+
+			}
+			tasks = append(tasks, taskin.Tasks{
 				{
 					Title: i18n.C.ScanVulnMetaStart,
 					Task: func(t *taskin.Task) error {
@@ -182,6 +210,7 @@ func Command() *cobra.Command {
 	cmd.Flags().StringVarP(&opts.FileName, "file-name", "n", "output.json", i18n.C.FlagSpecifyFile)
 	cmd.Flags().StringVarP(&opts.SbomFile, "sbom-output-file", "o", "", i18n.C.FlagSpecifySbomFile)
 	cmd.Flags().StringVarP(&opts.SbomInput, "sbom-input-file", "i", "", i18n.C.FlagSpecifySbomFile)
+	cmd.Flags().BoolVar(&opts.OfflinePurl, "offline-purl", false, "Use offline PURL functionality to find CVEs")
 
 	return cmd
 
