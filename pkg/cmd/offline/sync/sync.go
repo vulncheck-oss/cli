@@ -123,18 +123,14 @@ func Command() *cobra.Command {
 
 // EnsureIndexSync checks if the given index is synced, and if not, prompts the user to sync it.
 // It returns true if the index is available (either already synced or newly synced), and false otherwise.
-func EnsureIndexSync(indexType string) (bool, error) {
-	if config.IsCI() {
-		return false, fmt.Errorf("index %s is required and not cached yet", indexType)
-	}
-
-	indices, err := cache.Indices()
-	if err != nil {
-		return false, err
-	}
+func EnsureIndexSync(indices cache.InfoFile, indexType string, fail bool) (bool, error) {
 
 	if indices.GetIndex(indexType) != nil {
 		return true, nil
+	}
+
+	if config.IsCI() || fail {
+		return false, fmt.Errorf("index %s is required and not cached yet", indexType)
 	}
 
 	shouldSync := true
@@ -157,7 +153,7 @@ func EnsureIndexSync(indexType string) (bool, error) {
 	}
 
 	// Refresh indices after syncing
-	indices, err = cache.Indices()
+	indices, err := cache.Indices()
 	if err != nil {
 		return false, err
 	}

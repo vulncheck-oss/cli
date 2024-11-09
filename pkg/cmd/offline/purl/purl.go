@@ -33,23 +33,23 @@ func Command() *cobra.Command {
 			}
 
 			if packages.IsOS(instance) {
-				return fmt.Errorf("Operating System package support coming soon")
+				return fmt.Errorf("operating system package support coming soon")
+			}
+
+			indices, err := cache.Indices()
+			if err != nil {
+				return err
 			}
 
 			indexName := packages.IndexFromInstance(instance)
 
-			indexAvailable, err := sync.EnsureIndexSync(indexName)
+			indexAvailable, err := sync.EnsureIndexSync(indices, indexName, false)
 			if err != nil {
 				return err
 			}
 
 			if !indexAvailable {
 				return fmt.Errorf("index %s is required to proceed", instance.Type)
-			}
-
-			indices, err := cache.Indices()
-			if err != nil {
-				return err
 			}
 
 			index := indices.GetIndex(indexName)

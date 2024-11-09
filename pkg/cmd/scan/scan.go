@@ -3,6 +3,7 @@ package scan
 import (
 	"fmt"
 	"github.com/vulncheck-oss/cli/pkg/bill"
+	"github.com/vulncheck-oss/cli/pkg/cache"
 	"time"
 
 	"github.com/anchore/syft/syft/sbom"
@@ -94,8 +95,14 @@ func Command() *cobra.Command {
 					{
 						Title: i18n.C.ScanScanPurlStartOffline,
 						Task: func(t *taskin.Task) error {
+
+							indices, err := cache.Indices()
+							if err != nil {
+								return err
+							}
+
 							vulns = []models.ScanResultVulnerabilities{}
-							results, err := bill.GetVulns(purls, func(cur int, total int) {
+							results, err := bill.GetOfflineVulns(indices, purls, func(cur int, total int) {
 								t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgressOffline, cur, total)
 								t.Progress(cur, total)
 							})
@@ -103,6 +110,9 @@ func Command() *cobra.Command {
 								return err
 							}
 							vulns = results
+							output = models.ScanResult{
+								Vulnerabilities: vulns,
+							}
 							t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEndOffline, len(vulns), len(purls))
 							return nil
 						},
@@ -126,26 +136,24 @@ func Command() *cobra.Command {
 							return nil
 						},
 					},
+					{
+						Title: i18n.C.ScanVulnMetaStart,
+						Task: func(t *taskin.Task) error {
+							results, err := bill.GetMeta(vulns)
+							if err != nil {
+								return err
+							}
+							vulns = results
+							t.Title = i18n.C.ScanVulnMetaEnd
+							output = models.ScanResult{
+								Vulnerabilities: vulns,
+							}
+							return nil
+						},
+					},
 				}...)
 
 			}
-			tasks = append(tasks, taskin.Tasks{
-				{
-					Title: i18n.C.ScanVulnMetaStart,
-					Task: func(t *taskin.Task) error {
-						results, err := bill.GetMeta(vulns)
-						if err != nil {
-							return err
-						}
-						vulns = results
-						t.Title = i18n.C.ScanVulnMetaEnd
-						output = models.ScanResult{
-							Vulnerabilities: vulns,
-						}
-						return nil
-					},
-				},
-			}...)
 
 			if opts.SbomFile != "" {
 				tasks = append(tasks, taskin.Task{

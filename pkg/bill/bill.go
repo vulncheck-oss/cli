@@ -7,8 +7,13 @@ import (
 	"github.com/anchore/syft/syft/format"
 	"github.com/anchore/syft/syft/format/cyclonedxjson"
 	"github.com/anchore/syft/syft/sbom"
+	"github.com/package-url/packageurl-go"
+	"github.com/vulncheck-oss/cli/pkg/cache"
+	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
+	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/models"
+	"github.com/vulncheck-oss/cli/pkg/search"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/sdk-go"
 	"github.com/vulncheck-oss/sdk-go/pkg/client"
@@ -125,6 +130,59 @@ func GetVulns(purls []models.PurlDetail, iterator func(cur int, total int)) ([]m
 	}
 
 	return vulns, nil
+}
+
+func GetOfflineVulns(indices cache.InfoFile, purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
+
+	var vulns []models.ScanResultVulnerabilities
+
+	i := 0
+	for _, purl := range purls {
+		i++
+		instance, err := packageurl.FromString(purl.Purl)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if packages.IsOS(instance) {
+			return nil, fmt.Errorf("operating system package support coming soon")
+		}
+
+		indexName := packages.IndexFromInstance(instance)
+
+		indexAvailable, err := sync.EnsureIndexSync(indices, indexName, true)
+		if err != nil {
+			return nil, err
+		}
+
+		if !indexAvailable {
+			return nil, fmt.Errorf("index %s is required to proceed", instance.Type)
+		}
+
+		index := indices.GetIndex(indexName)
+
+		query := search.QueryPURL(instance)
+
+		results, _, err := search.IndexPurl(index.Name, query)
+		// loop through results and add to vulns
+		for _, purlEntry := range results {
+			for _, vuln := range purlEntry.Vulnerabilities {
+				vulns = append(vulns, models.ScanResultVulnerabilities{
+					Name:          purlEntry.Name,
+					Version:       purlEntry.Version,
+					CVE:           vuln.Detection,
+					FixedVersions: vuln.FixedVersion,
+					PurlDetail:    purl,
+				})
+			}
+		}
+
+		iterator(i, len(purls))
+	}
+
+	return vulns, nil
+
 }
 
 func GetMeta(vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulnerabilities, error) {
