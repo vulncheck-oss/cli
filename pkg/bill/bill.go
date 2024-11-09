@@ -165,6 +165,11 @@ func GetOfflineVulns(indices cache.InfoFile, purls []models.PurlDetail, iterator
 		query := search.QueryPURL(instance)
 
 		results, _, err := search.IndexPurl(index.Name, query)
+
+		if err != nil {
+			return nil, err
+		}
+
 		// loop through results and add to vulns
 		for _, purlEntry := range results {
 			for _, vuln := range purlEntry.Vulnerabilities {
