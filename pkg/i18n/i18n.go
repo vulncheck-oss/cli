@@ -93,22 +93,25 @@ type Copy struct {
 	PdnsExample               string
 	PdnsErrorListNameRequired string
 
-	ScanShort                  string
-	ScanExample                string
-	ScanErrorDirectoryRequired string
-	ScanSbomStart              string
-	ScanSbomLoad               string
-	ScanSbomEnd                string
-	ScanSbomLoaded             string
-	ScanExtractPurlStart       string
-	ScanExtractPurlEnd         string
-	ScanScanPurlStart          string
-	ScanScanPurlProgress       string
-	ScanScanPurlEnd            string
-	ScanVulnMetaStart          string
-	ScanVulnMetaEnd            string
-	ScanNoCvesFound            string
-	ScanBenchmark              string
+	ScanShort                   string
+	ScanExample                 string
+	ScanErrorDirectoryRequired  string
+	ScanSbomStart               string
+	ScanSbomLoad                string
+	ScanSbomEnd                 string
+	ScanSbomLoaded              string
+	ScanExtractPurlStart        string
+	ScanExtractPurlEnd          string
+	ScanScanPurlStart           string
+	ScanScanPurlStartOffline    string
+	ScanScanPurlProgress        string
+	ScanScanPurlProgressOffline string
+	ScanScanPurlEnd             string
+	ScanScanPurlEndOffline      string
+	ScanVulnMetaStart           string
+	ScanVulnMetaEnd             string
+	ScanNoCvesFound             string
+	ScanBenchmark               string
 
 	ErrorNoToken      string
 	ErrorUnauthorized string
@@ -229,17 +232,20 @@ var En = Copy{
 	PdnsExample:               "vulncheck pdns \"%s\"",
 	PdnsErrorListNameRequired: "list name is required",
 
-	ScanShort:            "Scan a directory for vulnerabilities",
-	ScanExample:          "vulncheck scan /path/to/directory",
-	ScanSbomStart:        "Generating SBOM",
-	ScanSbomLoad:         "Loading SBOM file %s",
-	ScanSbomEnd:          "SBOM created",
-	ScanSbomLoaded:       "SBOM file loadded",
-	ScanExtractPurlStart: "Extracting PURLs",
-	ScanExtractPurlEnd:   "%d PURLs extracted",
-	ScanScanPurlStart:    "Scanning PURLs",
-	ScanScanPurlProgress: "Scanning PURLs [%d/%d]",
-	ScanScanPurlEnd:      "Scanning PURLs: %d vulns found in %d packages",
+	ScanShort:                   "Scan a directory for vulnerabilities",
+	ScanExample:                 "vulncheck scan /path/to/directory",
+	ScanSbomStart:               "Generating SBOM",
+	ScanSbomLoad:                "Loading SBOM file %s",
+	ScanSbomEnd:                 "SBOM created",
+	ScanSbomLoaded:              "SBOM file loadded",
+	ScanExtractPurlStart:        "Extracting PURLs",
+	ScanExtractPurlEnd:          "%d PURLs extracted",
+	ScanScanPurlStart:           "Scanning PURLs",
+	ScanScanPurlStartOffline:    "[OFFLINE] Scanning PURLs",
+	ScanScanPurlProgress:        "Scanning PURLs [%d/%d]",
+	ScanScanPurlProgressOffline: "[OFFLINE] Scanning PURLs [%d/%d]",
+	ScanScanPurlEnd:             "Scanning PURLs: %d vulns found in %d packages",
+	ScanScanPurlEndOffline:      "[OFFLINE] Scanning PURLs: %d vulns found in %d packages",
 
 	ScanVulnMetaStart: "Fetching vulnerability metadata",
 	ScanVulnMetaEnd:   "Vulnerability metadata fetched",
