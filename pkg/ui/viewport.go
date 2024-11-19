@@ -27,10 +27,13 @@ var (
 )
 
 type model struct {
-	index    string
-	content  string
-	ready    bool
-	viewport viewport.Model
+	index       string
+	content     string
+	ready       bool
+	searching   bool
+	searchQuery string
+	searchIndex int
+	viewport    viewport.Model
 }
 
 func (m model) Init() tea.Cmd {
@@ -44,9 +47,63 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	)
 
 	switch msg := msg.(type) {
+
 	case tea.KeyMsg:
-		if k := msg.String(); k == "ctrl+c" || k == "q" || k == "esc" {
-			return m, tea.Quit
+		switch msg.String() {
+		case "ctrl+c", "q", "esc":
+			if m.searching {
+				m.searching = false
+				m.searchQuery = ""
+			} else {
+				return m, tea.Quit
+			}
+		case "/":
+			m.searching = true
+			m.searchQuery = ""
+			m.searchIndex = 0
+
+		case "backspace":
+			if m.searching && len(m.searchQuery) > 0 {
+				m.searchQuery = m.searchQuery[:len(m.searchQuery)-1]
+			}
+
+		case "enter":
+			if m.searching {
+				m.searching = false
+				if m.searchQuery != "" {
+					m.searchIndex = strings.Index(m.content, m.searchQuery)
+					if m.searchIndex != -1 {
+						// Scroll to the search result
+						lineNumber := strings.Count(m.content[:m.searchIndex], "\n")
+						m.viewport.GotoTop()
+						m.viewport.LineDown(lineNumber)
+					}
+				}
+			}
+
+		case "n":
+			if m.searching {
+				m.searchQuery += "n"
+			} else if m.searchQuery != "" {
+				nextIndex := strings.Index(m.content[m.searchIndex+1:], m.searchQuery)
+				if nextIndex != -1 {
+					m.searchIndex += nextIndex + 1
+					// Scroll to the next search result
+					lineNumber := strings.Count(m.content[:m.searchIndex], "\n")
+					m.viewport.GotoTop()
+					m.viewport.LineDown(lineNumber)
+				} else {
+					// If not found, wrap around to the beginning
+					m.searchIndex = strings.Index(m.content, m.searchQuery)
+					lineNumber := strings.Count(m.content[:m.searchIndex], "\n")
+					m.viewport.GotoTop()
+					m.viewport.LineDown(lineNumber)
+				}
+			}
+		default:
+			if m.searching {
+				m.searchQuery += msg.String()
+			}
 		}
 
 	case tea.WindowSizeMsg:
@@ -99,8 +156,28 @@ func (m model) View() string {
 	return fmt.Sprintf("%s\n%s\n%s", m.headerView(), m.viewport.View(), m.footerView())
 }
 
+/*
 func (m model) headerView() string {
 	title := titleStyle.Render("Browsing index: " + m.index)
+	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(title)))
+	return lipgloss.JoinHorizontal(lipgloss.Center, title, line)
+}
+*/
+
+func (m model) headerView() string {
+	var title string
+	if m.searching {
+		title = titleStyle.Render(fmt.Sprintf("Search: %s", m.searchQuery))
+	} else if m.searchQuery != "" {
+		occurrences := strings.Count(m.content, m.searchQuery)
+		currentOccurrence := 0
+		if m.searchIndex != -1 {
+			currentOccurrence = strings.Count(m.content[:m.viewport.YOffset+m.searchIndex], m.searchQuery)
+		}
+		title = titleStyle.Render(fmt.Sprintf("Search: %s (%d/%d) - \"n\" for next ", m.searchQuery, currentOccurrence, occurrences))
+	} else {
+		title = titleStyle.Render("Browsing index: " + m.index)
+	}
 	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(title)))
 	return lipgloss.JoinHorizontal(lipgloss.Center, title, line)
 }
