@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/vulncheck-oss/cli/pkg/cache"
+	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/search"
 	"github.com/vulncheck-oss/cli/pkg/ui"
@@ -41,6 +42,21 @@ func Command() *cobra.Command {
 			}
 
 			indices, err := cache.Indices()
+			if err != nil {
+				return err
+			}
+
+			indexAvailable, err := sync.EnsureIndexSync(indices, fmt.Sprintf("ipintel-%s", args[0]), false)
+			if err != nil {
+				return err
+			}
+
+			if !indexAvailable {
+				return fmt.Errorf("index %s is required to proceed", fmt.Sprintf("ipintel-%s", args[0]))
+			}
+
+			indices, err = cache.Indices()
+
 			if err != nil {
 				return err
 			}
