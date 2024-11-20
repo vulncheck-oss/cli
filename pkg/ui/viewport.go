@@ -51,9 +51,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q", "esc":
-			if m.searching {
+			if m.searching || m.searchQuery != "" {
 				m.searching = false
 				m.searchQuery = ""
+				m.searchIndex = 0
+
 			} else {
 				return m, tea.Quit
 			}
@@ -174,7 +176,7 @@ func (m model) headerView() string {
 		if m.searchIndex != -1 {
 			currentOccurrence = strings.Count(m.content[:m.viewport.YOffset+m.searchIndex], m.searchQuery)
 		}
-		title = titleStyle.Render(fmt.Sprintf("Search: %s (%d/%d) - \"n\" for next ", m.searchQuery, currentOccurrence, occurrences))
+		title = titleStyle.Render(fmt.Sprintf("Search: %s (%d/%d) - \"n\" = next, \"q\" = clear ", m.searchQuery, currentOccurrence, occurrences))
 	} else {
 		title = titleStyle.Render("Browsing index: " + m.index)
 	}
