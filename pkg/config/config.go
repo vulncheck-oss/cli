@@ -16,7 +16,8 @@ type Environment struct {
 }
 
 type Config struct {
-	Token string
+	Token      string
+	IndicesDir string
 }
 
 func Init() {
@@ -24,7 +25,7 @@ func Init() {
 }
 
 func loadConfig() (*Config, error) {
-	dir, err := configDir()
+	dir, err := Dir()
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +47,7 @@ func loadConfig() (*Config, error) {
 }
 
 func saveConfig(config *Config) error {
-	dir, err := configDir()
+	dir, err := Dir()
 	if err != nil {
 		return err
 	}
@@ -55,10 +56,11 @@ func saveConfig(config *Config) error {
 	viper.SetConfigPermissions(0600)
 	viper.SetConfigType("yaml")
 	viper.Set("Token", config.Token)
+	viper.Set("IndicesDir", config.IndicesDir)
 	return viper.WriteConfigAs(fmt.Sprintf("%s/vulncheck.yaml", dir))
 }
 
-func configDir() (string, error) {
+func Dir() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", nil
@@ -70,6 +72,37 @@ func configDir() (string, error) {
 		}
 	}
 	return dir, nil
+}
+
+func IndicesDir() (string, error) {
+
+	config, err := loadConfig()
+	if err == nil && config.IndicesDir != "" {
+		dir := config.IndicesDir
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return "", fmt.Errorf("failed to create indices directory: %w", err)
+		}
+		return dir, nil
+	}
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", nil
+	}
+	dir := fmt.Sprintf("%s/.config/vulncheck/indices", homeDir)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create indices directory: %w", err)
+	}
+	return dir, nil
+}
+
+func SetIndicesDir(dir string) error {
+	config, err := loadConfig()
+	if err != nil {
+		config = &Config{}
+	}
+	config.IndicesDir = dir
+	return saveConfig(config)
 }
 
 func HasConfig() bool {

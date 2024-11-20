@@ -7,9 +7,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
-	"net/url"
-	"strings"
-	"time"
+	"github.com/vulncheck-oss/cli/pkg/utils"
 )
 
 type UrlOptions struct {
@@ -64,13 +62,13 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			file, err := extractFile(response.GetData()[0].URL)
+			file, err := utils.ExtractFile(response.GetData()[0].URL)
 
 			if err != nil {
 				return err
 			}
 
-			date := parseDate(response.GetData()[0].DateAdded)
+			date := utils.ParseDate(response.GetData()[0].DateAdded)
 
 			ui.Info(fmt.Sprintf(i18n.C.BackupDownloadInfo, args[0], date))
 			ui.Info(fmt.Sprintf(i18n.C.BackupDownloadProgress, file))
@@ -86,31 +84,4 @@ func Command() *cobra.Command {
 	cmd.AddCommand(cmdDownload)
 
 	return cmd
-}
-
-func parseDate(date string) string {
-	dateAdded, err := time.Parse(time.RFC3339, date)
-	if err != nil {
-		return ""
-	}
-	return fmt.Sprintf("%s, %s, %s",
-		dateAdded.Format("January 2, 2006"), // Format date
-		dateAdded.Format("3:04:05 am"),      // Format time
-		dateAdded.Format("MST"),             // Format timezone
-	)
-}
-
-func extractFile(urlStr string) (string, error) {
-
-	parsedUrl, err := url.Parse(urlStr)
-	if err != nil {
-		return "", err
-	}
-
-	path := strings.TrimPrefix(parsedUrl.Path, "/")
-	if !strings.HasSuffix(path, ".zip") {
-		return "", fmt.Errorf("invalid file format")
-	}
-
-	return path, nil
 }

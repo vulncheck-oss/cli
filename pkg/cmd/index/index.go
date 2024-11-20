@@ -10,8 +10,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
-	"github.com/vulncheck-oss/cli/pkg/utils"
-	"github.com/vulncheck-oss/sdk"
+	"github.com/vulncheck-oss/sdk-go"
 )
 
 func Command() *cobra.Command {
@@ -26,8 +25,9 @@ func Command() *cobra.Command {
 
 	// Dynamically add flags for index commands (list and browse)
 	for i := 0; i < keys.NumField(); i++ {
-		flag := utils.NormalizeString(keys.Field(i).Name)
-		cmd.PersistentFlags().String(flag, "", keys.Field(i).Name)
+		flag := keys.Field(i).Tag.Get("json") // Get the json tag value which is the correct API field
+		name := keys.Field(i).Name
+		cmd.PersistentFlags().String(flag, "", name)
 	}
 
 	cmdList := &cobra.Command{
@@ -41,7 +41,7 @@ func Command() *cobra.Command {
 			// Create a new IndexQueryParameters struct and set the values from the flags
 			queryParameters := sdk.IndexQueryParameters{}
 			for i := 0; i < keys.NumField(); i++ {
-				flag := utils.NormalizeString(keys.Field(i).Name)
+				flag := keys.Field(i).Tag.Get("json")
 				if cmd.Flag(flag).Value.String() != "" {
 					field := reflect.ValueOf(&queryParameters).Elem().Field(i)
 					switch field.Kind() {
@@ -78,7 +78,7 @@ func Command() *cobra.Command {
 			// Create a new IndexQueryParameters struct and set the values from the flags
 			queryParameters := sdk.IndexQueryParameters{}
 			for i := 0; i < keys.NumField(); i++ {
-				flag := utils.NormalizeString(keys.Field(i).Name)
+				flag := keys.Field(i).Tag.Get("json")
 				if cmd.Flag(flag).Value.String() != "" {
 					field := reflect.ValueOf(&queryParameters).Elem().Field(i)
 					switch field.Kind() {

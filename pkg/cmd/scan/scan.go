@@ -1,33 +1,34 @@
 package scan
 
 import (
-	"context"
 	"fmt"
-	"github.com/anchore/syft/syft"
+	"github.com/vulncheck-oss/cli/pkg/bill"
+	"github.com/vulncheck-oss/cli/pkg/cache"
+	"time"
+
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/fumeapp/taskin"
 	"github.com/spf13/cobra"
-	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/models"
-	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
-	"github.com/vulncheck-oss/sdk"
-	"github.com/vulncheck-oss/sdk/pkg/client"
-	"strings"
-	"time"
 )
 
 type Options struct {
-	File     bool
-	FileName string
+	File        bool
+	FileName    string
+	SbomFile    string
+	SbomInput   string
+	OfflinePurl bool
 }
 
 func Command() *cobra.Command {
 	opts := &Options{
-		File:     false,
-		FileName: "output.json",
+		File:      false,
+		FileName:  "output.json",
+		SbomFile:  "",
+		SbomInput: "",
 	}
 
 	cmd := &cobra.Command{
@@ -47,58 +48,124 @@ func Command() *cobra.Command {
 
 			startTime := time.Now()
 
-			tasks := taskin.Tasks{
-				{
+			tasks := taskin.Tasks{}
+
+			if opts.SbomInput != "" {
+				tasks = append(tasks, taskin.Task{
+					Title: fmt.Sprintf("Loading SBOM from %s", opts.SbomInput),
+					Task: func(t *taskin.Task) error {
+						var err error
+						sbm, err = bill.LoadSBOM(opts.SbomInput)
+						if err != nil {
+							return err
+						}
+						t.Title = fmt.Sprintf("Loaded SBOM from %s", opts.SbomInput)
+						return nil
+					},
+				})
+			} else {
+				tasks = append(tasks, taskin.Task{
 					Title: i18n.C.ScanSbomStart,
 					Task: func(t *taskin.Task) error {
-						result, err := getSbom(args[0])
+						var err error
+						sbm, err = bill.GetSBOM(args[0])
 						if err != nil {
 							return err
 						}
 						t.Title = i18n.C.ScanSbomEnd
-						sbm = result
 						return nil
 					},
-				},
+				})
+			}
+
+			// Add other necessary tasks after the SBOM task
+			tasks = append(tasks, taskin.Tasks{
 				{
 					Title: i18n.C.ScanExtractPurlStart,
 					Task: func(t *taskin.Task) error {
-						purls = getPurls(sbm)
+						purls = bill.GetPURLDetail(sbm)
 						t.Title = fmt.Sprintf(i18n.C.ScanExtractPurlEnd, len(purls))
 						return nil
 					},
 				},
-				{
-					Title: i18n.C.ScanScanPurlStart,
+			}...)
+
+			if opts.OfflinePurl {
+				tasks = append(tasks, taskin.Tasks{
+					{
+						Title: i18n.C.ScanScanPurlStartOffline,
+						Task: func(t *taskin.Task) error {
+
+							indices, err := cache.Indices()
+							if err != nil {
+								return err
+							}
+
+							vulns = []models.ScanResultVulnerabilities{}
+							results, err := bill.GetOfflineVulns(indices, purls, func(cur int, total int) {
+								t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgressOffline, cur, total)
+								t.Progress(cur, total)
+							})
+							if err != nil {
+								return err
+							}
+							vulns = results
+							output = models.ScanResult{
+								Vulnerabilities: vulns,
+							}
+							t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEndOffline, len(vulns), len(purls))
+							return nil
+						},
+					},
+				}...)
+			} else {
+				tasks = append(tasks, taskin.Tasks{
+					{
+						Title: i18n.C.ScanScanPurlStart,
+						Task: func(t *taskin.Task) error {
+							vulns = []models.ScanResultVulnerabilities{}
+							results, err := bill.GetVulns(purls, func(cur int, total int) {
+								t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgress, cur, total)
+								t.Progress(cur, total)
+							})
+							if err != nil {
+								return err
+							}
+							vulns = results
+							t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(vulns), len(purls))
+							return nil
+						},
+					},
+					{
+						Title: i18n.C.ScanVulnMetaStart,
+						Task: func(t *taskin.Task) error {
+							results, err := bill.GetMeta(vulns)
+							if err != nil {
+								return err
+							}
+							vulns = results
+							t.Title = i18n.C.ScanVulnMetaEnd
+							output = models.ScanResult{
+								Vulnerabilities: vulns,
+							}
+							return nil
+						},
+					},
+				}...)
+
+			}
+
+			if opts.SbomFile != "" {
+				tasks = append(tasks, taskin.Task{
+					Title: fmt.Sprintf("Saving SBOM to %s", opts.SbomFile),
 					Task: func(t *taskin.Task) error {
-						vulns = []models.ScanResultVulnerabilities{}
-						results, err := getVulns(purls, func(cur int, total int) {
-							t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgress, cur, total)
-							t.Progress(cur, total)
-						})
-						if err != nil {
+						if err := bill.SaveSBOM(sbm, opts.SbomFile); err != nil {
 							return err
 						}
-						vulns = results
-						t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(vulns), len(purls))
+						t.Title = fmt.Sprintf("SBOM saved to %s", opts.SbomFile)
 						return nil
 					},
-				},
-				{
-					Title: i18n.C.ScanVulnMetaStart,
-					Task: func(t *taskin.Task) error {
-						results, err := getMeta(vulns)
-						if err != nil {
-							return err
-						}
-						vulns = results
-						t.Title = i18n.C.ScanVulnMetaEnd
-						output = models.ScanResult{
-							Vulnerabilities: vulns,
-						}
-						return nil
-					},
-				},
+				})
 			}
 
 			if opts.File {
@@ -149,169 +216,10 @@ func Command() *cobra.Command {
 
 	cmd.Flags().BoolVarP(&opts.File, "file", "f", false, i18n.C.FlagSaveResults)
 	cmd.Flags().StringVarP(&opts.FileName, "file-name", "n", "output.json", i18n.C.FlagSpecifyFile)
+	cmd.Flags().StringVarP(&opts.SbomFile, "sbom-output-file", "o", "", i18n.C.FlagSpecifySbomFile)
+	cmd.Flags().StringVarP(&opts.SbomInput, "sbom-input-file", "i", "", i18n.C.FlagSpecifySbomFile)
+	cmd.Flags().BoolVar(&opts.OfflinePurl, "offline-purl", false, "Use offline PURL functionality to find CVEs")
 
 	return cmd
 
-}
-
-func getSbom(dir string) (*sbom.SBOM, error) {
-	src, err := syft.GetSource(context.Background(), dir, nil)
-
-	if err != nil {
-		return nil, err
-	}
-
-	sbm, err := syft.CreateSBOM(context.Background(), src, nil)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return sbm, nil
-}
-
-func getPurls(sbm *sbom.SBOM) []models.PurlDetail {
-
-	if sbm == nil {
-		return []models.PurlDetail{}
-	}
-
-	var purls []models.PurlDetail
-
-	for p := range sbm.Artifacts.Packages.Enumerate() {
-		if p.PURL != "" && !strings.HasPrefix(p.PURL, "pkg:github") {
-			locations := make([]string, len(p.Locations.ToSlice()))
-			for i, l := range p.Locations.ToSlice() {
-				locations[i] = l.RealPath
-			}
-			purls = append(purls, models.PurlDetail{
-				Purl:        p.PURL,
-				PackageType: string(p.Type),
-				Cataloger:   p.FoundBy,
-				Locations:   locations,
-			})
-		}
-	}
-	return purls
-}
-
-func getVulns(purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
-
-	var vulns []models.ScanResultVulnerabilities
-
-	i := 0
-	for _, purl := range purls {
-		i++
-		response, err := session.Connect(config.Token()).GetPurl(purl.Purl)
-		if err != nil {
-			return nil, fmt.Errorf("error fetching purl %s: %v", purl.Purl, err)
-		}
-		if len(response.Data.Vulnerabilities) > 0 {
-			for _, vuln := range response.Data.Vulnerabilities {
-				vulns = append(vulns, models.ScanResultVulnerabilities{
-					Name:          response.PurlMeta().Name,
-					Version:       response.PurlMeta().Version,
-					CVE:           vuln.Detection,
-					FixedVersions: vuln.FixedVersion,
-					PurlDetail:    purl,
-				})
-			}
-		}
-		iterator(i, len(purls))
-	}
-
-	return vulns, nil
-}
-
-func getMeta(vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulnerabilities, error) {
-	for i, vuln := range vulns {
-		nvd2Response, err := session.Connect(config.Token()).GetIndexVulncheckNvd2(sdk.IndexQueryParameters{Cve: vuln.CVE})
-
-		if err != nil {
-			return nil, err
-		}
-
-		vulns[i].InKEV = nvd2Response.Data[0].VulncheckKEVExploitAdd != nil
-		vulns[i].CVSSBaseScore = baseScore(nvd2Response.Data[0])
-		vulns[i].CVSSTemporalScore = temporalScore(nvd2Response.Data[0])
-
-	}
-	return vulns, nil
-}
-
-func baseScore(item client.ApiNVD20CVEExtended) string {
-	if item.Metrics == nil {
-		return "n/a"
-	}
-	var score *float32
-	if (item.Metrics.CvssMetricV31 != nil) && (len(*item.Metrics.CvssMetricV31) > 0) {
-		score = (*item.Metrics.CvssMetricV31)[0].CvssData.BaseScore
-	}
-
-	if score == nil && (item.Metrics.CvssMetricV30 != nil) && (len(*item.Metrics.CvssMetricV30) > 0) {
-		score = (*item.Metrics.CvssMetricV30)[0].CvssData.BaseScore
-	}
-
-	if score == nil && (item.Metrics.CvssMetricV2 != nil) && (len(*item.Metrics.CvssMetricV2) > 0) {
-		score = (*item.Metrics.CvssMetricV2)[0].CvssData.BaseScore
-	}
-
-	if score == nil {
-		return "n/a"
-	}
-
-	return formatSingleDecimal(score)
-}
-
-func temporalScore(item client.ApiNVD20CVEExtended) string {
-	if item.Metrics == nil {
-		return "n/a"
-	}
-	var score *float32
-
-	if item.Metrics.CvssMetricV31 != nil && len(*item.Metrics.CvssMetricV31) > 0 {
-		score = (*item.Metrics.CvssMetricV31)[0].CvssData.TemporalScore
-	}
-
-	if score == nil && item.Metrics.TemporalCVSSV31 != nil {
-		score = item.Metrics.TemporalCVSSV31.TemporalScore
-	}
-
-	if score == nil && item.Metrics.TemporalCVSSV31Secondary != nil && len(*item.Metrics.TemporalCVSSV31Secondary) > 0 {
-		score = (*item.Metrics.TemporalCVSSV31Secondary)[0].TemporalScore
-	}
-
-	if score == nil && item.Metrics.CvssMetricV30 != nil && len(*item.Metrics.CvssMetricV30) > 0 {
-		score = (*item.Metrics.CvssMetricV30)[0].CvssData.TemporalScore
-	}
-
-	if score == nil && item.Metrics.TemporalCVSSV30Secondary != nil && len(*item.Metrics.TemporalCVSSV30Secondary) > 0 {
-		score = (*item.Metrics.TemporalCVSSV30Secondary)[0].TemporalScore
-	}
-
-	if score == nil && item.Metrics.TemporalCVSSV30 != nil {
-		score = item.Metrics.TemporalCVSSV30.TemporalScore
-	}
-
-	if score == nil && item.Metrics.CvssMetricV2 != nil && len(*item.Metrics.CvssMetricV2) > 0 {
-		score = (*item.Metrics.CvssMetricV2)[0].CvssData.TemporalScore
-	}
-
-	if score == nil && item.Metrics.TemporalCVSSV2 != nil {
-		score = item.Metrics.TemporalCVSSV2.TemporalScore
-	}
-
-	if score == nil && item.Metrics.TemporalCVSSV2Secondary != nil && len(*item.Metrics.TemporalCVSSV2Secondary) > 0 {
-		score = (*item.Metrics.TemporalCVSSV2Secondary)[0].TemporalScore
-	}
-
-	if score == nil {
-		return "n/a"
-	}
-
-	return formatSingleDecimal(score)
-}
-
-func formatSingleDecimal(value *float32) string {
-	return fmt.Sprintf("%.1f", *value)
 }

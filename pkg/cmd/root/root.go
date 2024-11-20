@@ -4,7 +4,10 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"github.com/vulncheck-oss/cli/pkg/cmd/offline"
 	"os"
+
+	"github.com/vulncheck-oss/cli/pkg/cmd/token"
 
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
@@ -25,7 +28,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
-	"github.com/vulncheck-oss/sdk"
+	"github.com/vulncheck-oss/sdk-go"
 )
 
 type AuthError struct {
@@ -75,6 +78,7 @@ func NewCmdRoot() *cobra.Command {
 	cmd.AddCommand(version.Command())
 	cmd.AddCommand(about.Command())
 	cmd.AddCommand(auth.Command())
+	cmd.AddCommand(token.Command())
 	cmd.AddCommand(indices.Command())
 	cmd.AddCommand(index.Command())
 	cmd.AddCommand(backup.Command())
@@ -84,6 +88,7 @@ func NewCmdRoot() *cobra.Command {
 	cmd.AddCommand(rule.Command())
 	cmd.AddCommand(tag.Command())
 	cmd.AddCommand(pdns.Command())
+	cmd.AddCommand(offline.Command())
 
 	return cmd
 }

@@ -2,6 +2,8 @@ package ui
 
 import (
 	"fmt"
+	"github.com/package-url/packageurl-go"
+	"os"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/table"
@@ -9,7 +11,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	ltable "github.com/charmbracelet/lipgloss/table"
 	"github.com/vulncheck-oss/cli/pkg/models"
-	"github.com/vulncheck-oss/sdk"
+	"github.com/vulncheck-oss/sdk-go"
 	"golang.org/x/term"
 )
 
@@ -18,8 +20,10 @@ var baseStyle = lipgloss.NewStyle().
 	BorderForeground(lipgloss.Color("#6667ab"))
 
 type tableModel struct {
-	table  table.Model
-	action func(index string) error
+	table       table.Model
+	selectedID  string
+	quitting    bool
+	createEntry bool
 }
 
 func (m tableModel) Init() tea.Cmd { return nil }
@@ -29,24 +33,17 @@ func (m tableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "esc":
-			if m.table.Focused() {
-				m.table.Blur()
-			} else {
-				m.table.Focus()
-			}
 		case "q", "ctrl+c":
+			os.Exit(0)
 			return m, tea.Quit
 		case "enter":
-			if err := m.action(m.table.SelectedRow()[0]); err != nil {
+			m.selectedID = m.table.SelectedRow()[0]
+			return m, tea.Quit
+		case "c":
+			if m.createEntry {
+				m.selectedID = "createEntry"
 				return m, tea.Quit
 			}
-			return m, tea.Quit
-			/*
-				return m, tea.Batch(
-					m.action(m.table.SelectedRow()[0]),
-				)
-			*/
 		}
 	}
 	m.table, cmd = m.table.Update(msg)
@@ -54,7 +51,7 @@ func (m tableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m tableModel) View() string {
-	return baseStyle.Render(m.table.View()) + "\n"
+	return baseStyle.Render(m.table.View())
 }
 
 func IndicesRows(indices []sdk.IndicesMeta, search string) []table.Row {
@@ -72,7 +69,7 @@ func IndicesRows(indices []sdk.IndicesMeta, search string) []table.Row {
 	return rows
 }
 
-func IndicesBrowse(indices []sdk.IndicesMeta, search string, action func(index string) error) error {
+func IndicesBrowse(indices []sdk.IndicesMeta, search string) (string, error) {
 	columns := []table.Column{
 		{Title: "Name", Width: 20},
 		{Title: "Description", Width: TermWidth() - 52},
@@ -81,11 +78,44 @@ func IndicesBrowse(indices []sdk.IndicesMeta, search string, action func(index s
 
 	rows := IndicesRows(indices, search)
 
+	m := newTableModel(columns, rows, false)
+
+	p := tea.NewProgram(m)
+	finalModel, err := p.Run()
+
+	if err != nil {
+		return "", fmt.Errorf("error running program: %v", err)
+	}
+
+	if finalModel, ok := finalModel.(tableModel); ok {
+		if finalModel.quitting {
+			return "", nil
+		}
+		return finalModel.selectedID, nil
+	}
+
+	return "", fmt.Errorf("unexpected model type")
+}
+
+func TokensRows(tokens []sdk.TokenData) []table.Row {
+	var rows []table.Row
+	for _, token := range tokens {
+		rows = append(rows, table.Row{
+			token.ID,
+			token.GetSourceLabel(),
+			token.GetLocationString(),
+			token.GetHumanUpdatedAt(),
+		})
+	}
+	return rows
+}
+
+func newTableModel(columns []table.Column, rows []table.Row, createEntry bool) tableModel {
 	t := table.New(
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(true),
-		table.WithHeight(TermHeight()-10),
+		table.WithHeight(TermHeight()-11),
 		table.WithWidth(TermWidth()-5),
 	)
 
@@ -101,12 +131,48 @@ func IndicesBrowse(indices []sdk.IndicesMeta, search string, action func(index s
 		Bold(false)
 	t.SetStyles(s)
 
-	m := tableModel{t, action}
-	p := tea.NewProgram(m)
-	if _, err := p.Run(); err != nil {
-		return fmt.Errorf("error running program: %v", err)
+	return tableModel{table: t, createEntry: createEntry}
+}
+
+func TokensBrowse(tokens []sdk.TokenData) (string, error) {
+	columns := []table.Column{
+		{Title: "ID", Width: 10},
+		{Title: "Source", Width: 30},
+		{Title: "Location", Width: TermWidth() - 67},
+		{Title: "Last Activity", Width: 15},
 	}
 
+	rows := TokensRows(tokens)
+
+	m := newTableModel(columns, rows, true)
+	p := tea.NewProgram(m)
+	finalModel, err := p.Run()
+	if err != nil {
+		return "", fmt.Errorf("error running program: %v", err)
+	}
+
+	if finalModel, ok := finalModel.(tableModel); ok {
+		if finalModel.quitting {
+			return "", nil
+		}
+		return finalModel.selectedID, nil
+	}
+
+	return "", fmt.Errorf("unexpected model type")
+}
+
+func TokensList(tokens []sdk.TokenData) error {
+
+	t := ltable.New().
+		Border(lipgloss.NormalBorder()).
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
+		Headers("ID", "Source", "Location", "Last Activity").Width(TermWidth())
+
+	for _, token := range tokens {
+		t.Row(token.ID, token.GetSourceLabel(), token.GetLocationString(), token.GetHumanUpdatedAt())
+	}
+
+	fmt.Println(t)
 	return nil
 }
 
@@ -152,6 +218,17 @@ func PurlMeta(purl sdk.PurlMeta) error {
 		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
 		Headers("Type", "Namespace", "Nme", "Version", "Qualifiers", "Subpath").
 		Row(purl.Type, purl.Namespace, purl.Name, purl.Version, strings.Join(purl.Qualifiers, ","), purl.Subpath).
+		Width(TermWidth())
+	fmt.Println(t)
+	return nil
+}
+
+func PurlInstance(purl packageurl.PackageURL) error {
+	qualifiers := make([]string, 0, len(purl.Qualifiers))
+	t := ltable.New().
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
+		Headers("Type", "Namespace", "Name", "Version", "Qualifiers", "Subpath").
+		Row(purl.Type, purl.Namespace, purl.Name, purl.Version, strings.Join(qualifiers, ","), purl.Subpath).
 		Width(TermWidth())
 	fmt.Println(t)
 	return nil

@@ -22,10 +22,28 @@ type Copy struct {
 	AuthLoginToken string
 	AuthLoginWeb   string
 
-	FlagSaveResults    string
-	FlagSpecifyFile    string
-	SavingResultsStart string
-	SavingResultsEnd   string
+	FlagSaveResults      string
+	FlagSpecifyFile      string
+	FlagSpecifySbomFile  string
+	FlagSpecifySbomInput string
+	SavingResultsStart   string
+	SavingResultsEnd     string
+
+	TokenShort string
+
+	ListTokensShort string
+	ListTokensFull  string
+
+	BrowseTokensShort string
+	BrowseTokens      string
+
+	CreateTokenShort         string
+	CreateTokenLabelRequired string
+	CreateTokenSuccess       string
+
+	RemoveTokenShort      string
+	RemoveTokenSuccess    string
+	RemoveTokenIDRequired string
 
 	IndicesShort string
 
@@ -75,20 +93,25 @@ type Copy struct {
 	PdnsExample               string
 	PdnsErrorListNameRequired string
 
-	ScanShort                  string
-	ScanExample                string
-	ScanErrorDirectoryRequired string
-	ScanSbomStart              string
-	ScanSbomEnd                string
-	ScanExtractPurlStart       string
-	ScanExtractPurlEnd         string
-	ScanScanPurlStart          string
-	ScanScanPurlProgress       string
-	ScanScanPurlEnd            string
-	ScanVulnMetaStart          string
-	ScanVulnMetaEnd            string
-	ScanNoCvesFound            string
-	ScanBenchmark              string
+	ScanShort                   string
+	ScanExample                 string
+	ScanErrorDirectoryRequired  string
+	ScanSbomStart               string
+	ScanSbomLoad                string
+	ScanSbomEnd                 string
+	ScanSbomLoaded              string
+	ScanExtractPurlStart        string
+	ScanExtractPurlEnd          string
+	ScanScanPurlStart           string
+	ScanScanPurlStartOffline    string
+	ScanScanPurlProgress        string
+	ScanScanPurlProgressOffline string
+	ScanScanPurlEnd             string
+	ScanScanPurlEndOffline      string
+	ScanVulnMetaStart           string
+	ScanVulnMetaEnd             string
+	ScanNoCvesFound             string
+	ScanBenchmark               string
 
 	ErrorNoToken      string
 	ErrorUnauthorized string
@@ -136,10 +159,28 @@ var En = Copy{
 	AuthLogoutErrorFailed:       "Failed to remove token",
 	AuthLogoutErrorInvalidToken: "Token was invalid, removing from config",
 
-	FlagSaveResults:    "Save Results as a file",
-	FlagSpecifyFile:    "Specify the file to save the results to",
-	SavingResultsStart: "Saving Results to %s",
-	SavingResultsEnd:   "Results saved to %s",
+	FlagSaveResults:      "Save Results as a file",
+	FlagSpecifyFile:      "Specify the file to save the results to",
+	FlagSpecifySbomFile:  "Specify the file to save your SBOM scan to",
+	FlagSpecifySbomInput: "Specify an existing SBOM file to scan instead of creating one from a folder",
+	SavingResultsStart:   "Saving Results to %s",
+	SavingResultsEnd:     "Results saved to %s",
+
+	TokenShort: "Manage Tokens",
+
+	ListTokensShort: "List tokens",
+	ListTokensFull:  "Listing %d tokens",
+	BrowseTokens:    "Browsing %d tokens, ESC or q to quit, c to create a token",
+
+	BrowseTokensShort: "Browse tokens interactively",
+
+	CreateTokenShort:         "Create a token",
+	CreateTokenSuccess:       "Token %s created successfully: %s",
+	CreateTokenLabelRequired: "Token Label missing or invalid",
+
+	RemoveTokenShort:      "Remove a token",
+	RemoveTokenSuccess:    "Token %s removed successfully",
+	RemoveTokenIDRequired: "Token ID missing or invalid",
 
 	IndicesShort: "View indices",
 
@@ -191,15 +232,20 @@ var En = Copy{
 	PdnsExample:               "vulncheck pdns \"%s\"",
 	PdnsErrorListNameRequired: "list name is required",
 
-	ScanShort:            "Scan a directory for vulnerabilities",
-	ScanExample:          "vulncheck scan /path/to/directory",
-	ScanSbomStart:        "Generating SBOM",
-	ScanSbomEnd:          "SBOM created",
-	ScanExtractPurlStart: "Extracting PURLs",
-	ScanExtractPurlEnd:   "%d PURLs extracted",
-	ScanScanPurlStart:    "Scanning PURLs",
-	ScanScanPurlProgress: "Scanning PURLs [%d/%d]",
-	ScanScanPurlEnd:      "Scanning PURLs: %d vulns found in %d packages",
+	ScanShort:                   "Scan a directory for vulnerabilities",
+	ScanExample:                 "vulncheck scan /path/to/directory",
+	ScanSbomStart:               "Generating SBOM",
+	ScanSbomLoad:                "Loading SBOM file %s",
+	ScanSbomEnd:                 "SBOM created",
+	ScanSbomLoaded:              "SBOM file loadded",
+	ScanExtractPurlStart:        "Extracting PURLs",
+	ScanExtractPurlEnd:          "%d PURLs extracted",
+	ScanScanPurlStart:           "Scanning PURLs",
+	ScanScanPurlStartOffline:    "[OFFLINE] Scanning PURLs",
+	ScanScanPurlProgress:        "Scanning PURLs [%d/%d]",
+	ScanScanPurlProgressOffline: "[OFFLINE] Scanning PURLs [%d/%d]",
+	ScanScanPurlEnd:             "Scanning PURLs: %d vulns found in %d packages",
+	ScanScanPurlEndOffline:      "[OFFLINE] Scanning PURLs: %d vulns found in %d packages",
 
 	ScanVulnMetaStart: "Fetching vulnerability metadata",
 	ScanVulnMetaEnd:   "Vulnerability metadata fetched",

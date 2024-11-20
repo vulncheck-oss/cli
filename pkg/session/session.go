@@ -2,13 +2,14 @@ package session
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
+
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/internal/build"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/environment"
-	"github.com/vulncheck-oss/sdk"
-	"regexp"
-	"strings"
+	"github.com/vulncheck-oss/sdk-go"
 )
 
 type MeResponse struct {
