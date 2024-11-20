@@ -55,6 +55,12 @@ func Command() *cobra.Command {
 				return fmt.Errorf("index %s is required to proceed", fmt.Sprintf("ipintel-%s", args[0]))
 			}
 
+			indices, err = cache.Indices()
+
+			if err != nil {
+				return err
+			}
+
 			index := indices.GetIndex(fmt.Sprintf("ipintel-%s", args[0]))
 
 			if index == nil {
