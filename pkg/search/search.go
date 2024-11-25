@@ -8,6 +8,7 @@ import (
 	"github.com/package-url/packageurl-go"
 	"github.com/tidwall/gjson"
 	"github.com/vulncheck-oss/cli/pkg/config"
+	"github.com/vulncheck-oss/cli/pkg/cpeparse"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk-go"
 	"os"
@@ -126,6 +127,12 @@ func QueryPURL(instance packageurl.PackageURL) string {
 		}
 	}
 	return strings.Join(conditions, " and ")
+}
+func QueryCPE(cpe cpeparse.CPE) string {
+	if cpe.Product == "" {
+		return "true"
+	}
+	return fmt.Sprintf(".products | any(. == %q)", cpe.Product)
 }
 
 func Index(indexName, query string) ([]Entry, *Stats, error) {

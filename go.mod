@@ -14,6 +14,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fumeapp/taskin v0.1.8
 	github.com/itchyny/gojq v0.12.16
+	github.com/octoper/go-ray v0.1.5
 	github.com/package-url/packageurl-go v0.1.3
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/spf13/cobra v1.8.1
@@ -158,7 +159,6 @@ require (
 	github.com/muesli/termenv v0.15.3-0.20240618155329-98d742f6907a // indirect
 	github.com/nwaples/rardecode v1.1.0 // indirect
 	github.com/oapi-codegen/runtime v1.1.1 // indirect
-	github.com/octoper/go-ray v0.1.5 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc3 // indirect
