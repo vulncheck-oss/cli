@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"github.com/octoper/go-ray"
 	"github.com/spf13/cobra"
-	"strings"
+	"github.com/vulncheck-oss/cli/pkg/cpeparse"
 )
-import "github.com/facebookincubator/nvdtools/wfn"
 
 func Command() *cobra.Command {
 
@@ -20,24 +19,12 @@ func Command() *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			cpeString := args[0]
-			var attr *wfn.Attributes
-			var err error
-
-			// Check if the CPE string is in 2.2 format
-			if strings.HasPrefix(cpeString, "cpe:/") {
-				// Convert 2.2 to 2.3 format
-				attr, err = wfn.UnbindURI(cpeString)
-			} else {
-				// Assume 2.3 format
-				attr, err = wfn.UnbindFmtString(cpeString)
-			}
+			attr, err := cpeparse.Parse(args[0])
 
 			if err != nil {
-				return fmt.Errorf("invalid CPE string: %v", err)
+				return err
 			}
 
-			// Print the parsed CPE attributes for debugging
 			fmt.Printf("Parsed CPE: %+v\n", attr)
 
 			ray.Ray(attr.String())
