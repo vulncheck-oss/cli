@@ -6,8 +6,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
-	"github.com/vulncheck-oss/cli/pkg/cpeparse"
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpeparse"
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpeprocess"
 	"github.com/vulncheck-oss/cli/pkg/search"
+	"github.com/vulncheck-oss/cli/pkg/ui"
 )
 
 func Command() *cobra.Command {
@@ -28,10 +30,6 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("CPE Vendor is: %s\n", cpe.Vendor)
-
-			ray.Ray(cpe)
-
 			indices, err := cache.Indices()
 			if err != nil {
 				return err
@@ -47,16 +45,26 @@ func Command() *cobra.Command {
 			}
 
 			query := search.QueryCPE(*cpe)
+			ray.Ray("query", query)
 
-			ray.Ray(query)
+			results, stats, err := search.IndexAdvisories(cpe.Vendor, query)
 
-			entries, stats, err := search.Index(cpe.Vendor, query)
+			if err != nil {
+				return err
+			}
+			cves, err := cpeprocess.Process(*cpe, results)
 
 			if err != nil {
 				return err
 			}
 
-			ray.Ray(entries, stats)
+			ray.Ray(stats, len(cves))
+
+			ui.Stat("Results found/filtered", fmt.Sprintf("%d/%d", len(results), len(cves)))
+			ui.Stat("Files/Lines processed", fmt.Sprintf("%d/%d", stats.TotalFiles, stats.TotalLines))
+			ui.Stat("Search duration", stats.Duration.String())
+
+			ui.Json(cves)
 
 			return nil
 		},

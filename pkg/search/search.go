@@ -8,7 +8,7 @@ import (
 	"github.com/package-url/packageurl-go"
 	"github.com/tidwall/gjson"
 	"github.com/vulncheck-oss/cli/pkg/config"
-	"github.com/vulncheck-oss/cli/pkg/cpeparse"
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpetypes"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk-go"
 	"os"
@@ -40,7 +40,7 @@ type PurlEntry struct {
 	PublishedDate string `json:"published_date"`
 }
 
-type Entry struct {
+type IPEntry struct {
 	IP          string   `json:"ip"`
 	Port        int      `json:"port"`
 	SSL         bool     `json:"ssl"`
@@ -58,6 +58,133 @@ type Entry struct {
 		Finding string `json:"finding"`
 	} `json:"type"`
 	FeedIDs []string `json:"feed_ids"`
+}
+
+type AdvisoryEntry struct {
+	Title              string   `json:"title"`
+	DateAdded          string   `json:"date_added"`
+	Description        string   `json:"description"`
+	Reporter           string   `json:"reporter"`
+	Impact             string   `json:"impact"`
+	Products           []string `json:"products"`
+	FixedIn            []string `json:"fixed_in"`
+	CVE                []string `json:"cve"`
+	AffectedComponents []string `json:"affected_components"`
+	URL                string   `json:"url"`
+	Bugzilla           []string `json:"bugzilla"`
+}
+
+type AdvisoryEntries []AdvisoryEntry
+type AdvisoryCVES []string
+
+func (ae AdvisoryEntries) CVES() AdvisoryCVES {
+
+	var cves []string
+	for _, entry := range ae {
+		cves = append(cves, entry.CVE...)
+	}
+	return cves
+}
+
+func (cves AdvisoryCVES) Unique() AdvisoryCVES {
+	uniqueCVEs := make(map[string]bool)
+	var result []string
+
+	for _, cve := range cves {
+		if !uniqueCVEs[cve] {
+			uniqueCVEs[cve] = true
+			result = append(result, cve)
+		}
+	}
+
+	return result
+}
+
+func IndexAdvisories(indexName, query string) (AdvisoryEntries, *Stats, error) {
+	startTime := time.Now()
+	var stats Stats
+
+	configDir, err := config.IndicesDir()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	indexDir := filepath.Join(configDir, indexName)
+
+	// List all JSON files in the index directory
+	files, err := listJSONFiles(indexDir)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to list files in index directory %s: %w", indexDir, err)
+	}
+
+	if len(files) == 0 {
+		return nil, nil, fmt.Errorf("no JSON files found in index directory %s", indexDir)
+	}
+
+	// We'll process the first JSON file found
+	filePath := files[0]
+
+	file, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to read file %s: %w", filePath, err)
+	}
+
+	var entries []AdvisoryEntry
+	if err := json.Unmarshal(file, &entries); err != nil {
+		return nil, nil, fmt.Errorf("failed to parse JSON in file %s: %w", filePath, err)
+	}
+
+	jq, err := gojq.Parse(fmt.Sprintf("select(%s)", query))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to parse query: %w", err)
+	}
+	code, err := gojq.Compile(jq)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to compile query: %w", err)
+	}
+
+	stats.Query = query
+	stats.TotalFiles = 1
+	stats.TotalLines = int64(len(entries))
+
+	var results []AdvisoryEntry
+
+	for _, entry := range entries {
+		entryMap, err := structToMap(entry)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error converting entry to map: %w", err)
+		}
+
+		iter := code.Run(entryMap)
+		v, ok := iter.Next()
+		if !ok {
+			continue
+		}
+		if err, ok := v.(error); ok {
+			return nil, nil, fmt.Errorf("error processing entry: %w", err)
+		}
+
+		if _, ok := v.(map[string]interface{}); ok {
+			results = append(results, entry)
+			stats.MatchedLines++
+		}
+	}
+
+	stats.Duration = time.Since(startTime)
+
+	return results, &stats, nil
+}
+
+// Helper function to convert struct to map
+func structToMap(obj interface{}) (map[string]interface{}, error) {
+	data, err := json.Marshal(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(data, &result)
+	return result, err
 }
 
 type Stats struct {
@@ -128,14 +255,17 @@ func QueryPURL(instance packageurl.PackageURL) string {
 	}
 	return strings.Join(conditions, " and ")
 }
-func QueryCPE(cpe cpeparse.CPE) string {
+func QueryCPE(cpe cpetypes.CPE) string {
 	if cpe.Product == "" {
 		return "true"
+	}
+	if cpe.IsMozilla() {
+		return fmt.Sprintf(".products | any(. == %q)", cpe.ProductUcFirst())
 	}
 	return fmt.Sprintf(".products | any(. == %q)", cpe.Product)
 }
 
-func Index(indexName, query string) ([]Entry, *Stats, error) {
+func IPIndex(indexName, query string) ([]IPEntry, *Stats, error) {
 	startTime := time.Now()
 	var stats Stats
 
@@ -162,7 +292,7 @@ func Index(indexName, query string) ([]Entry, *Stats, error) {
 
 	stats.Query = query
 
-	resultsChan := make(chan Entry)
+	resultsChan := make(chan IPEntry)
 	errorsChan := make(chan error)
 	var wg sync.WaitGroup
 
@@ -179,7 +309,7 @@ func Index(indexName, query string) ([]Entry, *Stats, error) {
 		close(errorsChan)
 	}()
 
-	var results []Entry
+	var results []IPEntry
 	for result := range resultsChan {
 		results = append(results, result)
 	}
@@ -333,7 +463,7 @@ func listIndexFiles(dir string) ([]string, error) {
 	return files, err
 }
 
-func processFile(filePath, query string, code *gojq.Code, resultsChan chan<- Entry, errorsChan chan<- error, wg *sync.WaitGroup, stats *Stats) {
+func processFile(filePath, query string, code *gojq.Code, resultsChan chan<- IPEntry, errorsChan chan<- error, wg *sync.WaitGroup, stats *Stats) {
 	defer wg.Done()
 
 	file, err := os.Open(filePath)
@@ -419,7 +549,7 @@ func parseQuery(query string) map[string]string {
 	return fields
 }
 
-func fullProcess(line []byte, code *gojq.Code) (*Entry, error) {
+func fullProcess(line []byte, code *gojq.Code) (*IPEntry, error) {
 	var input map[string]interface{}
 	if err := json.Unmarshal(line, &input); err != nil {
 		return nil, fmt.Errorf("error parsing JSON: %w", err)
@@ -435,7 +565,7 @@ func fullProcess(line []byte, code *gojq.Code) (*Entry, error) {
 	}
 
 	if _, ok := v.(map[string]interface{}); ok {
-		var entry Entry
+		var entry IPEntry
 		if err := json.Unmarshal(line, &entry); err != nil {
 			return nil, fmt.Errorf("error unmarshaling entry: %w", err)
 		}
@@ -443,4 +573,18 @@ func fullProcess(line []byte, code *gojq.Code) (*Entry, error) {
 	}
 
 	return nil, nil
+}
+
+func listJSONFiles(dir string) ([]string, error) {
+	var files []string
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && strings.HasSuffix(info.Name(), ".json") {
+			files = append(files, path)
+		}
+		return nil
+	})
+	return files, err
 }
