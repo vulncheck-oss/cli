@@ -100,7 +100,7 @@ func (cves AdvisoryCVES) Unique() AdvisoryCVES {
 	return result
 }
 
-func IndexAdvisories(indexName, query string) (AdvisoryEntries, *Stats, error) {
+func IndexAdvisories(indexName, query string) ([]interface{}, *Stats, error) {
 	startTime := time.Now()
 	var stats Stats
 
@@ -129,7 +129,7 @@ func IndexAdvisories(indexName, query string) (AdvisoryEntries, *Stats, error) {
 		return nil, nil, fmt.Errorf("failed to read file %s: %w", filePath, err)
 	}
 
-	var entries []AdvisoryEntry
+	var entries []interface{}
 	if err := json.Unmarshal(file, &entries); err != nil {
 		return nil, nil, fmt.Errorf("failed to parse JSON in file %s: %w", filePath, err)
 	}
@@ -147,7 +147,7 @@ func IndexAdvisories(indexName, query string) (AdvisoryEntries, *Stats, error) {
 	stats.TotalFiles = 1
 	stats.TotalLines = int64(len(entries))
 
-	var results []AdvisoryEntry
+	var results []interface{}
 
 	for _, entry := range entries {
 		entryMap, err := structToMap(entry)

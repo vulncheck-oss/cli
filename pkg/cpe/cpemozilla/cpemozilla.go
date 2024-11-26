@@ -4,7 +4,6 @@ import (
 	"fmt"
 	hcversion "github.com/hashicorp/go-version"
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpetypes"
-	"github.com/vulncheck-oss/cli/pkg/search"
 	"regexp"
 	"strconv"
 	"strings"
@@ -43,7 +42,7 @@ func Parse(cpe cpetypes.CPE) (*string, error) {
 	return nil, fmt.Errorf("unable to find mozilla product")
 }
 
-func Process(cpe cpetypes.CPE, results search.AdvisoryEntries) ([]string, error) {
+func Process(cpe cpetypes.CPE, results []cpetypes.MozillaAdvisory) ([]string, error) {
 
 	var CVEs []string
 
@@ -58,7 +57,7 @@ func Process(cpe cpetypes.CPE, results search.AdvisoryEntries) ([]string, error)
 
 	return CVEs, nil
 }
-func processAdvisory(cpe cpetypes.CPE, advisory search.AdvisoryEntry, CVEs []string) (cves []string, err error) {
+func processAdvisory(cpe cpetypes.CPE, advisory cpetypes.MozillaAdvisory, CVEs []string) (cves []string, err error) {
 
 	isSameProduct := false
 	var hitprod string

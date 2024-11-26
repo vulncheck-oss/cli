@@ -1,6 +1,60 @@
 package cpetypes
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
+
+type MozillaAdvisory struct {
+	Title              string             `json:"title"`
+	DateAdded          time.Time          `json:"date_added"`
+	Description        string             `json:"description,omitempty"`
+	Reporter           string             `json:"reporter,omitempty"`
+	Risk               string             `json:"risk,omitempty"`
+	Impact             string             `json:"impact"`
+	Products           []string           `json:"products"`
+	FixedIn            []string           `json:"fixed_in"`
+	CVE                []string           `json:"cve"`
+	AffectedComponents []MozillaComponent `json:"affected_components"`
+	Url                string             `json:"url"`
+	Bugzilla           []string           `json:"bugzilla"`
+}
+
+type MozillaAdvisories []MozillaAdvisory
+
+type MozillaComponent struct {
+	Title       string   `json:"title"`
+	Reporter    string   `json:"reporter"`
+	Impact      string   `json:"impact"`
+	Description string   `json:"description"`
+	CVE         []string `json:"cve"`
+	Bugzilla    []string `json:"bugzilla"`
+}
+
+type AdvisoryCVES []string
+
+func (ma MozillaAdvisories) CVES() AdvisoryCVES {
+
+	var cves []string
+	for _, entry := range ma {
+		cves = append(cves, entry.CVE...)
+	}
+	return cves
+}
+
+func (cves AdvisoryCVES) Unique() AdvisoryCVES {
+	uniqueCVEs := make(map[string]bool)
+	var result []string
+
+	for _, cve := range cves {
+		if !uniqueCVEs[cve] {
+			uniqueCVEs[cve] = true
+			result = append(result, cve)
+		}
+	}
+
+	return result
+}
 
 type CPE struct {
 	Part            string `json:"part"`
