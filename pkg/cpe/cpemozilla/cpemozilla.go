@@ -2,10 +2,8 @@ package cpemozilla
 
 import (
 	"fmt"
-	hcversion "github.com/hashicorp/go-version"
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpetypes"
-	"regexp"
-	"strconv"
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
 	"strings"
 )
 
@@ -31,7 +29,7 @@ func supportedProductsMap() map[string]string {
 }
 
 func Parse(cpe cpetypes.CPE) (*string, error) {
-	if !isParseableVersion(cpetypes.Unquote(cpe.Version)) {
+	if !cpeutils.IsParseableVersion(cpetypes.Unquote(cpe.Version)) {
 		return nil, fmt.Errorf("failed to parse requested version")
 	}
 
@@ -100,7 +98,7 @@ func processAdvisory(cpe cpetypes.CPE, advisory cpetypes.MozillaAdvisory, CVEs [
 			fiver := strings.TrimSpace(fisplit[1])
 
 			var cmpr int
-			if cmpr, err = CompareVersions(cpetypes.Unquote(cpe.Version), fiver); err == nil && cmpr < 0 {
+			if cmpr, err = cpeutils.CompareVersions(cpetypes.Unquote(cpe.Version), fiver); err == nil && cmpr < 0 {
 				//fmt.Printf("product: %v cmpre: %v, versionUnquote: %v, fiver: %v, CVE: %v Title: %v\n", hitprod, cmpr, versionUnquote, fiver, mozillaAdvisory.CVE, mozillaAdvisory.Title)
 				if len(advisory.AffectedComponents) == 0 {
 					CVEs = append(CVEs, advisory.CVE...)
@@ -117,6 +115,12 @@ func processAdvisory(cpe cpetypes.CPE, advisory cpetypes.MozillaAdvisory, CVEs [
 
 	}
 
+	if ltFixedVersion && len(advisory.AffectedComponents) > 0 {
+		for _, affcomp := range advisory.AffectedComponents {
+			remainderCVEs, CVEs = processAffectedMozillaComponent(affcomp, "", remainderCVEs, CVEs)
+		}
+	}
+
 	if ltFixedVersion && len(remainderCVEs) > 0 {
 		CVEs = append(CVEs, remainderCVEs...)
 	}
@@ -125,117 +129,92 @@ func processAdvisory(cpe cpetypes.CPE, advisory cpetypes.MozillaAdvisory, CVEs [
 
 }
 
-func isParseableVersion(a string) bool {
-	if _, err := GetUint64FromVersion(a); err == nil {
-		return true
+func processAffectedMozillaComponent(affcomp cpetypes.MozillaComponent, targetOS string, remainderCVEs, CVEs []string) (rCVEs, cves []string) {
+	// remove all CVEs mentioned by affected components. if there
+	// are CVEs missed by this component list, then we will add them
+	// in after and assume they impact us.
+	remainderCVEs = cpeutils.RemoveCVEEntries(remainderCVEs, affcomp.CVE)
+
+	// determine if we have a firefox for windows impacted entry
+	// and if so, add it's CVEs
+	if targetOS == "windows" && !isFirefoxWindowsAffected(affcomp.Description) {
+		return remainderCVEs, CVEs
 	}
-	_, err := hcversion.NewVersion(a)
-	return err == nil
+
+	return remainderCVEs, append(CVEs, affcomp.CVE...)
 }
 
-// GetUint64FromVersion attempts to map period separated numeric version
-// string to a uint64. Needs testing.
-func GetUint64FromVersion(version string) (uint64, error) {
-	iv, err := versionToUint64Slice(version)
-	if err != nil {
-		return 0, err
+func isFirefoxWindowsAffected(acdesc string) bool {
+	noWin := []string{
+		"Windows is not affected",
+		"Windows systems are not affected",
+		"does not affect Windows",
+		"is not present on Windows",
+		"issue does not affect Linux or Windows installations",
+		"only affects Thunderbird for ",
+		"only affects Firefox for Linux",
+		"only affects Firefox on Linux",
+		"only affects Firefox for macOS and Linux",
+		"only affects Firefox on MacOS",
+		"only affects Firefox for Android",
+		//		"only affects Thunderbird for",
+		"only affects OS X and Linux",
+		"only affects OS X systems",
+		"only affects OS X.",
+		"only affects OS X operating systems",
+		"only affected Mac OS operating",
+		"only affects the Linux oper",
+		"only affects Linux insta",
+		"only affects Linux users",
+		"only affects systems running the Linux operating system",
+		"only affected Firefox for Android",
+		"only affected Linux and Android operating",
+		"only affected Linux operating systems",
+		"issue is specific to Linux in",
+		"issue only occurs on Linux",
+		"issue only affects OS X installations",
+		"issue only affects macOS",
+		"issue only occurs on Mac OSX.",
+		"issue only affects OS X in",
+		"issue was limited to a subset of Intel drivers on Linux",
+		"acceleration on macOS",
+		"problem with Mesa drivers on Linux",
+		"reported that on Linux systems,",
+		"by other users on Linux and OS X systems.",
+		"protocol allowed directory traversal on Linux when",
+		"On Linux machines with gnome-vfs",
+		"URLs passed to Linux versions of ",
+		"Apple has shipped macOS 10.14.5 with an option to disable hyperthreading",
+		" reported an Apple issue",
+		"ships with Firefox on Mac OS X",
+		"passed to Linux versions of Firefox",
+		"by other users on Linux and OS X systems",
+		"allowed directory traversal on Linux wh",
 	}
-	return uint64SliceToUint64(iv)
-}
+	yesWin := []string{
+		"This issue is specific to Windows",
+		"This issue only affects Windows operating systems",
+		"ANGLE graphics library is only used on Windows",
+		"issue only affects systems running Windows",
+		"bugs only affects Windows",
+		"issue is limited to the Windows platform",
+	}
 
-func uint64SliceToUint64(isl []uint64) (uint64, error) {
-	if len(isl) == 0 {
-		return 0, fmt.Errorf("no fields detected in version slice")
-	}
-	if len(isl) > 8 {
-		return 0, fmt.Errorf("too many fields detected in version slice")
-	}
-	uver := uint64(0)
-	mask := uint64(0xff00000000000000)
-	for i, donor := range isl {
-		uver |= (donor << (56 - (i * 8))) & mask
-		mask = mask >> 8
-	}
-	return uver, nil
-}
+	// try to normalize some
+	acdesc = strings.ReplaceAll(acdesc, "\n", " ")
+	acdesc = strings.ReplaceAll(acdesc, "  ", " ")
+	acdesc = strings.ReplaceAll(acdesc, " .", ".")
 
-func versionToUint64Slice(version string) ([]uint64, error) {
-	s := strings.Split(version, ".")
-	if len(s) > 8 {
-		return nil, fmt.Errorf("version %s contains greater than 8 fields", version)
-	}
-
-	ivals := make([]uint64, len(s))
-	for i, v := range s {
-		ival, err := strconv.ParseUint(v, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("version %s contains unsupported field: %v", version, err)
+	for _, yw := range yesWin {
+		if strings.Contains(acdesc, yw) {
+			return true
 		}
-		ivals[i] = ival
 	}
-	return ivals, nil
-}
 
-// Attempt to compare versions
-func CompareVersions(a string, b string) (int, error) {
-	var c int
-	var err error
-
-	// try to handle the e.g., 5.x case
-	m, err := regexp.Match(`^\d{1,3}\.x$`, []byte(b))
-	if err == nil && m {
-		amaj := strings.Split(a, ".")[0]
-		amajv, errA := strconv.Atoi(amaj)
-		bmaj := strings.Split(b, ".")[0]
-		bmajv, errB := strconv.Atoi(bmaj)
-		if errA == nil && errB == nil {
-			if amajv < bmajv {
-				return -1, nil
-			} else if amajv == bmajv {
-				return 0, nil
-			} else {
-				return 1, nil
-			}
+	for _, nw := range noWin {
+		if strings.Contains(acdesc, nw) {
+			return false
 		}
 	}
-
-	c, err = CompareVersionsByUint64(a, b)
-	if err == nil {
-		return c, nil
-	}
-
-	hcvA, err := hcversion.NewVersion(a)
-	if err != nil {
-		return 0, fmt.Errorf("unable to parse version: %s", a)
-	}
-	hcvB, err := hcversion.NewVersion(b)
-	if err != nil {
-		return 0, fmt.Errorf("unable to parse version: %s", b)
-	}
-
-	if hcvA.LessThan(hcvB) {
-		return -1, nil
-	} else if hcvA.Equal(hcvB) {
-		return 0, nil
-	}
-	return 1, nil
-}
-
-func CompareVersionsByUint64(a, b string) (int, error) {
-	au64, err1 := GetUint64FromVersion(a)
-	bu64, err2 := GetUint64FromVersion(b)
-
-	if err1 != nil {
-		return 0, err1
-	}
-	if err2 != nil {
-		return 0, err2
-	}
-	if au64 < bu64 {
-		return -1, nil
-	}
-	if au64 == bu64 {
-		return 0, nil
-	}
-	return 1, nil
+	return true
 }

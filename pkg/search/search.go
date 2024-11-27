@@ -262,7 +262,8 @@ func QueryCPE(cpe cpetypes.CPE) string {
 	if cpe.IsMozilla() {
 		return fmt.Sprintf(".products | any(. == %q)", cpe.ProductUcFirst())
 	}
-	return fmt.Sprintf(".products | any(. == %q)", cpe.Product)
+
+	return "true"
 }
 
 func IPIndex(indexName, query string) ([]IPEntry, *Stats, error) {

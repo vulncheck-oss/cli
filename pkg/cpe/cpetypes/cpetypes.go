@@ -56,6 +56,20 @@ func (cves AdvisoryCVES) Unique() AdvisoryCVES {
 	return result
 }
 
+type NginxAdvisory struct {
+	DateAdded   time.Time `json:"date_added"`
+	Description string    `json:"description"`
+	Url         string    `json:"url"`
+
+	CVE []string `json:"cve"`
+
+	Severity        string   `json:"severity,omitempty"`
+	VulnVersions    []string `json:"vuln_versions,omitempty"`
+	NotVulnVersions []string `json:"not_vuln_versions,omitempty"`
+	PatchURL        string   `json:"patch_url,omitempty"`
+	PatchPGP        string   `json:"patch_pgp,omitempty"`
+}
+
 type CPE struct {
 	Part            string `json:"part"`
 	Vendor          string `json:"vendor"`
@@ -72,6 +86,10 @@ type CPE struct {
 
 func (c CPE) IsMozilla() bool {
 	return Unquote(c.Vendor) == "mozilla"
+}
+
+func (c CPE) IsNginx() bool {
+	return (Unquote(c.Vendor) == "nginx" || Unquote(c.Vendor) == "f5") && Unquote(c.Product) == "nginx"
 }
 
 // ProductUcFirst - returns the product name with the first letter capitalized.

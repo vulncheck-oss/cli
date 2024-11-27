@@ -2,7 +2,6 @@ package cpe
 
 import (
 	"fmt"
-	"github.com/octoper/go-ray"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
@@ -45,7 +44,6 @@ func Command() *cobra.Command {
 			}
 
 			query := search.QueryCPE(*cpe)
-			ray.Ray("query", query)
 
 			results, stats, err := search.IndexAdvisories(cpe.Vendor, query)
 
@@ -57,8 +55,6 @@ func Command() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
-			ray.Ray(stats, len(cves))
 
 			ui.Stat("Results found/filtered", fmt.Sprintf("%d/%d", len(results), len(cves)))
 			ui.Stat("Files/Lines processed", fmt.Sprintf("%d/%d", stats.TotalFiles, stats.TotalLines))

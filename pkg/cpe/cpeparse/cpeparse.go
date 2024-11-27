@@ -32,6 +32,10 @@ func Parse(s string) (*cpetypes.CPE, error) {
 		cpe.Product = *product
 	}
 
+	if cpe.IsNginx() {
+		cpe.Vendor = "nginx"
+	}
+
 	return &cpe, nil
 }
 
