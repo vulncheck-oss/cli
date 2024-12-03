@@ -5,9 +5,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
-	"github.com/vulncheck-oss/cli/pkg/cpe/cpeparse"
-	"github.com/vulncheck-oss/cli/pkg/cpe/cpeprocess"
-	"github.com/vulncheck-oss/cli/pkg/cpe/cpequery"
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpeoffline"
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpeuri"
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
 	"github.com/vulncheck-oss/cli/pkg/search"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 )
@@ -24,7 +24,7 @@ func Command() *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			cpe, err := cpeparse.Parse(args[0])
+			cpe, err := cpeuri.ToStruct(args[0])
 
 			if err != nil {
 				return err
@@ -35,27 +35,27 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			indexAvailable, err := sync.EnsureIndexSync(indices, cpe.Index, false)
+			indexAvailable, err := sync.EnsureIndexSync(indices, "cpecve", false)
 			if err != nil {
 				return err
 			}
 
 			if !indexAvailable {
-				return fmt.Errorf("index %s is required to proceed", cpe.Index)
+				return fmt.Errorf("index cpecve is required to proceed")
 			}
 
-			query, err := cpequery.Query(*cpe)
+			query, err := cpeoffline.Query(cpe)
 
 			if err != nil {
 				return err
 			}
 
-			results, stats, err := search.IndexAdvisories(cpe.Index, query)
+			results, stats, err := search.IndexCPE("cpecve", query)
 
 			if err != nil {
 				return err
 			}
-			cves, err := cpeprocess.Process(*cpe, results)
+			cves, err := cpeutils.Process(cpe, results)
 
 			if err != nil {
 				return err
@@ -65,7 +65,7 @@ func Command() *cobra.Command {
 			ui.Stat("Files/Lines processed", fmt.Sprintf("%d/%d", stats.TotalFiles, stats.TotalLines))
 			ui.Stat("Search duration", stats.Duration.String())
 
-			// ui.Json(cves)
+			ui.Json(cves)
 
 			return nil
 		},

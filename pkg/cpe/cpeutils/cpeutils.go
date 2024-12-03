@@ -8,6 +8,68 @@ import (
 	"strings"
 )
 
+type CPE struct {
+	Part            string `json:"part"`
+	Vendor          string `json:"vendor"`
+	Product         string `json:"product"`
+	Version         string `json:"version"`
+	Update          string `json:"update"`
+	Edition         string `json:"edition"`
+	Language        string `json:"language"`
+	SoftwareEdition string `json:"sw_edition"`
+	TargetSoftware  string `json:"target_sw"`
+	TargetHardware  string `json:"target_hw"`
+	Other           string `json:"other"`
+}
+
+type CPEVulnerabilities struct {
+	CPE
+	CPE23URI string   `json:"cpe23Uri"` // full cpe23uri string
+	Cves     []string `json:"cves"`     // associated CVEs
+}
+
+func Process(cpe *CPE, entries []CPEVulnerabilities) ([]string, error) {
+
+	var cveFindings []string
+
+	if IsParseableVersion(Unquote(cpe.Version)) {
+		for _, entry := range entries {
+			cmpr, err := CompareVersions(Unquote(cpe.Version), Unquote(entry.Version))
+			if err == nil {
+				if cmpr == 0 {
+					cveFindings = append(cveFindings, entry.Cves...)
+				}
+			}
+		}
+	} else {
+
+		for _, entry := range entries {
+			cveFindings = append(cveFindings, entry.Cves...)
+
+		}
+	}
+
+	cveFindings = RemoveDuplicatesUnordered(cveFindings)
+
+	return cveFindings, nil
+}
+
+func RemoveDuplicatesUnordered(elements []string) []string {
+	encountered := map[string]bool{}
+
+	func() {
+		for v := range elements {
+			encountered[elements[v]] = true
+		}
+	}()
+
+	result := []string{}
+	for key := range encountered {
+		result = append(result, key)
+	}
+	return result
+}
+
 func CompareVersions(a string, b string) (int, error) {
 	var c int
 	var err error
@@ -136,4 +198,49 @@ func IsParseableVersion(a string) bool {
 	}
 	_, err := hcversion.NewVersion(a)
 	return err == nil
+}
+
+func Unquote(b string) string {
+	return bindValueFS(b)
+}
+
+func bindValueFS(v string) string {
+	if v == "*" || v == "-" {
+		return v
+	}
+	if v == "" {
+		return "*"
+	}
+	return processQuotedChars(v)
+}
+
+func processQuotedChars(s string) string {
+	result := ""
+	idx := 0
+
+	for idx < len(s) {
+		c := s[idx]
+
+		if c != '\\' {
+			result = fmt.Sprintf("%s%c", result, c)
+
+		} else {
+
+			nextchr := s[idx+1]
+			switch nextchr {
+			case '.',
+				'-',
+				'_':
+				result = fmt.Sprintf("%s%c", result, nextchr)
+				idx += 2
+
+			default:
+				result = fmt.Sprintf("%s\\%c", result, nextchr)
+				idx += 2
+			}
+			continue
+		}
+		idx++
+	}
+	return result
 }

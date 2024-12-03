@@ -8,6 +8,7 @@ import (
 	"github.com/package-url/packageurl-go"
 	"github.com/tidwall/gjson"
 	"github.com/vulncheck-oss/cli/pkg/config"
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk-go"
 	"os"
@@ -99,7 +100,8 @@ func (cves AdvisoryCVES) Unique() AdvisoryCVES {
 	return result
 }
 
-func IndexAdvisories(indexName, query string) ([]interface{}, *Stats, error) {
+/*
+func IndexCPE(indexName, query string) ([]interface{}, *Stats, error) {
 	startTime := time.Now()
 	var stats Stats
 
@@ -164,6 +166,83 @@ func IndexAdvisories(indexName, query string) ([]interface{}, *Stats, error) {
 		}
 
 		if _, ok := v.(map[string]interface{}); ok {
+			results = append(results, entry)
+			stats.MatchedLines++
+		}
+	}
+
+	stats.Duration = time.Since(startTime)
+
+	return results, &stats, nil
+}
+*/
+
+func IndexCPE(indexName, query string) ([]cpeutils.CPEVulnerabilities, *Stats, error) {
+	startTime := time.Now()
+	var stats Stats
+
+	configDir, err := config.IndicesDir()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	indexDir := filepath.Join(configDir, indexName)
+
+	// List all JSON files in the index directory
+	files, err := listJSONFiles(indexDir)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to list files in index directory %s: %w", indexDir, err)
+	}
+
+	if len(files) == 0 {
+		return nil, nil, fmt.Errorf("no JSON files found in index directory %s", indexDir)
+	}
+
+	// We'll process the first JSON file found
+	filePath := files[0]
+
+	file, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to read file %s: %w", filePath, err)
+	}
+
+	var entries []cpeutils.CPEVulnerabilities
+	if err := json.Unmarshal(file, &entries); err != nil {
+		return nil, nil, fmt.Errorf("failed to parse JSON in file %s: %w", filePath, err)
+	}
+
+	jq, err := gojq.Parse(fmt.Sprintf("select(%s)", query))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to parse query: %w", err)
+	}
+	code, err := gojq.Compile(jq)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to compile query: %w", err)
+	}
+
+	stats.Query = query
+	stats.TotalFiles = 1
+	stats.TotalLines = int64(len(entries))
+
+	var results []cpeutils.CPEVulnerabilities
+
+	for _, entry := range entries {
+		entryMap, err := structToMap(entry)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error converting entry to map: %w", err)
+		}
+
+		iter := code.Run(entryMap)
+		v, ok := iter.Next()
+		if !ok {
+			continue
+		}
+		if err, ok := v.(error); ok {
+			return nil, nil, fmt.Errorf("error processing entry: %w", err)
+		}
+
+		// Check if the result is truthy (not false and not nil)
+		if v != nil && v != false {
 			results = append(results, entry)
 			stats.MatchedLines++
 		}

@@ -1,17 +1,16 @@
-package cpeparse
+package cpeuri
 
 import (
 	"fmt"
-	"github.com/vulncheck-oss/cli/pkg/cpe/cpemozilla"
-	"github.com/vulncheck-oss/cli/pkg/cpe/cpetypes"
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
 	"reflect"
 	"strings"
 	"unicode"
 )
 
-func Parse(s string) (*cpetypes.CPE, error) {
+func ToStruct(s string) (*cpeutils.CPE, error) {
 
-	var cpe cpetypes.CPE
+	var cpe cpeutils.CPE
 	var err error
 
 	cpe, err = GetCPEStructFromString(s)
@@ -24,26 +23,10 @@ func Parse(s string) (*cpetypes.CPE, error) {
 		return nil, fmt.Errorf("CPE Vendor or Product cannot be *")
 	}
 
-	if cpe.IsMozilla() {
-		index, err := cpemozilla.Parse(cpe)
-		if err != nil {
-			return nil, err
-		}
-		cpe.Index = *index
-	}
-
-	if cpe.IsNginx() {
-		cpe.Index = "nginx"
-	}
-
-	if cpe.Index == "*" {
-		cpe.Index = "cpecve"
-	}
-
 	return &cpe, nil
 }
 
-func GetCPEStructFromString(s string) (cpetypes.CPE, error) {
+func GetCPEStructFromString(s string) (cpeutils.CPE, error) {
 	if IsCPEFormattedString(s) {
 		c, e := UnbindCPEFormattedString(s)
 		if e != nil {
@@ -60,7 +43,7 @@ func GetCPEStructFromString(s string) (cpetypes.CPE, error) {
 		ConvertEmptyToAny(&c)
 		return c, nil
 	}
-	return cpetypes.CPE{}, fmt.Errorf("unrecognized cpe binding form")
+	return cpeutils.CPE{}, fmt.Errorf("unrecognized cpe binding form")
 }
 
 // IsCPEURIString determines if a string looks like it is a CPE bound as 2.2
@@ -83,7 +66,7 @@ func IsCPEURIString(s string) bool {
 
 // ConvertEmptyToAny is used to fill in empty fields with ANY (i.e., "*"). This
 // is primarily used when CPE URI binding string is the input.
-func ConvertEmptyToAny(cpe *cpetypes.CPE) {
+func ConvertEmptyToAny(cpe *cpeutils.CPE) {
 	v := reflect.ValueOf(cpe).Elem()
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
@@ -122,23 +105,23 @@ func isAllASCII(s string) bool {
 
 // UnbindCPEFormattedString attempts to unbind a cpe 2.3 formatted string to
 // a CPE struct
-func UnbindCPEFormattedString(str string) (cpetypes.CPE, error) {
+func UnbindCPEFormattedString(str string) (cpeutils.CPE, error) {
 	if !isAllASCII(str) {
-		return cpetypes.CPE{}, fmt.Errorf("cpe string contains non-ASCII chars")
+		return cpeutils.CPE{}, fmt.Errorf("cpe string contains non-ASCII chars")
 	}
 
-	cpe := cpetypes.CPE{}
+	cpe := cpeutils.CPE{}
 	fields := []string{"Part", "Vendor", "Product", "Version", "Update", "Edition", "Language", "SoftwareEdition", "TargetSoftware", "TargetHardware", "Other"}
 
 	components := strings.Split(str, ":")
 	if len(components) < 13 {
-		return cpetypes.CPE{}, fmt.Errorf("invalid CPE formatted string")
+		return cpeutils.CPE{}, fmt.Errorf("invalid CPE formatted string")
 	}
 
 	for i, fieldName := range fields {
 		v, err := getAndUnbindComponent(components[i+2])
 		if err != nil {
-			return cpetypes.CPE{}, err
+			return cpeutils.CPE{}, err
 		}
 
 		field := reflect.ValueOf(&cpe).Elem().FieldByName(fieldName)
@@ -234,11 +217,11 @@ func addQuoting(str string) (string, error) {
 
 // UnbindCPEURIString is based on the pseudocode algorithm found in 6.1.3.2 of
 // NISTIR 7695
-func UnbindCPEURIString(uri string) (cpetypes.CPE, error) {
-	cpe := cpetypes.CPE{}
+func UnbindCPEURIString(uri string) (cpeutils.CPE, error) {
+	cpe := cpeutils.CPE{}
 
 	if !isAllASCII(uri) {
-		return cpetypes.CPE{}, fmt.Errorf("cpe string contains non-ASCII chars")
+		return cpeutils.CPE{}, fmt.Errorf("cpe string contains non-ASCII chars")
 	}
 
 	var err error
@@ -248,51 +231,51 @@ func UnbindCPEURIString(uri string) (cpetypes.CPE, error) {
 		case 1:
 			cpe.Part, err = decodeCompURI(v)
 			if err != nil {
-				return cpetypes.CPE{}, err
+				return cpeutils.CPE{}, err
 			}
 
 		case 2:
 			cpe.Vendor, err = decodeCompURI(v)
 			if err != nil {
-				return cpetypes.CPE{}, err
+				return cpeutils.CPE{}, err
 			}
 
 		case 3:
 			cpe.Product, err = decodeCompURI(v)
 			if err != nil {
-				return cpetypes.CPE{}, err
+				return cpeutils.CPE{}, err
 			}
 
 		case 4:
 			cpe.Version, err = decodeCompURI(v)
 			if err != nil {
-				return cpetypes.CPE{}, err
+				return cpeutils.CPE{}, err
 			}
 
 		case 5:
 			cpe.Update, err = decodeCompURI(v)
 			if err != nil {
-				return cpetypes.CPE{}, err
+				return cpeutils.CPE{}, err
 			}
 
 		case 6:
 			if v == "" || v == "-" || v[0] != '~' {
 				cpe.Edition, err = decodeCompURI(v)
 				if err != nil {
-					return cpetypes.CPE{}, err
+					return cpeutils.CPE{}, err
 				}
 
 			} else {
 				err = unpackCompURI(v, &cpe)
 				if err != nil {
-					return cpetypes.CPE{}, err
+					return cpeutils.CPE{}, err
 				}
 			}
 
 		case 7:
 			cpe.Language, err = decodeCompURI(v)
 			if err != nil {
-				return cpetypes.CPE{}, err
+				return cpeutils.CPE{}, err
 			}
 		}
 	}
@@ -359,7 +342,7 @@ func decodeCompURI(s string) (string, error) {
 	return result.String(), nil
 }
 
-func unpackCompURI(s string, cpe *cpetypes.CPE) error {
+func unpackCompURI(s string, cpe *cpeutils.CPE) error {
 	if len(s) <= 1 {
 		return fmt.Errorf("invalid packed URI: too short")
 	}
