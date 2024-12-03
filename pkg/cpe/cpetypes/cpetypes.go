@@ -31,6 +31,12 @@ type MozillaComponent struct {
 	Bugzilla    []string `json:"bugzilla"`
 }
 
+type CPEVulnerabilities struct {
+	CPE
+	CPE23URI string   `json:"cpe23Uri"` // full cpe23uri string
+	Cves     []string `json:"cves"`     // associated CVEs
+}
+
 type AdvisoryCVES []string
 
 func (ma MozillaAdvisories) CVES() AdvisoryCVES {
@@ -82,6 +88,7 @@ type CPE struct {
 	TargetSoftware  string `json:"target_sw"`
 	TargetHardware  string `json:"target_hw"`
 	Other           string `json:"other"`
+	Index           string `json:"index"`
 }
 
 func (c CPE) IsMozilla() bool {

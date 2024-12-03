@@ -7,6 +7,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpeparse"
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpeprocess"
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpequery"
 	"github.com/vulncheck-oss/cli/pkg/search"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 )
@@ -34,18 +35,22 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			indexAvailable, err := sync.EnsureIndexSync(indices, cpe.Vendor, false)
+			indexAvailable, err := sync.EnsureIndexSync(indices, cpe.Index, false)
 			if err != nil {
 				return err
 			}
 
 			if !indexAvailable {
-				return fmt.Errorf("index %s is required to proceed", cpe.Vendor)
+				return fmt.Errorf("index %s is required to proceed", cpe.Index)
 			}
 
-			query := search.QueryCPE(*cpe)
+			query, err := cpequery.Query(*cpe)
 
-			results, stats, err := search.IndexAdvisories(cpe.Vendor, query)
+			if err != nil {
+				return err
+			}
+
+			results, stats, err := search.IndexAdvisories(cpe.Index, query)
 
 			if err != nil {
 				return err
@@ -60,7 +65,7 @@ func Command() *cobra.Command {
 			ui.Stat("Files/Lines processed", fmt.Sprintf("%d/%d", stats.TotalFiles, stats.TotalLines))
 			ui.Stat("Search duration", stats.Duration.String())
 
-			ui.Json(cves)
+			// ui.Json(cves)
 
 			return nil
 		},

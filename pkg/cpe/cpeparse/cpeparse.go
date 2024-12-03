@@ -25,15 +25,19 @@ func Parse(s string) (*cpetypes.CPE, error) {
 	}
 
 	if cpe.IsMozilla() {
-		product, err := cpemozilla.Parse(cpe)
+		index, err := cpemozilla.Parse(cpe)
 		if err != nil {
 			return nil, err
 		}
-		cpe.Product = *product
+		cpe.Index = *index
 	}
 
 	if cpe.IsNginx() {
-		cpe.Vendor = "nginx"
+		cpe.Index = "nginx"
+	}
+
+	if cpe.Index == "*" {
+		cpe.Index = "cpecve"
 	}
 
 	return &cpe, nil

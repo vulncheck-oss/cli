@@ -5,6 +5,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpemozilla"
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpenginx"
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpetypes"
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
 )
 
 func Process(cpe cpetypes.CPE, entries []interface{}) ([]string, error) {
@@ -44,5 +45,60 @@ func Process(cpe cpetypes.CPE, entries []interface{}) ([]string, error) {
 		return cpenginx.Process(cpe, nginxAdvisories)
 	}
 
-	return []string{}, nil
+	cveFindings := make([]string, 0)
+
+	if cpeutils.IsParseableVersion(cpetypes.Unquote(cpe.Version)) {
+		for _, entry := range entries {
+			jsonData, err := json.Marshal(entry)
+			if err != nil {
+				return nil, err
+			}
+
+			var vuln cpetypes.CPEVulnerabilities
+			if err := json.Unmarshal(jsonData, &vuln); err != nil {
+				return nil, err
+			}
+
+			cmpr, err := cpeutils.CompareVersions(cpetypes.Unquote(cpe.Version), cpetypes.Unquote(vuln.Version))
+			if err == nil {
+				if cmpr == 0 {
+					cveFindings = append(cveFindings, vuln.Cves...)
+				}
+			}
+		}
+	} else {
+
+		for _, entry := range entries {
+			jsonData, err := json.Marshal(entry)
+			if err != nil {
+				return nil, err
+			}
+
+			var vuln cpetypes.CPEVulnerabilities
+			if err := json.Unmarshal(jsonData, &vuln); err != nil {
+				return nil, err
+			}
+			cveFindings = append(cveFindings, vuln.Cves...)
+
+		}
+	}
+
+	cveFindings = RemoveDuplicatesUnordered(cveFindings)
+
+	return cveFindings, nil
+}
+func RemoveDuplicatesUnordered(elements []string) []string {
+	encountered := map[string]bool{}
+
+	func() {
+		for v := range elements {
+			encountered[elements[v]] = true
+		}
+	}()
+
+	result := []string{}
+	for key := range encountered {
+		result = append(result, key)
+	}
+	return result
 }

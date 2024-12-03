@@ -8,7 +8,6 @@ import (
 	"github.com/package-url/packageurl-go"
 	"github.com/tidwall/gjson"
 	"github.com/vulncheck-oss/cli/pkg/config"
-	"github.com/vulncheck-oss/cli/pkg/cpe/cpetypes"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk-go"
 	"os"
@@ -254,16 +253,6 @@ func QueryPURL(instance packageurl.PackageURL) string {
 		}
 	}
 	return strings.Join(conditions, " and ")
-}
-func QueryCPE(cpe cpetypes.CPE) string {
-	if cpe.Product == "" {
-		return "true"
-	}
-	if cpe.IsMozilla() {
-		return fmt.Sprintf(".products | any(. == %q)", cpe.ProductUcFirst())
-	}
-
-	return "true"
 }
 
 func IPIndex(indexName, query string) ([]IPEntry, *Stats, error) {
