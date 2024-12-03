@@ -100,83 +100,7 @@ func (cves AdvisoryCVES) Unique() AdvisoryCVES {
 	return result
 }
 
-/*
-func IndexCPE(indexName, query string) ([]interface{}, *Stats, error) {
-	startTime := time.Now()
-	var stats Stats
-
-	configDir, err := config.IndicesDir()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	indexDir := filepath.Join(configDir, indexName)
-
-	// List all JSON files in the index directory
-	files, err := listJSONFiles(indexDir)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to list files in index directory %s: %w", indexDir, err)
-	}
-
-	if len(files) == 0 {
-		return nil, nil, fmt.Errorf("no JSON files found in index directory %s", indexDir)
-	}
-
-	// We'll process the first JSON file found
-	filePath := files[0]
-
-	file, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to read file %s: %w", filePath, err)
-	}
-
-	var entries []interface{}
-	if err := json.Unmarshal(file, &entries); err != nil {
-		return nil, nil, fmt.Errorf("failed to parse JSON in file %s: %w", filePath, err)
-	}
-
-	jq, err := gojq.Parse(fmt.Sprintf("select(%s)", query))
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse query: %w", err)
-	}
-	code, err := gojq.Compile(jq)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to compile query: %w", err)
-	}
-
-	stats.Query = query
-	stats.TotalFiles = 1
-	stats.TotalLines = int64(len(entries))
-
-	var results []interface{}
-
-	for _, entry := range entries {
-		entryMap, err := structToMap(entry)
-		if err != nil {
-			return nil, nil, fmt.Errorf("error converting entry to map: %w", err)
-		}
-
-		iter := code.Run(entryMap)
-		v, ok := iter.Next()
-		if !ok {
-			continue
-		}
-		if err, ok := v.(error); ok {
-			return nil, nil, fmt.Errorf("error processing entry: %w", err)
-		}
-
-		if _, ok := v.(map[string]interface{}); ok {
-			results = append(results, entry)
-			stats.MatchedLines++
-		}
-	}
-
-	stats.Duration = time.Since(startTime)
-
-	return results, &stats, nil
-}
-*/
-
+// IndexCPE - 12 seconds
 func IndexCPE(indexName, query string) ([]cpeutils.CPEVulnerabilities, *Stats, error) {
 	startTime := time.Now()
 	var stats Stats
@@ -188,7 +112,6 @@ func IndexCPE(indexName, query string) ([]cpeutils.CPEVulnerabilities, *Stats, e
 
 	indexDir := filepath.Join(configDir, indexName)
 
-	// List all JSON files in the index directory
 	files, err := listJSONFiles(indexDir)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to list files in index directory %s: %w", indexDir, err)
@@ -198,19 +121,17 @@ func IndexCPE(indexName, query string) ([]cpeutils.CPEVulnerabilities, *Stats, e
 		return nil, nil, fmt.Errorf("no JSON files found in index directory %s", indexDir)
 	}
 
-	// We'll process the first JSON file found
 	filePath := files[0]
 
-	file, err := os.ReadFile(filePath)
+	fileContent, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to read file %s: %w", filePath, err)
 	}
 
-	var entries []cpeutils.CPEVulnerabilities
-	if err := json.Unmarshal(file, &entries); err != nil {
-		return nil, nil, fmt.Errorf("failed to parse JSON in file %s: %w", filePath, err)
-	}
+	stats.Query = query
+	stats.TotalFiles = 1
 
+	// Compile the jq query
 	jq, err := gojq.Parse(fmt.Sprintf("select(%s)", query))
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to parse query: %w", err)
@@ -220,49 +141,45 @@ func IndexCPE(indexName, query string) ([]cpeutils.CPEVulnerabilities, *Stats, e
 		return nil, nil, fmt.Errorf("failed to compile query: %w", err)
 	}
 
-	stats.Query = query
-	stats.TotalFiles = 1
-	stats.TotalLines = int64(len(entries))
+	result := gjson.ParseBytes(fileContent)
+	stats.TotalLines = result.Get("#").Int()
 
 	var results []cpeutils.CPEVulnerabilities
 
-	for _, entry := range entries {
-		entryMap, err := structToMap(entry)
-		if err != nil {
-			return nil, nil, fmt.Errorf("error converting entry to map: %w", err)
+	result.ForEach(func(_, value gjson.Result) bool {
+		var entryMap map[string]interface{}
+		if err := json.Unmarshal([]byte(value.Raw), &entryMap); err != nil {
+			// Log the error or handle it as appropriate
+			return true // continue to next item
 		}
 
 		iter := code.Run(entryMap)
 		v, ok := iter.Next()
 		if !ok {
-			continue
+			return true // continue to next item
 		}
-		if err, ok := v.(error); ok {
-			return nil, nil, fmt.Errorf("error processing entry: %w", err)
+		if _, ok := v.(error); ok {
+			// Log the error or handle it as appropriate
+			return true // continue to next item
 		}
 
 		// Check if the result is truthy (not false and not nil)
 		if v != nil && v != false {
+			var entry cpeutils.CPEVulnerabilities
+			if err := json.Unmarshal([]byte(value.Raw), &entry); err != nil {
+				// Log the error or handle it as appropriate
+				return true // continue to next item
+			}
 			results = append(results, entry)
 			stats.MatchedLines++
 		}
-	}
+
+		return true // continue to next item
+	})
 
 	stats.Duration = time.Since(startTime)
 
 	return results, &stats, nil
-}
-
-// Helper function to convert struct to map
-func structToMap(obj interface{}) (map[string]interface{}, error) {
-	data, err := json.Marshal(obj)
-	if err != nil {
-		return nil, err
-	}
-
-	var result map[string]interface{}
-	err = json.Unmarshal(data, &result)
-	return result, err
 }
 
 type Stats struct {

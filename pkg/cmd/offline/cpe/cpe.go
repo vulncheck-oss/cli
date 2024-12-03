@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
+	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpeoffline"
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpeuri"
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
@@ -15,6 +16,8 @@ import (
 func Command() *cobra.Command {
 
 	var jsonOutput bool
+
+	var statsOnly bool
 
 	cmd := &cobra.Command{
 		Use:     "cpe <scheme>",
@@ -61,15 +64,23 @@ func Command() *cobra.Command {
 				return err
 			}
 
+			if jsonOutput || config.IsCI() {
+				ui.Json(cves)
+				return nil
+			}
+
 			ui.Stat("Results found/filtered", fmt.Sprintf("%d/%d", len(results), len(cves)))
 			ui.Stat("Files/Lines processed", fmt.Sprintf("%d/%d", stats.TotalFiles, stats.TotalLines))
 			ui.Stat("Search duration", stats.Duration.String())
 
-			ui.Json(cves)
+			if !statsOnly {
+				ui.Json(cves)
+			}
 
 			return nil
 		},
 	}
 	cmd.Flags().BoolVarP(&jsonOutput, "json", "j", false, "Output in JSON format")
+	cmd.Flags().BoolVarP(&statsOnly, "stats", "s", false, "Output stats only")
 	return cmd
 }
