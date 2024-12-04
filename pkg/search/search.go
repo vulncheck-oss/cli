@@ -60,46 +60,6 @@ type IPEntry struct {
 	FeedIDs []string `json:"feed_ids"`
 }
 
-type AdvisoryEntry struct {
-	Title              string   `json:"title"`
-	DateAdded          string   `json:"date_added"`
-	Description        string   `json:"description"`
-	Reporter           string   `json:"reporter"`
-	Impact             string   `json:"impact"`
-	Products           []string `json:"products"`
-	FixedIn            []string `json:"fixed_in"`
-	CVE                []string `json:"cve"`
-	AffectedComponents []string `json:"affected_components"`
-	URL                string   `json:"url"`
-	Bugzilla           []string `json:"bugzilla"`
-}
-
-type AdvisoryEntries []AdvisoryEntry
-type AdvisoryCVES []string
-
-func (ae AdvisoryEntries) CVES() AdvisoryCVES {
-
-	var cves []string
-	for _, entry := range ae {
-		cves = append(cves, entry.CVE...)
-	}
-	return cves
-}
-
-func (cves AdvisoryCVES) Unique() AdvisoryCVES {
-	uniqueCVEs := make(map[string]bool)
-	var result []string
-
-	for _, cve := range cves {
-		if !uniqueCVEs[cve] {
-			uniqueCVEs[cve] = true
-			result = append(result, cve)
-		}
-	}
-
-	return result
-}
-
 type Stats struct {
 	TotalFiles   int64
 	TotalLines   int64

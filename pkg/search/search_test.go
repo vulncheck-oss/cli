@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/itchyny/gojq"
 	"github.com/package-url/packageurl-go"
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
 	"os"
 	"path/filepath"
 	"sort"
@@ -284,4 +285,51 @@ func TestProcessFile(t *testing.T) {
 	assert.Equal(t, int64(1), stats.TotalFiles, "Unexpected total files count")
 	assert.Equal(t, int64(3), stats.TotalLines, "Unexpected total lines count")
 	assert.Equal(t, int64(2), stats.MatchedLines, "Unexpected matched lines count")
+}
+
+func TestQuickFilterCPE(t *testing.T) {
+	testCases := []struct {
+		name     string
+		json     string
+		cpe      cpeutils.CPE
+		expected bool
+	}{
+		{
+			name:     "Match vendor",
+			json:     `{"vendor": "microsoft", "product": "windows"}`,
+			cpe:      cpeutils.CPE{Vendor: "microsoft"},
+			expected: true,
+		},
+		{
+			name:     "Match product",
+			json:     `{"vendor": "apache", "product": "tomcat"}`,
+			cpe:      cpeutils.CPE{Product: "tomcat"},
+			expected: true,
+		},
+		{
+			name:     "Match both",
+			json:     `{"vendor": "oracle", "product": "java"}`,
+			cpe:      cpeutils.CPE{Vendor: "oracle", Product: "java"},
+			expected: true,
+		},
+		{
+			name:     "No match",
+			json:     `{"vendor": "google", "product": "chrome"}`,
+			cpe:      cpeutils.CPE{Vendor: "mozilla", Product: "firefox"},
+			expected: false,
+		},
+		{
+			name:     "Empty CPE",
+			json:     `{"vendor": "apple", "product": "macos"}`,
+			cpe:      cpeutils.CPE{},
+			expected: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := quickFilterCPE([]byte(tc.json), tc.cpe)
+			assert.Equal(t, tc.expected, result, "Unexpected result for case: %s", tc.name)
+		})
+	}
 }
