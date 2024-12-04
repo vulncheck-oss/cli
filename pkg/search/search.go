@@ -100,8 +100,15 @@ func (cves AdvisoryCVES) Unique() AdvisoryCVES {
 	return result
 }
 
-// IndexCPE - 12 seconds
-func IndexCPE(indexName, query string) ([]cpeutils.CPEVulnerabilities, *Stats, error) {
+type Stats struct {
+	TotalFiles   int64
+	TotalLines   int64
+	MatchedLines int64
+	Duration     time.Duration
+	Query        string
+}
+
+func IndexCPE(indexName string, cpe cpeutils.CPE, query string) ([]cpeutils.CPEVulnerabilities, *Stats, error) {
 	startTime := time.Now()
 	var stats Stats
 
@@ -111,28 +118,17 @@ func IndexCPE(indexName, query string) ([]cpeutils.CPEVulnerabilities, *Stats, e
 	}
 
 	indexDir := filepath.Join(configDir, indexName)
-
 	files, err := listJSONFiles(indexDir)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to list files in index directory %s: %w", indexDir, err)
-	}
-
-	if len(files) == 0 {
-		return nil, nil, fmt.Errorf("no JSON files found in index directory %s", indexDir)
+	if err != nil || len(files) == 0 {
+		return nil, nil, fmt.Errorf("failed to find JSON files in index directory %s: %w", indexDir, err)
 	}
 
 	filePath := files[0]
-
-	fileContent, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to read file %s: %w", filePath, err)
-	}
-
-	stats.Query = query
 	stats.TotalFiles = 1
+	stats.Query = query
 
 	// Compile the jq query
-	jq, err := gojq.Parse(fmt.Sprintf("select(%s)", query))
+	jq, err := gojq.Parse(query)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to parse query: %w", err)
 	}
@@ -141,53 +137,65 @@ func IndexCPE(indexName, query string) ([]cpeutils.CPEVulnerabilities, *Stats, e
 		return nil, nil, fmt.Errorf("failed to compile query: %w", err)
 	}
 
-	result := gjson.ParseBytes(fileContent)
-	stats.TotalLines = result.Get("#").Int()
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to open file %s: %w", filePath, err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
 
 	var results []cpeutils.CPEVulnerabilities
 
-	result.ForEach(func(_, value gjson.Result) bool {
-		var entryMap map[string]interface{}
-		if err := json.Unmarshal([]byte(value.Raw), &entryMap); err != nil {
-			// Log the error or handle it as appropriate
-			return true // continue to next item
+	for scanner.Scan() {
+		stats.TotalLines++
+		line := scanner.Bytes()
+
+		// Quick filter using gjson
+		if !quickFilterCPE(line, cpe) {
+			continue
 		}
 
-		iter := code.Run(entryMap)
+		// Full processing with gojq
+		var input interface{}
+		if err := json.Unmarshal(line, &input); err != nil {
+			continue
+		}
+
+		iter := code.Run(input)
 		v, ok := iter.Next()
-		if !ok {
-			return true // continue to next item
-		}
-		if _, ok := v.(error); ok {
-			// Log the error or handle it as appropriate
-			return true // continue to next item
+		if !ok || v == nil {
+			continue
 		}
 
-		// Check if the result is truthy (not false and not nil)
-		if v != nil && v != false {
+		// If the query returned true, we have a match
+		if v == true {
 			var entry cpeutils.CPEVulnerabilities
-			if err := json.Unmarshal([]byte(value.Raw), &entry); err != nil {
-				// Log the error or handle it as appropriate
-				return true // continue to next item
+			if err := json.Unmarshal(line, &entry); err != nil {
+				continue
 			}
 			results = append(results, entry)
 			stats.MatchedLines++
 		}
+	}
 
-		return true // continue to next item
-	})
+	if err := scanner.Err(); err != nil {
+		return nil, nil, fmt.Errorf("error reading file: %w", err)
+	}
 
 	stats.Duration = time.Since(startTime)
-
 	return results, &stats, nil
 }
 
-type Stats struct {
-	TotalFiles   int64
-	TotalLines   int64
-	MatchedLines int64
-	Duration     time.Duration
-	Query        string
+func quickFilterCPE(line []byte, cpe cpeutils.CPE) bool {
+	if cpe.Vendor != "" && gjson.GetBytes(line, "vendor").String() != cpe.Vendor {
+		return false
+	}
+	if cpe.Product != "" && gjson.GetBytes(line, "product").String() != cpe.Product {
+		return false
+	}
+	return true
 }
 
 func QueryIPIntel(country, asn, cidr, countryCode, hostname, id string) string {
