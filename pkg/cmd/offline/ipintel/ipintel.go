@@ -73,7 +73,7 @@ func Command() *cobra.Command {
 				ui.Info(fmt.Sprintf("Searching index %s, last updated on %s", index.Name, utils.ParseDate(index.LastUpdated)))
 			}
 
-			results, stats, err := search.Index(index.Name, query)
+			results, stats, err := search.IPIndex(index.Name, query)
 			if err != nil {
 				return err
 			}

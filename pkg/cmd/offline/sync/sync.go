@@ -11,6 +11,8 @@ import (
 	"slices"
 )
 
+var specialIndices = []string{"cpecve"}
+
 func Command() *cobra.Command {
 
 	var addIndices, removeIndices []string
@@ -35,6 +37,11 @@ func Command() *cobra.Command {
 			availableIndices := make(map[string]bool)
 			for _, index := range indices {
 				availableIndices[index.Name] = true
+			}
+
+			// Add special indices to availableIndices
+			for _, specialIndex := range specialIndices {
+				availableIndices[specialIndex] = true
 			}
 
 			// Handle purge flag

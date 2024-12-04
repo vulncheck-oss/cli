@@ -8,6 +8,7 @@ import (
 	"github.com/package-url/packageurl-go"
 	"github.com/tidwall/gjson"
 	"github.com/vulncheck-oss/cli/pkg/config"
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk-go"
 	"os"
@@ -39,7 +40,7 @@ type PurlEntry struct {
 	PublishedDate string `json:"published_date"`
 }
 
-type Entry struct {
+type IPEntry struct {
 	IP          string   `json:"ip"`
 	Port        int      `json:"port"`
 	SSL         bool     `json:"ssl"`
@@ -65,6 +66,96 @@ type Stats struct {
 	MatchedLines int64
 	Duration     time.Duration
 	Query        string
+}
+
+func IndexCPE(indexName string, cpe cpeutils.CPE, query string) ([]cpeutils.CPEVulnerabilities, *Stats, error) {
+	startTime := time.Now()
+	var stats Stats
+
+	configDir, err := config.IndicesDir()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	indexDir := filepath.Join(configDir, indexName)
+	files, err := listJSONFiles(indexDir)
+	if err != nil || len(files) == 0 {
+		return nil, nil, fmt.Errorf("failed to find JSON files in index directory %s: %w", indexDir, err)
+	}
+
+	filePath := files[0]
+	stats.TotalFiles = 1
+	stats.Query = query
+
+	// Compile the jq query
+	jq, err := gojq.Parse(query)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to parse query: %w", err)
+	}
+	code, err := gojq.Compile(jq)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to compile query: %w", err)
+	}
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to open file %s: %w", filePath, err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+
+	var results []cpeutils.CPEVulnerabilities
+
+	for scanner.Scan() {
+		stats.TotalLines++
+		line := scanner.Bytes()
+
+		// Quick filter using gjson
+		if !quickFilterCPE(line, cpe) {
+			continue
+		}
+
+		// Full processing with gojq
+		var input interface{}
+		if err := json.Unmarshal(line, &input); err != nil {
+			continue
+		}
+
+		iter := code.Run(input)
+		v, ok := iter.Next()
+		if !ok || v == nil {
+			continue
+		}
+
+		// If the query returned true, we have a match
+		if v == true {
+			var entry cpeutils.CPEVulnerabilities
+			if err := json.Unmarshal(line, &entry); err != nil {
+				continue
+			}
+			results = append(results, entry)
+			stats.MatchedLines++
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, nil, fmt.Errorf("error reading file: %w", err)
+	}
+
+	stats.Duration = time.Since(startTime)
+	return results, &stats, nil
+}
+
+func quickFilterCPE(line []byte, cpe cpeutils.CPE) bool {
+	if cpe.Vendor != "" && gjson.GetBytes(line, "vendor").String() != cpe.Vendor {
+		return false
+	}
+	if cpe.Product != "" && gjson.GetBytes(line, "product").String() != cpe.Product {
+		return false
+	}
+	return true
 }
 
 func QueryIPIntel(country, asn, cidr, countryCode, hostname, id string) string {
@@ -128,7 +219,7 @@ func QueryPURL(instance packageurl.PackageURL) string {
 	return strings.Join(conditions, " and ")
 }
 
-func Index(indexName, query string) ([]Entry, *Stats, error) {
+func IPIndex(indexName, query string) ([]IPEntry, *Stats, error) {
 	startTime := time.Now()
 	var stats Stats
 
@@ -155,7 +246,7 @@ func Index(indexName, query string) ([]Entry, *Stats, error) {
 
 	stats.Query = query
 
-	resultsChan := make(chan Entry)
+	resultsChan := make(chan IPEntry)
 	errorsChan := make(chan error)
 	var wg sync.WaitGroup
 
@@ -172,7 +263,7 @@ func Index(indexName, query string) ([]Entry, *Stats, error) {
 		close(errorsChan)
 	}()
 
-	var results []Entry
+	var results []IPEntry
 	for result := range resultsChan {
 		results = append(results, result)
 	}
@@ -326,7 +417,7 @@ func listIndexFiles(dir string) ([]string, error) {
 	return files, err
 }
 
-func processFile(filePath, query string, code *gojq.Code, resultsChan chan<- Entry, errorsChan chan<- error, wg *sync.WaitGroup, stats *Stats) {
+func processFile(filePath, query string, code *gojq.Code, resultsChan chan<- IPEntry, errorsChan chan<- error, wg *sync.WaitGroup, stats *Stats) {
 	defer wg.Done()
 
 	file, err := os.Open(filePath)
@@ -412,7 +503,7 @@ func parseQuery(query string) map[string]string {
 	return fields
 }
 
-func fullProcess(line []byte, code *gojq.Code) (*Entry, error) {
+func fullProcess(line []byte, code *gojq.Code) (*IPEntry, error) {
 	var input map[string]interface{}
 	if err := json.Unmarshal(line, &input); err != nil {
 		return nil, fmt.Errorf("error parsing JSON: %w", err)
@@ -428,7 +519,7 @@ func fullProcess(line []byte, code *gojq.Code) (*Entry, error) {
 	}
 
 	if _, ok := v.(map[string]interface{}); ok {
-		var entry Entry
+		var entry IPEntry
 		if err := json.Unmarshal(line, &entry); err != nil {
 			return nil, fmt.Errorf("error unmarshaling entry: %w", err)
 		}
@@ -436,4 +527,18 @@ func fullProcess(line []byte, code *gojq.Code) (*Entry, error) {
 	}
 
 	return nil, nil
+}
+
+func listJSONFiles(dir string) ([]string, error) {
+	var files []string
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && strings.HasSuffix(info.Name(), ".json") {
+			files = append(files, path)
+		}
+		return nil
+	})
+	return files, err
 }
