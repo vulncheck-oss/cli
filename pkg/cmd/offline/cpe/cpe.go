@@ -2,7 +2,6 @@ package cpe
 
 import (
 	"fmt"
-	"github.com/octoper/go-ray"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
@@ -72,9 +71,7 @@ func Command() *cobra.Command {
 
 			ui.Stat("Results found/filtered", fmt.Sprintf("%d/%d", len(results), len(cves)))
 			ui.Stat("Files/Lines processed", fmt.Sprintf("%d/%d", stats.TotalFiles, stats.TotalLines))
-			ui.Stat("Search duration", stats.Duration.String())
-
-			ray.Ray(query)
+			ui.Stat("Search duration", fmt.Sprintf("%.2f seconds", stats.Duration.Seconds()))
 
 			if !statsOnly {
 				ui.Json(cves)
