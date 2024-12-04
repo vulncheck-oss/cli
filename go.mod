@@ -7,7 +7,7 @@ require (
 	github.com/alecthomas/chroma/v2 v2.14.0
 	github.com/anchore/syft v1.4.1
 	github.com/charmbracelet/bubbles v0.20.0
-	github.com/charmbracelet/bubbletea v1.2.3
+	github.com/charmbracelet/bubbletea v1.2.4
 	github.com/charmbracelet/huh v0.6.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20240404200615-66118a2cb3cf
 	github.com/charmbracelet/lipgloss v1.0.0
