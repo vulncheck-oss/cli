@@ -249,7 +249,7 @@ func TestProcessFile(t *testing.T) {
 		t.Fatalf("Failed to compile query: %v", err)
 	}
 
-	resultsChan := make(chan Entry, 10)
+	resultsChan := make(chan IPEntry, 10)
 	errorsChan := make(chan error, 10)
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -270,7 +270,7 @@ func TestProcessFile(t *testing.T) {
 	}
 
 	// Collect and check results
-	var results []Entry
+	var results []IPEntry
 	for entry := range resultsChan {
 		results = append(results, entry)
 	}
