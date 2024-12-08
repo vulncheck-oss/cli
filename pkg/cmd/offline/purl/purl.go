@@ -52,6 +52,12 @@ func Command() *cobra.Command {
 				return fmt.Errorf("index %s is required to proceed", instance.Type)
 			}
 
+			indices, err = cache.Indices()
+
+			if err != nil {
+				return err
+			}
+
 			index := indices.GetIndex(indexName)
 
 			query := search.QueryPURL(instance)
