@@ -36,7 +36,8 @@ func Command() *cobra.Command {
 		Short:   i18n.C.ScanShort,
 		Example: i18n.C.ScanExample,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 1 {
+
+			if opts.SbomInput == "" && len(args) != 1 {
 				return ui.Error(i18n.C.ScanErrorDirectoryRequired)
 			}
 
