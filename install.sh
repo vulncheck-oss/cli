@@ -5,7 +5,7 @@ echo "Fetching latest version..."
 VERSION=$(curl -s https://api.github.com/repos/vulncheck-oss/cli/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/v//')
 
 if [ -z "$VERSION" ]; then
-    echo "Failed to fetch the latest version. Using default version."
+    echo "Failed to fetch the latest version."
     exit 1
 fi
 
