@@ -1,7 +1,18 @@
 #!/bin/bash
 
-# Set the version
-VERSION="0.8.2"
+
+#!/bin/bash
+
+# Fetch the latest version from GitHub
+echo "Fetching latest version..."
+VERSION=$(curl -s https://api.github.com/repos/vulncheck-oss/cli/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/v//')
+
+if [ -z "$VERSION" ]; then
+    echo "Failed to fetch the latest version. Using default version."
+    exit 1
+fi
+
+echo "Latest version: $VERSION"
 
 # Detect the operating system and architecture
 if [[ "$OSTYPE" == "darwin"* ]]; then
