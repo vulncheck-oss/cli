@@ -1,15 +1,31 @@
 #!/bin/bash
 
-# Fetch the latest version from GitHub
-echo "Fetching latest version..."
-VERSION=$(curl -s https://api.github.com/repos/vulncheck-oss/cli/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/v//')
+# Parse command line arguments
+for arg in "$@"
+do
+    case $arg in
+        --version=*)
+        SPECIFIED_VERSION="${arg#*=}"
+        shift # Remove --version= from processing
+        ;;
+    esac
+done
 
-if [ -z "$VERSION" ]; then
-    echo "Failed to fetch the latest version."
-    exit 1
+if [ -n "$SPECIFIED_VERSION" ]; then
+    VERSION="$SPECIFIED_VERSION"
+    echo "Using specified version: $VERSION"
+else
+    # Fetch the latest version from GitHub
+    echo "Fetching latest version..."
+    VERSION=$(curl -s https://api.github.com/repos/vulncheck-oss/cli/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/v//')
+
+    if [ -z "$VERSION" ]; then
+        echo "Failed to fetch the latest version. Please check your internet connection and try again."
+        exit 1
+    fi
+
+    echo "Latest version: $VERSION"
 fi
-
-echo "Latest version: $VERSION"
 
 # Detect the operating system and architecture
 if [[ "$OSTYPE" == "darwin"* ]]; then
