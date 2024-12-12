@@ -8,6 +8,7 @@ import (
 	"github.com/package-url/packageurl-go"
 	"github.com/tidwall/gjson"
 	"github.com/vulncheck-oss/cli/pkg/config"
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk-go"
 	"os"
@@ -65,6 +66,75 @@ type Stats struct {
 	MatchedLines int64
 	Duration     time.Duration
 	Query        string
+}
+
+func IndexCPE(indexName string, cpe cpeutils.CPE, query string) ([]cpeutils.CPEVulnerabilities, *Stats, error) {
+	startTime := time.Now()
+	var stats Stats
+
+	configDir, err := config.IndicesDir()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	indexDir := filepath.Join(configDir, indexName)
+	files, err := listJSONFiles(indexDir)
+	if err != nil || len(files) == 0 {
+		return nil, nil, fmt.Errorf("failed to find JSON files in index directory %s: %w", indexDir, err)
+	}
+
+	filePath := files[0]
+	stats.TotalFiles = 1
+	stats.Query = query
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to open file %s: %w", filePath, err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+
+	var results []cpeutils.CPEVulnerabilities
+
+	for scanner.Scan() {
+		stats.TotalLines++
+		line := scanner.Text()
+
+		if matchesCPE(line, cpe) {
+			var entry cpeutils.CPEVulnerabilities
+			if err := json.Unmarshal([]byte(line), &entry); err != nil {
+				continue
+			}
+			results = append(results, entry)
+			stats.MatchedLines++
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, nil, fmt.Errorf("error reading file: %w", err)
+	}
+
+	stats.Duration = time.Since(startTime)
+	return results, &stats, nil
+}
+
+func matchesCPE(line string, cpe cpeutils.CPE) bool {
+
+	if cpe.Vendor != "" {
+		if !strings.Contains(line, fmt.Sprintf(`%s`, strings.ToLower(cpe.Vendor))) {
+			return false
+		}
+	}
+
+	if cpe.Product != "" {
+		if !strings.Contains(line, fmt.Sprintf(`%s`, strings.ToLower(cpe.Product))) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func QueryIPIntel(country, asn, cidr, countryCode, hostname, id string) string {
