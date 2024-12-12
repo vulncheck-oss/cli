@@ -112,31 +112,31 @@ func IndexCPE(indexName string, cpe cpeutils.CPE, query string) ([]cpeutils.CPEV
 		stats.TotalLines++
 		line := scanner.Bytes()
 
-		// Quick filter using gjson
-		if !quickFilterCPE(line, cpe) {
+		var entry cpeutils.CPEVulnerabilities
+		if err := json.Unmarshal(line, &entry); err != nil {
 			continue
 		}
 
-		// Full processing with gojq
+		// Apply the query using gojq
 		var input interface{}
 		if err := json.Unmarshal(line, &input); err != nil {
 			continue
 		}
 
 		iter := code.Run(input)
-		v, ok := iter.Next()
-		if !ok || v == nil {
-			continue
-		}
-
-		// If the query returned true, we have a match
-		if v == true {
-			var entry cpeutils.CPEVulnerabilities
-			if err := json.Unmarshal(line, &entry); err != nil {
-				continue
+		for {
+			v, ok := iter.Next()
+			if !ok {
+				break
 			}
-			results = append(results, entry)
-			stats.MatchedLines++
+			if err, ok := v.(error); ok {
+				return nil, nil, fmt.Errorf("query execution error: %w", err)
+			}
+			if v == true {
+				results = append(results, entry)
+				stats.MatchedLines++
+				break
+			}
 		}
 	}
 

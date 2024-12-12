@@ -2,6 +2,7 @@ package cpe
 
 import (
 	"fmt"
+	"github.com/octoper/go-ray"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
@@ -48,6 +49,8 @@ func Command() *cobra.Command {
 			}
 
 			query, err := cpeoffline.Query(cpe)
+
+			ray.Ray(query)
 
 			if err != nil {
 				return err
