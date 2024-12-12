@@ -87,16 +87,6 @@ func IndexCPE(indexName string, cpe cpeutils.CPE, query string) ([]cpeutils.CPEV
 	stats.TotalFiles = 1
 	stats.Query = query
 
-	// Compile the jq query
-	jq, err := gojq.Parse(query)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse query: %w", err)
-	}
-	code, err := gojq.Compile(jq)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to compile query: %w", err)
-	}
-
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to open file %s: %w", filePath, err)
@@ -110,29 +100,11 @@ func IndexCPE(indexName string, cpe cpeutils.CPE, query string) ([]cpeutils.CPEV
 
 	for scanner.Scan() {
 		stats.TotalLines++
-		line := scanner.Bytes()
+		line := scanner.Text()
 
-		// Quick filter using gjson
-		if !quickFilterCPE(line, cpe) {
-			continue
-		}
-
-		// Full processing with gojq
-		var input interface{}
-		if err := json.Unmarshal(line, &input); err != nil {
-			continue
-		}
-
-		iter := code.Run(input)
-		v, ok := iter.Next()
-		if !ok || v == nil {
-			continue
-		}
-
-		// If the query returned true, we have a match
-		if v == true {
+		if matchesCPE(line, cpe) {
 			var entry cpeutils.CPEVulnerabilities
-			if err := json.Unmarshal(line, &entry); err != nil {
+			if err := json.Unmarshal([]byte(line), &entry); err != nil {
 				continue
 			}
 			results = append(results, entry)
@@ -148,13 +120,20 @@ func IndexCPE(indexName string, cpe cpeutils.CPE, query string) ([]cpeutils.CPEV
 	return results, &stats, nil
 }
 
-func quickFilterCPE(line []byte, cpe cpeutils.CPE) bool {
-	if cpe.Vendor != "" && gjson.GetBytes(line, "vendor").String() != cpe.Vendor {
-		return false
+func matchesCPE(line string, cpe cpeutils.CPE) bool {
+
+	if cpe.Vendor != "" {
+		if !strings.Contains(line, strings.ToLower(cpe.Vendor)) {
+			return false
+		}
 	}
-	if cpe.Product != "" && gjson.GetBytes(line, "product").String() != cpe.Product {
-		return false
+
+	if cpe.Product != "" {
+		if !strings.Contains(line, strings.ToLower(cpe.Product)) {
+			return false
+		}
 	}
+
 	return true
 }
 

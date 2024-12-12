@@ -19,8 +19,8 @@ func ToStruct(s string) (*cpeutils.CPE, error) {
 		return nil, fmt.Errorf("invalid CPE string: %v", err)
 	}
 
-	if cpe.Vendor == "*" || cpe.Product == "*" {
-		return nil, fmt.Errorf("CPE Vendor or Product cannot be *")
+	if cpe.Vendor == "*" && cpe.Product == "*" {
+		return nil, fmt.Errorf("CPE Vendor and Product cannot be *")
 	}
 
 	return &cpe, nil
@@ -105,46 +105,98 @@ func isAllASCII(s string) bool {
 
 // UnbindCPEFormattedString attempts to unbind a cpe 2.3 formatted string to
 // a CPE struct
+
 func UnbindCPEFormattedString(str string) (cpeutils.CPE, error) {
+	str = strings.ToLower(str)
 	if !isAllASCII(str) {
 		return cpeutils.CPE{}, fmt.Errorf("cpe string contains non-ASCII chars")
 	}
 
 	cpe := cpeutils.CPE{}
-	fields := []string{"Part", "Vendor", "Product", "Version", "Update", "Edition", "Language", "SoftwareEdition", "TargetSoftware", "TargetHardware", "Other"}
-
-	components := strings.Split(str, ":")
-	if len(components) < 13 {
-		return cpeutils.CPE{}, fmt.Errorf("invalid CPE formatted string")
-	}
-
-	for i, fieldName := range fields {
-		v, err := getAndUnbindComponent(components[i+2])
+	for a := 2; a <= 12; a++ {
+		v := getCompFS(str, a)
+		v, err := unbindValueFS(v)
 		if err != nil {
 			return cpeutils.CPE{}, err
 		}
 
-		field := reflect.ValueOf(&cpe).Elem().FieldByName(fieldName)
-		if field.IsValid() && field.CanSet() {
-			field.SetString(v)
+		switch a {
+		case 2:
+			cpe.Part = v
+
+		case 3:
+			cpe.Vendor = v
+
+		case 4:
+			cpe.Product = v
+
+		case 5:
+			cpe.Version = v
+
+		case 6:
+			cpe.Update = v
+
+		case 7:
+			cpe.Edition = v
+
+		case 8:
+			cpe.Language = v
+
+		case 9:
+			cpe.SoftwareEdition = v
+
+		case 10:
+			cpe.TargetSoftware = v
+
+		case 11:
+			cpe.TargetHardware = v
+
+		case 12:
+			cpe.Other = v
 		}
 	}
-
 	return cpe, nil
 }
 
-func getAndUnbindComponent(str string) (string, error) {
-	// Unescape colons
-	str = strings.ReplaceAll(str, "\\:", ":")
+func getCompFS(str string, i int) string {
+	fcount := 0
+	sidx := 0
 
+	if i < 0 || i > 12 {
+		return ""
+	}
+
+	for idx, v := range str {
+		if v == ':' && (idx == 0 || str[idx-1] != '\\') {
+			if i == fcount {
+				return str[sidx:idx]
+			}
+			fcount++
+			sidx = idx + 1
+		}
+
+	}
+
+	if fcount == i {
+		return str[sidx:]
+	}
+
+	return ""
+}
+
+func unbindValueFS(str string) (string, error) {
 	switch str {
-	case "", "*":
+	case "*":
 		return "*", nil
+
+	case "":
+		return "*", nil
+
 	case "-":
 		return "-", nil
-	default:
-		return addQuoting(str)
+
 	}
+	return addQuoting(str)
 }
 
 func addQuoting(str string) (string, error) {
