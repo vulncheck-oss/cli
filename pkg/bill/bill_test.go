@@ -43,7 +43,7 @@ func TestLoadSBOM(t *testing.T) {
 		t.Fatalf("SaveSBOM failed: %v", err)
 	}
 
-	loadedSBOM, err := LoadSBOM(sbomFile)
+	loadedSBOM, _, err := LoadSBOM(sbomFile)
 	if err != nil {
 		t.Fatalf("LoadSBOM failed: %v", err)
 	}
@@ -57,14 +57,14 @@ func TestGetPURLDetail(t *testing.T) {
 	mockSBOM := &sbom.SBOM{}
 	// TODO: Populate mockSBOM with test data
 
-	purls := GetPURLDetail(mockSBOM)
+	purls := GetPURLDetail(mockSBOM, nil)
 
 	if len(purls) != 0 {
 		t.Errorf("Expected 0 PURLs, got %d", len(purls))
 	}
 
 	// Test with nil SBOM
-	nilPurls := GetPURLDetail(nil)
+	nilPurls := GetPURLDetail(nil, nil)
 	if len(nilPurls) != 0 {
 		t.Errorf("Expected 0 PURLs for nil SBOM, got %d", len(nilPurls))
 	}
