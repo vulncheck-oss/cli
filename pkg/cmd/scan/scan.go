@@ -2,6 +2,7 @@ package scan
 
 import (
 	"fmt"
+	"github.com/octoper/go-ray"
 	"github.com/vulncheck-oss/cli/pkg/bill"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"time"
@@ -37,7 +38,8 @@ func Command() *cobra.Command {
 		Example: i18n.C.ScanExample,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			if opts.SbomInput == "" && len(args) != 1 {
+			ray.Ray(args)
+			if opts.SbomInput == "" && len(args) < 1 {
 				return ui.Error(i18n.C.ScanErrorDirectoryRequired)
 			}
 

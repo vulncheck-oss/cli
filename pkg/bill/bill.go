@@ -98,6 +98,7 @@ func GetPURLDetail(sbm *sbom.SBOM) []models.PurlDetail {
 				PackageType: string(p.Type),
 				Cataloger:   p.FoundBy,
 				Locations:   locations,
+				SbomRef:     string(p.ID()),
 			})
 		}
 	}
