@@ -19,8 +19,8 @@ func ToStruct(s string) (*cpeutils.CPE, error) {
 		return nil, fmt.Errorf("invalid CPE string: %v", err)
 	}
 
-	if cpe.Vendor == "*" || cpe.Product == "*" {
-		return nil, fmt.Errorf("CPE Vendor or Product cannot be *")
+	if cpe.Vendor == "*" && cpe.Product == "*" {
+		return nil, fmt.Errorf("CPE Vendor and Product cannot be *")
 	}
 
 	return &cpe, nil
@@ -105,32 +105,210 @@ func isAllASCII(s string) bool {
 
 // UnbindCPEFormattedString attempts to unbind a cpe 2.3 formatted string to
 // a CPE struct
+
 func UnbindCPEFormattedString(str string) (cpeutils.CPE, error) {
+	str = strings.ToLower(str)
 	if !isAllASCII(str) {
 		return cpeutils.CPE{}, fmt.Errorf("cpe string contains non-ASCII chars")
 	}
 
 	cpe := cpeutils.CPE{}
-	fields := []string{"Part", "Vendor", "Product", "Version", "Update", "Edition", "Language", "SoftwareEdition", "TargetSoftware", "TargetHardware", "Other"}
-
-	components := strings.Split(str, ":")
-	if len(components) < 13 {
-		return cpeutils.CPE{}, fmt.Errorf("invalid CPE formatted string")
-	}
-
-	for i, fieldName := range fields {
-		v, err := getAndUnbindComponent(components[i+2])
+	for a := 2; a <= 12; a++ {
+		v := getCompFS(str, a)
+		v, err := unbindValueFS(v)
 		if err != nil {
 			return cpeutils.CPE{}, err
 		}
 
-		field := reflect.ValueOf(&cpe).Elem().FieldByName(fieldName)
-		if field.IsValid() && field.CanSet() {
-			field.SetString(v)
+		switch a {
+		case 2:
+			cpe.Part = v
+
+		case 3:
+			cpe.Vendor = v
+
+		case 4:
+			cpe.Product = v
+
+		case 5:
+			cpe.Version = v
+
+		case 6:
+			cpe.Update = v
+
+		case 7:
+			cpe.Edition = v
+
+		case 8:
+			cpe.Language = v
+
+		case 9:
+			cpe.SoftwareEdition = v
+
+		case 10:
+			cpe.TargetSoftware = v
+
+		case 11:
+			cpe.TargetHardware = v
+
+		case 12:
+			cpe.Other = v
 		}
 	}
-
 	return cpe, nil
+}
+
+func getCompFS(str string, i int) string {
+	fcount := 0
+	sidx := 0
+
+	if i < 0 || i > 12 {
+		return ""
+	}
+
+	for idx, v := range str {
+		if v == ':' && (idx == 0 || str[idx-1] != '\\') {
+			if i == fcount {
+				return str[sidx:idx]
+			}
+			fcount++
+			sidx = idx + 1
+		}
+
+	}
+
+	if fcount == i {
+		return str[sidx:]
+	}
+
+	return ""
+}
+
+func unbindValueFS(str string) (string, error) {
+	switch str {
+	case "*":
+		return "*", nil
+
+	case "":
+		return "*", nil
+
+	case "-":
+		return "-", nil
+
+	}
+	return AddQuoting(str)
+}
+
+func AddQuoting(str string) (string, error) {
+	result := ""
+	idx := 0
+	embedded := false
+
+	for idx < len(str) {
+		c := str[idx]
+
+		// alphanum or _
+		if (c >= 'A' && c <= 'Z') ||
+			(c >= 'a' && c <= 'z') ||
+			(c >= '0' && c <= '9') ||
+			c == '_' {
+			result = result + string(c)
+			idx++
+			embedded = true
+			continue
+		}
+
+		// handle escaping
+		if c == '\\' {
+			// the 2.3 specification does not do this check, but should
+			if len(str)-idx > 1 {
+				result = fmt.Sprintf("%s%c%c", result, c, str[idx+1])
+				idx += 2
+				embedded = true
+				continue
+			} else {
+				return "", fmt.Errorf("escaping character length failure")
+			}
+		}
+
+		// wildcard must be at start or end
+		if c == '*' {
+			if idx == 0 || idx == len(str)-1 {
+				result = fmt.Sprintf("%s%c", result, c)
+				idx++
+				embedded = true
+				continue
+			} else {
+				return "",
+					fmt.Errorf("unquoted asterisk not at start or end of string")
+			}
+		}
+
+		// handle ? modifier
+		if c == '?' {
+			if ((idx == 0) || (idx == len(str)-1)) ||
+				(!embedded && str[idx-1] == '?') ||
+				(embedded && str[idx+1] == '?') {
+				result = fmt.Sprintf("%s%c", result, c)
+				idx++
+				embedded = false
+				continue
+			} else {
+				return "",
+					fmt.Errorf("unquoted ? must be at start or end of string")
+			}
+		}
+
+		// all others must be escaped
+		result = fmt.Sprintf("%s\\%c", result, c)
+		idx++
+		embedded = true
+	}
+	return result, nil
+}
+
+func bindValueFS(v string) (string, error) {
+	if v == "*" || v == "-" {
+		return v, nil
+	}
+	if v == "" {
+		return "*", nil
+	}
+	return processQuotedChars(v)
+}
+
+func processQuotedChars(s string) (string, error) {
+	result := ""
+	idx := 0
+
+	for idx < len(s) {
+		c := s[idx]
+
+		if c != '\\' {
+			result = fmt.Sprintf("%s%c", result, c)
+
+		} else {
+			if len(s)-idx <= 1 {
+				return "", fmt.Errorf("invalid escaping")
+			}
+
+			nextchr := s[idx+1]
+			switch nextchr {
+			case '.',
+				'-',
+				'_':
+				result = fmt.Sprintf("%s%c", result, nextchr)
+				idx += 2
+
+			default:
+				result = fmt.Sprintf("%s\\%c", result, nextchr)
+				idx += 2
+			}
+			continue
+		}
+		idx++
+	}
+	return result, nil
 }
 
 func getAndUnbindComponent(str string) (string, error) {
