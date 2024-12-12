@@ -123,13 +123,13 @@ func IndexCPE(indexName string, cpe cpeutils.CPE, query string) ([]cpeutils.CPEV
 func matchesCPE(line string, cpe cpeutils.CPE) bool {
 
 	if cpe.Vendor != "" {
-		if !strings.Contains(line, fmt.Sprintf(`%s`, strings.ToLower(cpe.Vendor))) {
+		if !strings.Contains(line, strings.ToLower(cpe.Vendor)) {
 			return false
 		}
 	}
 
 	if cpe.Product != "" {
-		if !strings.Contains(line, fmt.Sprintf(`%s`, strings.ToLower(cpe.Product))) {
+		if !strings.Contains(line, strings.ToLower(cpe.Product)) {
 			return false
 		}
 	}
