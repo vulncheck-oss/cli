@@ -9,7 +9,7 @@ type PurlDetail struct {
 	PackageType string   `json:"type"`
 	Cataloger   string   `json:"cataloger"`
 	Locations   []string `json:"locations"`
-	SbomRef     string   `json:sbom_ref`
+	SbomRef     string   `json:"sbom_ref""`
 }
 
 type ScanResultVulnerabilities struct {

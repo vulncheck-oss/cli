@@ -2,7 +2,6 @@ package scan
 
 import (
 	"fmt"
-	"github.com/octoper/go-ray"
 	"github.com/vulncheck-oss/cli/pkg/bill"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"time"
@@ -38,12 +37,12 @@ func Command() *cobra.Command {
 		Example: i18n.C.ScanExample,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			ray.Ray(args)
 			if opts.SbomInput == "" && len(args) < 1 {
 				return ui.Error(i18n.C.ScanErrorDirectoryRequired)
 			}
 
 			var sbm *sbom.SBOM
+			var inputRefs []bill.InputSbomRef
 			var purls []models.PurlDetail
 			var vulns []models.ScanResultVulnerabilities
 
@@ -58,7 +57,8 @@ func Command() *cobra.Command {
 					Title: fmt.Sprintf("Loading SBOM from %s", opts.SbomInput),
 					Task: func(t *taskin.Task) error {
 						var err error
-						sbm, err = bill.LoadSBOM(opts.SbomInput)
+						sbm, inputRefs, err = bill.LoadSBOM(opts.SbomInput)
+
 						if err != nil {
 							return err
 						}
@@ -86,7 +86,7 @@ func Command() *cobra.Command {
 				{
 					Title: i18n.C.ScanExtractPurlStart,
 					Task: func(t *taskin.Task) error {
-						purls = bill.GetPURLDetail(sbm)
+						purls = bill.GetPURLDetail(sbm, inputRefs)
 						t.Title = fmt.Sprintf(i18n.C.ScanExtractPurlEnd, len(purls))
 						return nil
 					},

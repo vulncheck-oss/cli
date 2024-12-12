@@ -2,6 +2,7 @@ package bill
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/format"
@@ -17,9 +18,15 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/sdk-go"
 	"github.com/vulncheck-oss/sdk-go/pkg/client"
+	"io"
 	"os"
 	"strings"
 )
+
+type InputSbomRef struct {
+	SbomRef string
+	PURL    string
+}
 
 func GetSBOM(dir string) (*sbom.SBOM, error) {
 	src, err := syft.GetSource(context.Background(), dir, nil)
@@ -64,22 +71,60 @@ func SaveSBOM(sbm *sbom.SBOM, file string) error {
 	return nil
 }
 
-func LoadSBOM(inputFile string) (*sbom.SBOM, error) {
+func LoadSBOM(inputFile string) (*sbom.SBOM, []InputSbomRef, error) {
 	file, err := os.Open(inputFile)
 	if err != nil {
-		return nil, fmt.Errorf("unable to open SBOM file %s: %w", inputFile, err)
+		return nil, nil, fmt.Errorf("unable to open SBOM file %s: %w", inputFile, err)
 	}
 	defer file.Close()
 
-	sbm, _, _, err := format.Decode(file)
+	// Read the entire file content
+	content, err := io.ReadAll(file)
 	if err != nil {
-		return nil, fmt.Errorf("unable to decode SBOM from file %s: %w", inputFile, err)
+		return nil, nil, fmt.Errorf("unable to read SBOM file %s: %w", inputFile, err)
 	}
 
-	return sbm, nil
+	// Parse JSON to extract bom-ref and purl
+	var rawSBOM map[string]interface{}
+	err = json.Unmarshal(content, &rawSBOM)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to parse SBOM JSON from file %s: %w", inputFile, err)
+	}
+
+	var inputSbomRefs []InputSbomRef
+
+	// Extract bom-ref and purl from components
+	if components, ok := rawSBOM["components"].([]interface{}); ok {
+		for _, comp := range components {
+			if component, ok := comp.(map[string]interface{}); ok {
+				bomRef, bomRefOk := component["bom-ref"].(string)
+				purl, purlOk := component["purl"].(string)
+				if bomRefOk && purlOk {
+					inputSbomRefs = append(inputSbomRefs, InputSbomRef{
+						SbomRef: bomRef,
+						PURL:    purl,
+					})
+				}
+			}
+		}
+	}
+
+	// Reset file pointer to the beginning for Syft to read
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to reset file pointer: %w", err)
+	}
+
+	// Decode SBOM using Syft
+	sbm, _, _, err := format.Decode(file)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to decode SBOM from file %s: %w", inputFile, err)
+	}
+
+	return sbm, inputSbomRefs, nil
 }
 
-func GetPURLDetail(sbm *sbom.SBOM) []models.PurlDetail {
+func GetPURLDetail(sbm *sbom.SBOM, inputRefs []InputSbomRef) []models.PurlDetail {
 
 	if sbm == nil {
 		return []models.PurlDetail{}
@@ -93,13 +138,23 @@ func GetPURLDetail(sbm *sbom.SBOM) []models.PurlDetail {
 			for i, l := range p.Locations.ToSlice() {
 				locations[i] = l.RealPath
 			}
-			purls = append(purls, models.PurlDetail{
+
+			purlDetail := models.PurlDetail{
 				Purl:        p.PURL,
 				PackageType: string(p.Type),
 				Cataloger:   p.FoundBy,
 				Locations:   locations,
-				SbomRef:     string(p.ID()),
-			})
+			}
+
+			for _, ref := range inputRefs {
+				if ref.PURL == p.PURL {
+					purlDetail.SbomRef = ref.SbomRef
+					break
+				}
+			}
+
+			purls = append(purls, purlDetail)
+
 		}
 	}
 	return purls
