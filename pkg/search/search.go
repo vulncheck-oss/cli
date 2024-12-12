@@ -8,7 +8,6 @@ import (
 	"github.com/package-url/packageurl-go"
 	"github.com/tidwall/gjson"
 	"github.com/vulncheck-oss/cli/pkg/config"
-	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/sdk-go"
 	"os"
@@ -66,96 +65,6 @@ type Stats struct {
 	MatchedLines int64
 	Duration     time.Duration
 	Query        string
-}
-
-func IndexCPE(indexName string, cpe cpeutils.CPE, query string) ([]cpeutils.CPEVulnerabilities, *Stats, error) {
-	startTime := time.Now()
-	var stats Stats
-
-	configDir, err := config.IndicesDir()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	indexDir := filepath.Join(configDir, indexName)
-	files, err := listJSONFiles(indexDir)
-	if err != nil || len(files) == 0 {
-		return nil, nil, fmt.Errorf("failed to find JSON files in index directory %s: %w", indexDir, err)
-	}
-
-	filePath := files[0]
-	stats.TotalFiles = 1
-	stats.Query = query
-
-	// Compile the jq query
-	jq, err := gojq.Parse(query)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse query: %w", err)
-	}
-	code, err := gojq.Compile(jq)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to compile query: %w", err)
-	}
-
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to open file %s: %w", filePath, err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
-
-	var results []cpeutils.CPEVulnerabilities
-
-	for scanner.Scan() {
-		stats.TotalLines++
-		line := scanner.Bytes()
-
-		var entry cpeutils.CPEVulnerabilities
-		if err := json.Unmarshal(line, &entry); err != nil {
-			continue
-		}
-
-		// Apply the query using gojq
-		var input interface{}
-		if err := json.Unmarshal(line, &input); err != nil {
-			continue
-		}
-
-		iter := code.Run(input)
-		for {
-			v, ok := iter.Next()
-			if !ok {
-				break
-			}
-			if err, ok := v.(error); ok {
-				return nil, nil, fmt.Errorf("query execution error: %w", err)
-			}
-			if v == true {
-				results = append(results, entry)
-				stats.MatchedLines++
-				break
-			}
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, nil, fmt.Errorf("error reading file: %w", err)
-	}
-
-	stats.Duration = time.Since(startTime)
-	return results, &stats, nil
-}
-
-func quickFilterCPE(line []byte, cpe cpeutils.CPE) bool {
-	if cpe.Vendor != "" && gjson.GetBytes(line, "vendor").String() != cpe.Vendor {
-		return false
-	}
-	if cpe.Product != "" && gjson.GetBytes(line, "product").String() != cpe.Product {
-		return false
-	}
-	return true
 }
 
 func QueryIPIntel(country, asn, cidr, countryCode, hostname, id string) string {
