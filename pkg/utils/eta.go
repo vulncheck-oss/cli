@@ -59,9 +59,12 @@ func (e *ETACalculator) Update(progress int) (speed float64, eta time.Duration) 
     return speed, eta
 }
 
+func (e *ETACalculator) TotalTime() time.Duration {
+    return time.Since(e.startTime)
+}
 func FormatETA(eta time.Duration) string {
     if eta <= 0 {
-        return "calculating..."
+        return ".."
     }
     
     minutes := int(eta.Minutes())

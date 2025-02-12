@@ -15,7 +15,7 @@ import (
 // DownloadTask creates a task for downloading a file from the given URL.
 func taskDownload(url string, index string, filename string) taskin.Task {
 	return taskin.Task{
-		Title: fmt.Sprintf("Downloading %s", filepath.Base(filename)),
+		Title: fmt.Sprintf("Download %s", index),
 		Task: func(t *taskin.Task) error {
 			resp, err := http.Get(url)
 			if err != nil {
@@ -79,7 +79,7 @@ func taskDownload(url string, index string, filename string) taskin.Task {
 
 func taskDB(index string, configDir string, filePath string, lastUpdated string, indexInfo *InfoFile) taskin.Task {
 	return taskin.Task{
-		Title: fmt.Sprintf("Indexing %s", index),
+		Title: fmt.Sprintf("Index %s", index),
 		Task: func(t *taskin.Task) error {
 			lastProgress := -1
 			eta := utils.NewETACalculator()
@@ -125,7 +125,9 @@ func taskDB(index string, configDir string, filePath string, lastUpdated string,
 				indexInfo.Indices = append(indexInfo.Indices, updatedInfo)
 			}
 
-			t.Title = fmt.Sprintf("Synced %s (Size: %s)", index, utils.GetSizeHuman(size))
+			totalTime := eta.TotalTime()
+			totalTimeStr := utils.FormatETA(totalTime)
+			t.Title = fmt.Sprintf("Indexed %s (Size: %s, Time: %s)", index, utils.GetSizeHuman(size), totalTimeStr)
 			return nil
 		},
 	}
@@ -134,8 +136,9 @@ func taskDB(index string, configDir string, filePath string, lastUpdated string,
 // extractIndexTask creates a task for extracting the index file.
 func taskExtract(index string, configDir string, filePath string) taskin.Task {
 	return taskin.Task{
-		Title: fmt.Sprintf("Extracting %s", filepath.Base(filePath)),
+		Title: fmt.Sprintf("Extract %s", index),
 		Task: func(t *taskin.Task) error {
+			t.Title = fmt.Sprintf("Extracting %s", index)
 			indexDir := filepath.Join(configDir, index)
 			if err := os.MkdirAll(indexDir, 0755); err != nil {
 				return fmt.Errorf("failed to create index directory: %w", err)
