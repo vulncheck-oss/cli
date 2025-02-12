@@ -6,57 +6,45 @@ import (
 )
 
 type ETACalculator struct {
-    startTime    time.Time
-    lastUpdate   time.Time
-    lastProgress int
-    speeds       []float64
-    sampleSize   int
+    startTime time.Time
+    samples   []float64
+    size      int
 }
 
 func NewETACalculator() *ETACalculator {
-    now := time.Now()
     return &ETACalculator{
-        startTime:    now,
-        lastUpdate:   now,
-        sampleSize:   5, // Number of recent speeds to average over
-        speeds:       make([]float64, 0),
+        startTime: time.Now(),
+        samples:   make([]float64, 10), // Keep last 10 samples
+        size:      0,
     }
 }
 
-func (e *ETACalculator) Update(progress int) (speed float64, eta time.Duration) {
+func (e *ETACalculator) Update(progress int) (float64, time.Duration) {
     now := time.Now()
-    elapsed := now.Sub(e.lastUpdate).Seconds()
+    elapsed := now.Sub(e.startTime).Seconds()
 
-    if elapsed > 0 {
-        // Calculate the speed since the last update
-        progressDelta := progress - e.lastProgress
-        currentSpeed := float64(progressDelta) / elapsed
+    // Calculate current speed
+    speed := float64(progress) / elapsed
 
-        // Add the current speed to the list of speeds
-        e.speeds = append(e.speeds, currentSpeed)
-        if len(e.speeds) > e.sampleSize {
-            e.speeds = e.speeds[1:] // Keep only the last sampleSize speeds
-        }
-
-        // Calculate the average speed
-        var totalSpeed float64
-        for _, s := range e.speeds {
-            totalSpeed += s
-        }
-        speed = totalSpeed / float64(len(e.speeds))
-
-        // Calculate the remaining time
-        if speed > 0 {
-            remainingProgress := 100 - progress
-            secondsLeft := float64(remainingProgress) / speed
-            eta = time.Duration(secondsLeft * float64(time.Second))
-        }
-
-        e.lastUpdate = now
-        e.lastProgress = progress
+    // Update samples
+    e.samples[e.size%len(e.samples)] = speed
+    if e.size < len(e.samples) {
+        e.size++
     }
 
-    return speed, eta
+    // Calculate average speed
+    var total float64
+    for i := 0; i < e.size; i++ {
+        total += e.samples[i]
+    }
+    avgSpeed := total / float64(e.size)
+
+    // Calculate ETA
+    remaining := float64(100 - progress)
+    seconds := remaining / avgSpeed
+    eta := time.Duration(seconds * float64(time.Second))
+
+    return avgSpeed, eta
 }
 
 func (e *ETACalculator) TotalTime() time.Duration {
@@ -65,7 +53,7 @@ func (e *ETACalculator) TotalTime() time.Duration {
 
 func FormatETA(eta time.Duration) string {
     if eta <= 0 {
-        return ".."
+        return "calculating.."
     }
 
     minutes := int(eta.Minutes())
