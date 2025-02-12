@@ -83,6 +83,7 @@ func taskDB(index string, configDir string, filePath string, lastUpdated string,
 		Task: func(t *taskin.Task) error {
 			lastProgress := -1
 			eta := utils.NewETACalculator()
+			t.Title = fmt.Sprintf("Indexing %s..", index)
 
 			progressCallback := func(progress int) {
 				if progress != lastProgress {

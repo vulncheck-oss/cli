@@ -154,16 +154,15 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 			}
 
 			if jsonColumns[i] {
-				// Only marshal JSON for array fields
-				if arr, ok := val.([]interface{}); ok {
-					jsonStr, _ := json.Marshal(arr)
-					values[i] = string(jsonStr)
-				} else {
-					values[i] = nil
+				jsonStr, err := json.Marshal(val)
+				if err != nil {
+					return fmt.Errorf("failed to marshal JSON field %s: %w", col.Name, err)
 				}
+				values[i] = string(jsonStr)
 			} else {
 				values[i] = val
 			}
+
 		}
 
 		batch = append(batch, values)

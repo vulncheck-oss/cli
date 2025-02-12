@@ -36,7 +36,7 @@ var Schemas = []Schema{
 			{Name: "asn", Type: "TEXT", Index: true, NotNull: true},
 			{Name: "country_code", Type: "TEXT", Index: true, NotNull: true},
 			{Name: "hostnames", Type: "TEXT", Index: true, NotNull: false, IsJSON: true},
-			{Name: "type_id", Type: "TEXT", Index: true, NotNull: false},
+			{Name: "type", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
 
 			// Non-searched fields - no indexes needed
 			{Name: "port", Type: "INTEGER", Index: false, NotNull: true},
