@@ -40,6 +40,9 @@ func taskDownload(url string, index string, filename string) taskin.Task {
 
 			written := int64(0)
 			buffer := make([]byte, 32*1024)
+			eta := utils.NewETACalculator()
+			lastProgress := -1
+
 			for {
 				nr, er := resp.Body.Read(buffer)
 				if nr > 0 {
@@ -63,14 +66,22 @@ func taskDownload(url string, index string, filename string) taskin.Task {
 					break
 				}
 
-				progress := float64(written) / float64(size)
-				t.Progress(int(progress*100), 100)
-				t.Title = fmt.Sprintf("Downloading %s %.2f%%", index, progress*100)
+				progress := int(float64(written) / float64(size) * 100)
+				if progress != lastProgress {
+					_, duration := eta.Update(progress)
+					etaStr := utils.FormatETA(duration)
+
+					t.Progress(progress, 100)
+					t.Title = fmt.Sprintf("Downloading %s %d%% (ETA: %s)", index, progress, etaStr)
+					lastProgress = progress
+				}
 			}
 
 			if err != nil {
 				return fmt.Errorf("error during download: %w", err)
 			}
+
+			t.Title = fmt.Sprintf("Downloaded %s (Size: %s)", index, utils.GetSizeHuman(uint64(size)))
 
 			return nil
 		},
@@ -79,11 +90,11 @@ func taskDownload(url string, index string, filename string) taskin.Task {
 
 func taskDB(index string, configDir string, filePath string, lastUpdated string, indexInfo *InfoFile) taskin.Task {
 	return taskin.Task{
-		Title: fmt.Sprintf("Index %s", index),
+		Title: fmt.Sprintf("Catalog %s", index),
 		Task: func(t *taskin.Task) error {
 			lastProgress := -1
 			eta := utils.NewETACalculator()
-			t.Title = fmt.Sprintf("Indexing %s..", index)
+			t.Title = fmt.Sprintf("Cataloging %s..", index)
 
 			progressCallback := func(progress int) {
 				if progress != lastProgress {
@@ -91,7 +102,7 @@ func taskDB(index string, configDir string, filePath string, lastUpdated string,
 					etaStr := utils.FormatETA(duration)
 
 					t.Progress(progress, 100)
-					t.Title = fmt.Sprintf("Indexing %s %d%% (ETA: %s)",
+					t.Title = fmt.Sprintf("Cataloging %s %d%% (ETA: %s)",
 						index, progress, etaStr)
 					lastProgress = progress
 				}
@@ -128,7 +139,7 @@ func taskDB(index string, configDir string, filePath string, lastUpdated string,
 
 			totalTime := eta.TotalTime()
 			totalTimeStr := utils.FormatETA(totalTime)
-			t.Title = fmt.Sprintf("Indexed %s (Size: %s, Time: %s)", index, utils.GetSizeHuman(size), totalTimeStr)
+			t.Title = fmt.Sprintf("Cataloged %s (Size: %s, Time: %s)", index, utils.GetSizeHuman(size), totalTimeStr)
 			return nil
 		},
 	}

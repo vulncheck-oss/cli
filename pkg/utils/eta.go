@@ -53,7 +53,7 @@ func (e *ETACalculator) TotalTime() time.Duration {
 
 func FormatETA(eta time.Duration) string {
     if eta <= 0 {
-        return "calculating.."
+        return ".."
     }
 
     minutes := int(eta.Minutes())
