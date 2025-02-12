@@ -17,6 +17,7 @@ func Command() *cobra.Command {
 
 	var addIndices, removeIndices []string
 	var purge bool
+	var force bool
 
 	cmd := &cobra.Command{
 		Use:     "sync",
@@ -112,7 +113,7 @@ func Command() *cobra.Command {
 				}
 			}
 
-			if err := cache.IndicesSync(selectedIndices); err != nil {
+			if err := cache.IndicesSync(selectedIndices, force); err != nil {
 				return err
 			}
 
@@ -124,6 +125,7 @@ func Command() *cobra.Command {
 	cmd.Flags().StringSliceVar(&addIndices, "add", nil, "Add specific indices to sync")
 	cmd.Flags().StringSliceVar(&removeIndices, "remove", nil, "Remove specific indices from sync")
 	cmd.Flags().BoolVar(&purge, "purge", false, "Purge all cached indices")
+	cmd.Flags().BoolVar(&force, "force", false, "Force a sync ignoring if the index is up-to-date")
 
 	return cmd
 }
