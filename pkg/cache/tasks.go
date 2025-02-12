@@ -3,7 +3,7 @@ package cache
 import (
 	"fmt"
 	"github.com/fumeapp/taskin"
-	"github.com/vulncheck-oss/cli/pkg/sqlite"
+	"github.com/vulncheck-oss/cli/pkg/db"
 	"github.com/vulncheck-oss/cli/pkg/utils"
 	"io"
 	"net/http"
@@ -77,7 +77,7 @@ func taskDownload(url string, index string, filename string) taskin.Task {
 	}
 }
 
-func taskSqlite(index string, configDir string, filePath string, lastUpdated string, indexInfo *InfoFile) taskin.Task {
+func taskDB(index string, configDir string, filePath string, lastUpdated string, indexInfo *InfoFile) taskin.Task {
 	return taskin.Task{
 		Title: fmt.Sprintf("Indexing %s", index),
 		Task: func(t *taskin.Task) error {
@@ -90,7 +90,7 @@ func taskSqlite(index string, configDir string, filePath string, lastUpdated str
 				}
 			}
 			indexDir := filepath.Join(configDir, index)
-			if err := sqlite.JSONTable(filePath, indexDir, progressCallback); err != nil {
+			if err := db.ImportIndex(filePath, indexDir, progressCallback); err != nil {
 				return err
 			}
 

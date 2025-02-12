@@ -118,7 +118,7 @@ func syncSingleIndex(index string, configDir string, indexInfo *InfoFile, force 
 	childTasks := taskin.Tasks{
 		taskDownload(response.GetData()[0].URL, index, filePath),
 		taskExtract(index, configDir, filePath),
-		taskSqlite(index, configDir, filePath, lastUpdated, indexInfo),
+		taskDB(index, configDir, filePath, lastUpdated, indexInfo),
 	}
 
 	return childTasks
