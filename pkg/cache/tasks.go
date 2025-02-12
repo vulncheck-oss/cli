@@ -82,13 +82,20 @@ func taskDB(index string, configDir string, filePath string, lastUpdated string,
 		Title: fmt.Sprintf("Indexing %s", index),
 		Task: func(t *taskin.Task) error {
 			lastProgress := -1
+			eta := utils.NewETACalculator()
+
 			progressCallback := func(progress int) {
 				if progress != lastProgress {
+					_, duration := eta.Update(progress)
+					etaStr := utils.FormatETA(duration)
+
 					t.Progress(progress, 100)
-					t.Title = fmt.Sprintf("Indexing %s %d%%", index, progress)
+					t.Title = fmt.Sprintf("Indexing %s %d%% (ETA: %s)",
+						index, progress, etaStr)
 					lastProgress = progress
 				}
 			}
+
 			indexDir := filepath.Join(configDir, index)
 			if err := db.ImportIndex(filePath, indexDir, progressCallback); err != nil {
 				return err
