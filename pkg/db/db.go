@@ -26,7 +26,7 @@ func DB() (*sql.DB, error) {
     dbPath := filepath.Join(configDir, "data.db")
     if _, err := os.Stat(dbPath); err == nil {
         // File exists, open the existing database
-        dbInstance, err = sql.Open("sqlite3", dbPath+"?_journal_mode=WAL")
+        dbInstance, err = sql.Open("sqlite3", dbPath)
         if err != nil {
             return nil, fmt.Errorf("failed to open database: %w", err)
         }
@@ -40,21 +40,10 @@ func DB() (*sql.DB, error) {
         }
         file.Close()
 
-        dbInstance, err = sql.Open("sqlite3", dbPath+"?_journal_mode=WAL")
+        dbInstance, err = sql.Open("sqlite3", dbPath)
         if err != nil {
             return nil, fmt.Errorf("failed to open database: %w", err)
         }
-    }
-
-    // Performance optimizations
-    _, err = dbInstance.Exec(`
-        PRAGMA journal_mode = WAL;
-        PRAGMA synchronous = NORMAL;
-        PRAGMA cache_size = -2000000; 
-        PRAGMA temp_store = MEMORY;
-    `)
-    if err != nil {
-        return nil, fmt.Errorf("failed to set PRAGMA statements: %w", err)
     }
 
     return dbInstance, nil

@@ -95,142 +95,136 @@ func ImportIndex(filePath string, indexDir string, progressCallback func(int)) e
 }
 
 func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL string, maxSize int64, progressFn func(int64)) error {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
+    file, err := os.Open(filePath)
+    if err != nil {
+        return err
+    }
+    defer file.Close()
 
-	// Use larger scanner buffer for better performance
-	scanner := bufio.NewScanner(file)
-	scanner.Buffer(make([]byte, 4*1024*1024), 4*1024*1024) // 4MB buffer
+    scanner := bufio.NewScanner(file)
+    scanner.Buffer(make([]byte, 4*1024*1024), 4*1024*1024) // 4MB buffer
 
-	// Pre-allocate batch slice to reduce allocations
-	batch := make([][]interface{}, 0, 10000)
-	var batchSize int64
+    var batch [][]interface{}
+    var batchSize int64
 
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
+    // Cache JSON array column indices
+    jsonColumns := make(map[int]bool)
+    for i, col := range schema.Columns {
+        if col.IsJSON {
+            jsonColumns[i] = true
+        }
+    }
 
-	// Cache JSON array column indices
-	jsonColumns := make(map[int]bool)
-	for i, col := range schema.Columns {
-		if col.IsJSON {
-			jsonColumns[i] = true
-		}
-	}
+    for scanner.Scan() {
+        line := scanner.Bytes()
 
-	for scanner.Scan() {
-		line := scanner.Bytes()
+        // Fast path for fallback schema
+        if len(schema.Columns) == 1 && schema.Columns[0].Name == "data" {
+            if !json.Valid(line) {
+                return fmt.Errorf("invalid JSON")
+            }
+            batch = append(batch, []interface{}{string(line)})
+            batchSize += int64(len(line))
+            continue
+        }
 
-		// Fast path for fallback schema
-		if len(schema.Columns) == 1 && schema.Columns[0].Name == "data" {
-			if !json.Valid(line) {
-				return fmt.Errorf("invalid JSON")
-			}
-			batch = append(batch, []interface{}{string(line)})
-			batchSize += int64(len(line))
-			continue
-		}
+        // Handle structured schema
+        var entry map[string]interface{}
+        if err := json.Unmarshal(line, &entry); err != nil {
+            return fmt.Errorf("failed to unmarshal JSON: %w", err)
+        }
 
-		// Handle structured schema
-		var entry map[string]interface{}
-		if err := json.Unmarshal(line, &entry); err != nil {
-			return fmt.Errorf("failed to unmarshal JSON: %w", err)
-		}
+        values := make([]interface{}, len(schema.Columns))
+        for i, col := range schema.Columns {
+            val, exists := entry[col.Name]
+            if !exists {
+                if col.NotNull {
+                    return fmt.Errorf("missing required field %s", col.Name)
+                }
+                values[i] = nil
+                continue
+            }
 
-		values := make([]interface{}, len(schema.Columns))
-		for i, col := range schema.Columns {
-			val, exists := entry[col.Name]
-			if !exists {
-				if col.NotNull {
-					return fmt.Errorf("missing required field %s", col.Name)
-				}
-				values[i] = nil
-				continue
-			}
+            if jsonColumns[i] {
+                // Only marshal JSON for array fields
+                if arr, ok := val.([]interface{}); ok {
+                    jsonStr, _ := json.Marshal(arr)
+                    values[i] = string(jsonStr)
+                } else {
+                    jsonStr, _ := json.Marshal(val)
+                    values[i] = string(jsonStr)
+                }
+            } else {
+                values[i] = val
+            }
+        }
 
-			if jsonColumns[i] {
-				jsonStr, err := json.Marshal(val)
-				if err != nil {
-					return fmt.Errorf("failed to marshal JSON field %s: %w", col.Name, err)
-				}
-				values[i] = string(jsonStr)
-			} else {
-				values[i] = val
-			}
+        batch = append(batch, values)
+        batchSize += int64(len(line))
 
-		}
+        // Use larger batch size for better performance
+        if batchSize >= 50*1024*1024 { // 50MB batches
+            err := executeBatch(db, baseInsertSQL, batch)
+            if err != nil {
+                return err
+            }
+            progressFn(batchSize)
 
-		batch = append(batch, values)
-		batchSize += int64(len(line))
+            batch = batch[:0] // Reuse slice
+            batchSize = 0
+        }
+    }
 
-		// Use larger batch size for better performance
-		if batchSize >= 50*1024*1024 { // 50MB batches
-			if err := executeBatch(tx, baseInsertSQL, batch); err != nil {
-				return err
-			}
-			progressFn(batchSize)
+    // Process any remaining rows in the batch
+    if len(batch) > 0 {
+        err := executeBatch(db, baseInsertSQL, batch)
+        if err != nil {
+            return err
+        }
+        progressFn(batchSize)
+    }
 
-			batch = batch[:0] // Reuse slice
-			batchSize = 0
-
-			if err := tx.Commit(); err != nil {
-				return err
-			}
-			tx, err = db.Begin()
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(batch) > 0 {
-		if err := executeBatch(tx, baseInsertSQL, batch); err != nil {
-			return err
-		}
-		progressFn(batchSize)
-	}
-
-	return tx.Commit()
+    return nil
 }
 
-func executeBatch(tx *sql.Tx, baseSQL string, batch [][]interface{}) error {
-	if len(batch) == 0 {
-		return nil
-	}
+func executeBatch(db *sql.DB, baseSQL string, batch [][]interface{}) error {
+    if len(batch) == 0 {
+        return nil
+    }
 
-	varsPerRow := len(batch[0])
-	maxRowsPerBatch := maxSQLiteVariables / varsPerRow
+    tx, err := db.Begin()
+    if err != nil {
+        return fmt.Errorf("failed to begin transaction: %w", err)
+    }
+    defer tx.Rollback()
 
-	// Pre-allocate slices
-	values := make([]string, 0, maxRowsPerBatch)
-	args := make([]interface{}, 0, maxRowsPerBatch*varsPerRow)
-	placeholder := "(" + strings.Repeat("?,", varsPerRow-1) + "?)"
+    varsPerRow := len(batch[0])
+    maxRowsPerBatch := maxSQLiteVariables / varsPerRow
 
-	for i := 0; i < len(batch); i += maxRowsPerBatch {
-		end := i + maxRowsPerBatch
-		if end > len(batch) {
-			end = len(batch)
-		}
+    for i := 0; i < len(batch); i += maxRowsPerBatch {
+        end := i + maxRowsPerBatch
+        if end > len(batch) {
+            end = len(batch)
+        }
+        subBatch := batch[i:end]
 
-		values = values[:0]
-		args = args[:0]
+        // Build VALUES clause and args
+        values := make([]string, len(subBatch))
+        args := make([]interface{}, 0, len(subBatch)*len(batch[0]))
+        placeholder := "(" + strings.Repeat("?,", len(batch[0])-1) + "?)"
 
-		// Build batch
-		for j := i; j < end; j++ {
-			values = append(values, placeholder)
-			args = append(args, batch[j]...)
-		}
+        for j, row := range subBatch {
+            values[j] = placeholder
+            args = append(args, row...)
+        }
 
-		query := baseSQL + " " + strings.Join(values, ",")
-		if _, err := tx.Exec(query, args...); err != nil {
-			return fmt.Errorf("failed to execute batch: %w", err)
-		}
-	}
+        // Execute batch insert
+        query := baseSQL + " " + strings.Join(values, ",")
+        _, err = tx.Exec(query, args...)
+        if err != nil {
+            return fmt.Errorf("failed to execute batch: %w", err)
+        }
+    }
 
-	return nil
+    return tx.Commit()
 }
