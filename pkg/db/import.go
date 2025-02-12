@@ -11,88 +11,103 @@ import (
 )
 
 func ImportIndex(filePath string, indexDir string, progressCallback func(int)) error {
-	db, err := DB()
-	if err != nil {
-		return err
-	}
+    db, err := DB()
+    if err != nil {
+        return err
+    }
 
-	// Get schema for this index type
-	indexName := filepath.Base(indexDir)
-	schema := GetSchema(indexName)
-	if schema == nil {
-		return fmt.Errorf("no schema found for index %s", indexName)
-	}
+    // Get schema for this index type
+    indexName := filepath.Base(indexDir)
+    schema := GetSchema(indexName)
+    if schema == nil {
+        return fmt.Errorf("no schema found for index %s", indexName)
+    }
 
-	// Drop existing table if it exists
-	tableName := strings.Replace(indexName, "-", "_", -1)
-	if _, err := db.Exec(fmt.Sprintf(`DROP TABLE IF EXISTS "%s"`, tableName)); err != nil {
-		return fmt.Errorf("failed to drop existing table: %w", err)
-	}
+    // Convert table name to use underscores instead of hyphens
+    tableName := strings.Replace(indexName, "-", "_", -1)
 
-	// Create table with schema
-	cols := make([]string, len(schema.Columns))
-	for i, col := range schema.Columns {
-		def := fmt.Sprintf("%s %s", col.Name, col.Type)
-		if col.NotNull {
-			def += " NOT NULL"
-		}
-		cols[i] = def
-	}
-	createTableSQL := fmt.Sprintf(`CREATE TABLE "%s" (%s)`,
-		tableName, strings.Join(cols, ", "))
+    // Drop existing table if it exists
+    dropTableSQL := fmt.Sprintf(`DROP TABLE IF EXISTS "%s"`, tableName)
+    if _, err := db.Exec(dropTableSQL); err != nil {
+        return fmt.Errorf("failed to drop existing table: %w", err)
+    }
 
-	if _, err := db.Exec(createTableSQL); err != nil {
-		return fmt.Errorf("failed to create table: %w", err)
-	}
+    // Create table with schema
+    cols := make([]string, len(schema.Columns))
+    for i, col := range schema.Columns {
+        def := fmt.Sprintf("%s %s", col.Name, col.Type)
+        if col.NotNull {
+            def += " NOT NULL"
+        }
+        cols[i] = def
+    }
+    createTableSQL := fmt.Sprintf(`CREATE TABLE "%s" (%s)`,
+        tableName, strings.Join(cols, ", "))
 
-	// Create indexes
-	for _, col := range schema.Columns {
-		if col.Index {
-			indexSQL := fmt.Sprintf("CREATE INDEX idx_%s_%s ON %s(%s)",
-				tableName, col.Name, tableName, col.Name)
-			if _, err := db.Exec(indexSQL); err != nil {
-				return fmt.Errorf("failed to create index: %w", err)
-			}
-		}
-	}
+    if _, err := db.Exec(createTableSQL); err != nil {
+        return fmt.Errorf("failed to create table: %w", err)
+    }
 
-	// Find all JSON files
-	files, err := filepath.Glob(filepath.Join(indexDir, "*.json"))
-	if err != nil {
-		return fmt.Errorf("failed to list JSON files: %w", err)
-	}
+    // Drop indexes before import
+    for _, col := range schema.Columns {
+        if col.Index {
+            indexName := fmt.Sprintf("idx_%s_%s", tableName, col.Name)
+            dropIndexSQL := fmt.Sprintf("DROP INDEX IF EXISTS %s", indexName)
+            if _, err := db.Exec(dropIndexSQL); err != nil {
+                return fmt.Errorf("failed to drop index %s: %w", indexName, err)
+            }
+        }
+    }
 
-	// Prepare base insert statement
-	colNames := make([]string, len(schema.Columns))
-	placeholders := make([]string, len(schema.Columns))
-	for i, col := range schema.Columns {
-		colNames[i] = col.Name
-		placeholders[i] = "?"
-	}
-	baseInsertSQL := fmt.Sprintf(`INSERT INTO "%s" (%s) VALUES`,
-		tableName, strings.Join(colNames, ","))
+    // Find all JSON files
+    files, err := filepath.Glob(filepath.Join(indexDir, "*.json"))
+    if err != nil {
+        return fmt.Errorf("failed to list JSON files: %w", err)
+    }
 
-	totalSize := int64(0)
-	for _, f := range files {
-		if info, err := os.Stat(f); err == nil {
-			totalSize += info.Size()
-		}
-	}
+    // Prepare base insert statement
+    colNames := make([]string, len(schema.Columns))
+    placeholders := make([]string, len(schema.Columns))
+    for i, col := range schema.Columns {
+        colNames[i] = col.Name
+        placeholders[i] = "?"
+    }
+    baseInsertSQL := fmt.Sprintf(`INSERT INTO "%s" (%s) VALUES`,
+        tableName, strings.Join(colNames, ","))
 
-	processedSize := int64(0)
-	for fileNum, file := range files {
-		if err := importFile(db, file, schema, baseInsertSQL, maxInsertSize, func(size int64) {
-			processedSize += size
-			progress := int(float64(processedSize) / float64(totalSize) * 100)
-			progressCallback(progress)
-		}); err != nil {
-			return fmt.Errorf("failed to import file %s: %w", file, err)
-		}
-		progressCallback(int(float64(fileNum+1) / float64(len(files)) * 100))
-	}
+    totalSize := int64(0)
+    for _, f := range files {
+        if info, err := os.Stat(f); err == nil {
+            totalSize += info.Size()
+        }
+    }
 
-	return nil
+    processedSize := int64(0)
+    for fileNum, file := range files {
+        if err := importFile(db, file, schema, baseInsertSQL, maxInsertSize, func(size int64) {
+            processedSize += size
+            progress := int(float64(processedSize) / float64(totalSize) * 100)
+            progressCallback(progress)
+        }); err != nil {
+            return fmt.Errorf("failed to import file %s: %w", file, err)
+        }
+        progressCallback(int(float64(fileNum+1) / float64(len(files)) * 100))
+    }
+
+    // Recreate indexes after import
+    for _, col := range schema.Columns {
+        if col.Index {
+            indexSQL := fmt.Sprintf("CREATE INDEX idx_%s_%s ON %s(%s)",
+                tableName, col.Name, tableName, col.Name)
+            if _, err := db.Exec(indexSQL); err != nil {
+                return fmt.Errorf("failed to create index: %w", err)
+            }
+        }
+    }
+
+    return nil
 }
+
 
 func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL string, maxSize int64, progressFn func(int64)) error {
     file, err := os.Open(filePath)
