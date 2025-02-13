@@ -41,8 +41,7 @@ func ImportIndex(filePath string, indexDir string, progressCallback func(int)) e
 		}
 		cols[i] = def
 	}
-	createTableSQL := fmt.Sprintf(`CREATE TABLE "%s" (%s)`,
-		tableName, strings.Join(cols, ", "))
+	createTableSQL := fmt.Sprintf(`CREATE TABLE "%s" (%s)`, tableName, strings.Join(cols, ", "))
 
 	if _, err := db.Exec(createTableSQL); err != nil {
 		return fmt.Errorf("failed to create table: %w", err)
@@ -52,7 +51,7 @@ func ImportIndex(filePath string, indexDir string, progressCallback func(int)) e
 	for _, col := range schema.Columns {
 		if col.Index {
 			indexName := fmt.Sprintf("idx_%s_%s", tableName, col.Name)
-			dropIndexSQL := fmt.Sprintf("DROP INDEX IF EXISTS %s", indexName)
+			dropIndexSQL := fmt.Sprintf(`DROP INDEX IF EXISTS "idx_%s_%s"`, tableName, col.Name)
 			if _, err := db.Exec(dropIndexSQL); err != nil {
 				return fmt.Errorf("failed to drop index %s: %w", indexName, err)
 			}
@@ -97,8 +96,7 @@ func ImportIndex(filePath string, indexDir string, progressCallback func(int)) e
 	// Recreate indexes after import
 	for _, col := range schema.Columns {
 		if col.Index {
-			indexSQL := fmt.Sprintf("CREATE INDEX idx_%s_%s ON %s(%s)",
-				tableName, col.Name, tableName, col.Name)
+			indexSQL := fmt.Sprintf(`CREATE INDEX "idx_%s_%s" ON "%s"("%s")`, tableName, col.Name, tableName, col.Name)
 			if _, err := db.Exec(indexSQL); err != nil {
 				return fmt.Errorf("failed to create index: %w", err)
 			}
