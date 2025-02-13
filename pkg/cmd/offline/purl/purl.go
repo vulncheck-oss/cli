@@ -8,7 +8,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
 	"github.com/vulncheck-oss/cli/pkg/config"
-	"github.com/vulncheck-oss/cli/pkg/search"
+	"github.com/vulncheck-oss/cli/pkg/db"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/cli/pkg/utils"
 	"github.com/vulncheck-oss/sdk-go"
@@ -60,8 +60,6 @@ func Command() *cobra.Command {
 
 			index := indices.GetIndex(indexName)
 
-			query := search.QueryPURL(instance)
-
 			if !jsonOutput && !config.IsCI() {
 				if err := ui.PurlInstance(instance); err != nil {
 					return err
@@ -69,7 +67,7 @@ func Command() *cobra.Command {
 				ui.Info(fmt.Sprintf("Searching index %s, last updated on %s", index.Name, utils.ParseDate(index.LastUpdated)))
 			}
 
-			results, stats, err := search.IndexPurl(index.Name, query)
+			results, stats, err := db.PURLSearch(index.Name, args[0])
 			if err != nil {
 				return err
 			}
@@ -93,7 +91,6 @@ func Command() *cobra.Command {
 			}
 
 			ui.Stat("Results found", fmt.Sprintf("%d", len(results)))
-			ui.Stat("Files/Lines processed", fmt.Sprintf("%d/%d", stats.TotalFiles, stats.TotalLines))
 			ui.Stat("Search duration", stats.Duration.String())
 
 			for _, result := range results {

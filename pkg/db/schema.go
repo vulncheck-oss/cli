@@ -51,11 +51,8 @@ var Schemas = []Schema{
 			{Name: "name", Type: "TEXT", Index: false, NotNull: true},
 			{Name: "version", Type: "TEXT", Index: false, NotNull: true},
 			{Name: "purl", Type: "TEXT", Index: true, NotNull: true, IsJSON: true},
-			{Name: "licenses", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
+			{Name: "licenses", Type: "TEXT", Index: false, NotNull: false, IsJSON: true}, // Add licenses
 			{Name: "cves", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
-			{Name: "artifacts", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
-			{Name: "published_date", Type: "TEXT", Index: false, NotNull: false},
-		},
 	},
 }
 
