@@ -53,6 +53,27 @@ var Schemas = []Schema{
 			{Name: "purl", Type: "TEXT", Index: true, NotNull: true, IsJSON: true},
 			{Name: "licenses", Type: "TEXT", Index: false, NotNull: false, IsJSON: true}, // Add licenses
 			{Name: "cves", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
+		},
+	},
+	{
+		Indices: []string{"cpecve"},
+		Columns: []Column{
+			/*
+				{Name: "part", Type: "TEXT", Index: false, NotNull: false},
+				{Name: "vendor", Type: "TEXT", Index: false, NotNull: false},
+				{Name: "product", Type: "TEXT", Index: false, NotNull: false},
+				{Name: "version", Type: "TEXT", Index: false, NotNull: false},
+				{Name: "update", Type: "TEXT", Index: false, NotNull: false},
+				{Name: "edition", Type: "TEXT", Index: false, NotNull: false},
+				{Name: "language", Type: "TEXT", Index: false, NotNull: false},
+				{Name: "sw_edition", Type: "TEXT", Index: false, NotNull: false},
+				{Name: "target_sw", Type: "TEXT", Index: false, NotNull: false},
+				{Name: "target_hw", Type: "TEXT", Index: false, NotNull: false},
+				{Name: "other", Type: "TEXT", Index: false, NotNull: false},
+			*/
+			{Name: "cpe23Uri", Type: "TEXT", Index: true, NotNull: false},
+			{Name: "cves", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
+		},
 	},
 }
 
