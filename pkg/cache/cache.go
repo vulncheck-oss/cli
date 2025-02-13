@@ -146,15 +146,19 @@ func IndicesSync(indices []string, force bool) error {
 		}
 	}
 
-	tasks := taskin.Tasks{
-		{
-			Title: fmt.Sprintf("Syncing %d indices", len(indices)),
-			Tasks: make(taskin.Tasks, 0, len(indices)),
-		},
-	}
+	tasks := taskin.Tasks{}
 
 	for _, index := range indices {
-		tasks[0].Tasks = append(tasks[0].Tasks, syncSingleIndex(index, configDir, &indexInfo, force)...)
+		parentTask := taskin.Task{
+			Title: fmt.Sprintf("Sync index %s", index),
+			Task: func(t *taskin.Task) error {
+				t.Title = fmt.Sprintf("Syncing index %s", index)
+				return nil
+			},
+			Tasks: syncSingleIndex(index, configDir, &indexInfo, force),
+		}
+
+		tasks = append(tasks, parentTask)
 	}
 
 	runner := taskin.New(tasks, taskin.Defaults)

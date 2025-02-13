@@ -17,6 +17,7 @@ func taskDownload(url string, index string, filename string) taskin.Task {
 	return taskin.Task{
 		Title: fmt.Sprintf("Download %s", index),
 		Task: func(t *taskin.Task) error {
+			eta := utils.NewETACalculator()
 			resp, err := http.Get(url)
 			if err != nil {
 				return fmt.Errorf("failed to get URL: %w", err)
@@ -40,7 +41,6 @@ func taskDownload(url string, index string, filename string) taskin.Task {
 
 			written := int64(0)
 			buffer := make([]byte, 32*1024)
-			eta := utils.NewETACalculator()
 			lastProgress := -1
 
 			for {
@@ -81,7 +81,38 @@ func taskDownload(url string, index string, filename string) taskin.Task {
 				return fmt.Errorf("error during download: %w", err)
 			}
 
-			t.Title = fmt.Sprintf("Downloaded %s (Size: %s)", index, utils.GetSizeHuman(uint64(size)))
+			t.Title = fmt.Sprintf("Downloaded %s (Size: %s, Time: %s)", index, utils.GetSizeHuman(uint64(size)), eta.TotalTimeFormatted())
+
+			return nil
+		},
+	}
+}
+
+// extractIndexTask creates a task for extracting the index file.
+func taskExtract(index string, configDir string, filePath string) taskin.Task {
+	return taskin.Task{
+		Title: fmt.Sprintf("Extract %s", index),
+		Task: func(t *taskin.Task) error {
+			t.Title = fmt.Sprintf("Extracting %s", index)
+			eta := utils.NewETACalculator()
+			indexDir := filepath.Join(configDir, index)
+			if err := os.MkdirAll(indexDir, 0755); err != nil {
+				return fmt.Errorf("failed to create index directory: %w", err)
+			}
+			if err := utils.Unzip(filePath, indexDir); err != nil {
+				return fmt.Errorf("failed to unzip index file: %w", err)
+			}
+
+			size, err := utils.GetDirectorySize(indexDir)
+			if err != nil {
+				return fmt.Errorf("failed to calculate size of index directory: %w", err)
+			}
+
+			t.Title = fmt.Sprintf("Extracted %s (Size: %s, Time: %s)", index, utils.GetSizeHuman(size), eta.TotalTimeFormatted())
+
+			if err := os.Remove(filePath); err != nil {
+				return fmt.Errorf("failed to remove downloaded zip file: %s", err)
+			}
 
 			return nil
 		},
@@ -137,39 +168,7 @@ func taskDB(index string, configDir string, filePath string, lastUpdated string,
 				indexInfo.Indices = append(indexInfo.Indices, updatedInfo)
 			}
 
-			totalTime := eta.TotalTime()
-			totalTimeStr := utils.FormatETA(totalTime)
-			t.Title = fmt.Sprintf("Cataloged %s (Size: %s, Time: %s)", index, utils.GetSizeHuman(size), totalTimeStr)
-			return nil
-		},
-	}
-}
-
-// extractIndexTask creates a task for extracting the index file.
-func taskExtract(index string, configDir string, filePath string) taskin.Task {
-	return taskin.Task{
-		Title: fmt.Sprintf("Extract %s", index),
-		Task: func(t *taskin.Task) error {
-			t.Title = fmt.Sprintf("Extracting %s", index)
-			indexDir := filepath.Join(configDir, index)
-			if err := os.MkdirAll(indexDir, 0755); err != nil {
-				return fmt.Errorf("failed to create index directory: %w", err)
-			}
-			if err := utils.Unzip(filePath, indexDir); err != nil {
-				return fmt.Errorf("failed to unzip index file: %w", err)
-			}
-
-			size, err := utils.GetDirectorySize(indexDir)
-			if err != nil {
-				return fmt.Errorf("failed to calculate size of index directory: %w", err)
-			}
-
-			t.Title = fmt.Sprintf("Extracted %s (Size: %s)", index, utils.GetSizeHuman(size))
-
-			if err := os.Remove(filePath); err != nil {
-				return fmt.Errorf("failed to remove downloaded zip file: %s", err)
-			}
-
+			t.Title = fmt.Sprintf("Cataloged %s (Size: %s, Time: %s)", index, utils.GetSizeHuman(size), eta.TotalTimeFormatted())
 			return nil
 		},
 	}
