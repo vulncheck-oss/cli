@@ -13,8 +13,8 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
 	"github.com/vulncheck-oss/cli/pkg/config"
+	"github.com/vulncheck-oss/cli/pkg/db"
 	"github.com/vulncheck-oss/cli/pkg/models"
-	"github.com/vulncheck-oss/cli/pkg/search"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/sdk-go"
 	"github.com/vulncheck-oss/sdk-go/pkg/client"
@@ -218,9 +218,7 @@ func GetOfflineVulns(indices cache.InfoFile, purls []models.PurlDetail, iterator
 
 		index := indices.GetIndex(indexName)
 
-		query := search.QueryPURL(instance)
-
-		results, _, err := search.IndexPurl(index.Name, query)
+		results, _, err := db.PURLSearch(index.Name, purl.Purl)
 
 		if err != nil {
 			return nil, err

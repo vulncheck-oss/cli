@@ -53,6 +53,7 @@ var Schemas = []Schema{
 			{Name: "purl", Type: "TEXT", Index: true, NotNull: true, IsJSON: true},
 			{Name: "licenses", Type: "TEXT", Index: false, NotNull: false, IsJSON: true}, // Add licenses
 			{Name: "cves", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
+			{Name: "vulnerabilities", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
 		},
 	},
 	{
