@@ -220,7 +220,7 @@ func GetOfflineVulns(indices cache.InfoFile, purls []models.PurlDetail, iterator
 
 		index := indices.GetIndex(indexName)
 
-		results, _, err := db.PURLSearch(index.Name, purl.Purl)
+		results, _, err := db.PURLSearch(index.Name, instance)
 
 		if err != nil {
 			return nil, err

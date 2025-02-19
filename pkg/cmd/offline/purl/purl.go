@@ -69,7 +69,7 @@ func Command() *cobra.Command {
 				ui.Info(fmt.Sprintf("Searching index %s, last updated on %s", index.Name, utils.ParseDate(index.LastUpdated)))
 			}
 
-			results, stats, err := db.PURLSearch(index.Name, args[0])
+			results, stats, err := db.PURLSearch(index.Name, instance)
 			if err != nil {
 				return err
 			}

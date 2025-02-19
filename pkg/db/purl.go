@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/octoper/go-ray"
+	"github.com/package-url/packageurl-go"
 	"github.com/vulncheck-oss/sdk-go"
 	"strings"
 	"time"
@@ -18,7 +20,7 @@ type PurlEntry struct {
 	Vulnerabilities []sdk.PurlVulnerability `json:"vulnerabilities"`
 }
 
-func PURLSearch(indexName, purl string) ([]PurlEntry, *Stats, error) {
+func PURLSearch(indexName string, instance packageurl.PackageURL) ([]PurlEntry, *Stats, error) {
 	startTime := time.Now()
 
 	db, err := DB()
@@ -27,9 +29,11 @@ func PURLSearch(indexName, purl string) ([]PurlEntry, *Stats, error) {
 	}
 
 	tableName := strings.ReplaceAll(indexName, "-", "_")
+	schema := GetSchema(indexName)
+	ray.Ray(schema.Name, instance)
 	query := fmt.Sprintf("SELECT name, version, purl, cves, vulnerabilities FROM `%s` WHERE purl LIKE ?", tableName)
 
-	rows, err := db.Query(query, "%"+purl+"%")
+	rows, err := db.Query(query, "%"+instance.String()+"%")
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to execute query: %w", err)
 	}
