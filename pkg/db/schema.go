@@ -10,6 +10,7 @@ type Column struct {
 
 type Schema struct {
 	Indices  []string
+	Name     string
 	Fallback bool
 	Columns  []Column
 }
@@ -17,6 +18,7 @@ type Schema struct {
 var Schemas = []Schema{
 	{
 		Fallback: true,
+		Name:     "fallback",
 		Indices:  []string{},
 		Columns: []Column{
 			{Name: "data", Type: "TEXT", Index: true, NotNull: true, IsJSON: true},
@@ -24,6 +26,7 @@ var Schemas = []Schema{
 	},
 	{
 		Indices: []string{"ipintel-3d", "ipintel-10d", "ipintel-30d"},
+		Name:    "ipintel",
 		Columns: []Column{
 			// Primary search fields - all indexed
 			{Name: "ip", Type: "TEXT", Index: true, NotNull: true},
@@ -46,7 +49,11 @@ var Schemas = []Schema{
 		},
 	},
 	{
-		Indices: []string{"cargo", "npm", "gem", "pypi", "maven", "nuget", "composer", "hackage", "cran", "pub", "conan", "swift", "go", "dub", "elixir", "julia", "luarocks", "opam", "r", "vcpkg"},
+		Indices: []string{
+			"cargo", "npm", "gem", "pypi", "maven", "nuget", "composer", "hackage", "cran", "pub", "conan", "swift", "go", "dub", "elixir", "julia", "luarocks", "opam", "r", "vcpkg",
+			"alma", "alpine", "amazon", "arch", "cbl-mariner", "centos", "chainguard", "debian", "fedora", "oracle", "redhat", "rocky", "suse", "ubuntu", "wolfi",
+		},
+		Name: "purl",
 		Columns: []Column{
 			{Name: "name", Type: "TEXT", Index: false, NotNull: true},
 			{Name: "version", Type: "TEXT", Index: false, NotNull: true},
@@ -58,6 +65,7 @@ var Schemas = []Schema{
 	},
 	{
 		Indices: []string{"cpecve"},
+		Name:    "cpecve",
 		Columns: []Column{
 			{Name: "vendor", Type: "TEXT", Index: true, NotNull: false},
 			{Name: "product", Type: "TEXT", Index: true, NotNull: false},

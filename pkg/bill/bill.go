@@ -201,9 +201,11 @@ func GetOfflineVulns(indices cache.InfoFile, purls []models.PurlDetail, iterator
 			return nil, err
 		}
 
-		if packages.IsOS(instance) {
-			return nil, fmt.Errorf("operating system package support coming soon")
-		}
+		/*
+			if packages.IsOS(instance) {
+				return nil, fmt.Errorf("operating system package support coming soon")
+			}
+		*/
 
 		indexName := packages.IndexFromInstance(instance)
 

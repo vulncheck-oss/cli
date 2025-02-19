@@ -146,6 +146,15 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 			return fmt.Errorf("failed to unmarshal JSON: %w", err)
 		}
 
+		// For PURL schema, skip entries without CVEs
+		if schema.Name == "purl" {
+			cves, hasCVEs := entry["cves"].([]interface{})
+			if !hasCVEs || len(cves) == 0 {
+				// Still count the line for progress
+				progressFn(int64(len(line)))
+				continue
+			}
+		}
 		values := make([]interface{}, len(schema.Columns))
 		for i, col := range schema.Columns {
 			val, exists := entry[col.Name]

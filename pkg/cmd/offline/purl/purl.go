@@ -32,9 +32,11 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			if packages.IsOS(instance) {
-				return fmt.Errorf("operating system package support coming soon")
-			}
+			/*
+				if packages.IsOS(instance) {
+					return fmt.Errorf("operating system package support coming soon")
+				}
+			*/
 
 			indices, err := cache.Indices()
 			if err != nil {
