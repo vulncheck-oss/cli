@@ -49,11 +49,10 @@ var Schemas = []Schema{
 		},
 	},
 	{
+		Name: "purl PM",
 		Indices: []string{
 			"cargo", "npm", "gem", "pypi", "maven", "nuget", "composer", "hackage", "cran", "pub", "conan", "swift", "go", "dub", "elixir", "julia", "luarocks", "opam", "r", "vcpkg",
-			"alma", "alpine", "amazon", "arch", "cbl-mariner", "centos", "chainguard", "debian", "fedora", "oracle", "redhat", "rocky", "suse", "ubuntu", "wolfi",
 		},
-		Name: "purl",
 		Columns: []Column{
 			{Name: "name", Type: "TEXT", Index: false, NotNull: true},
 			{Name: "version", Type: "TEXT", Index: false, NotNull: true},
@@ -64,8 +63,27 @@ var Schemas = []Schema{
 		},
 	},
 	{
-		Indices: []string{"cpecve"},
+		Name: "purl OS",
+		Indices: []string{
+			"alma", "alpine", "amazon", "arch", "cbl-mariner", "centos", "chainguard", "debian", "fedora", "oracle", "redhat", "rocky", "suse", "ubuntu", "wolfi",
+		},
+		Columns: []Column{
+			{Name: "os_version", Type: "TEXT", Index: true, NotNull: true},
+			{Name: "os_arch", Type: "TEXT", Index: true, NotNull: true},
+			{Name: "id", Type: "TEXT", Index: true, NotNull: true},
+			{Name: "title", Type: "TEXT", Index: false, NotNull: true},
+			{Name: "cve", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
+			{Name: "severity", Type: "TEXT", Index: true, NotNull: false},
+			{Name: "type", Type: "TEXT", Index: true, NotNull: false},
+			{Name: "description", Type: "TEXT", Index: false, NotNull: false},
+			{Name: "references", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
+			{Name: "packages", Type: "TEXT", Index: false, NotNull: true, IsJSON: true},
+		},
+	},
+
+	{
 		Name:    "cpecve",
+		Indices: []string{"cpecve"},
 		Columns: []Column{
 			{Name: "vendor", Type: "TEXT", Index: true, NotNull: false},
 			{Name: "product", Type: "TEXT", Index: true, NotNull: false},

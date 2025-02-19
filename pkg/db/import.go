@@ -113,8 +113,17 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 	}
 	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
-	scanner.Buffer(make([]byte, 4*1024*1024), 4*1024*1024) // 4MB buffer
+	// Read first character to check if it's an array
+	firstByte := make([]byte, 1)
+	if _, err := file.Read(firstByte); err != nil {
+		return fmt.Errorf("failed to read first byte: %w", err)
+	}
+	isArray := firstByte[0] == '['
+
+	// Reset file pointer
+	if _, err := file.Seek(0, 0); err != nil {
+		return fmt.Errorf("failed to reset file pointer: %w", err)
+	}
 
 	var batch [][]interface{}
 	var batchSize int64
@@ -127,85 +136,122 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 		}
 	}
 
-	for scanner.Scan() {
-		line := scanner.Bytes()
+	if isArray {
+		// Handle array of objects
+		decoder := json.NewDecoder(file)
+		// Read opening bracket
+		_, err := decoder.Token()
+		if err != nil {
+			return fmt.Errorf("failed to read array start: %w", err)
+		}
 
-		// Fast path for fallback schema
-		if len(schema.Columns) == 1 && schema.Columns[0].Name == "data" {
-			if !json.Valid(line) {
-				return fmt.Errorf("invalid JSON")
+		// Read array elements
+		for decoder.More() {
+			var entry map[string]interface{}
+			if err := decoder.Decode(&entry); err != nil {
+				return fmt.Errorf("failed to decode JSON object: %w", err)
 			}
-			batch = append(batch, []interface{}{string(line)})
-			batchSize += int64(len(line))
-			continue
-		}
 
-		// Handle structured schema
-		var entry map[string]interface{}
-		if err := json.Unmarshal(line, &entry); err != nil {
-			return fmt.Errorf("failed to unmarshal JSON: %w", err)
-		}
+			if values, size, err := processEntry(entry, schema, jsonColumns); err == nil {
+				batch = append(batch, values)
+				batchSize += size
 
-		// For PURL schema, skip entries without CVEs
-		if schema.Name == "purl" {
-			cves, hasCVEs := entry["cves"].([]interface{})
-			if !hasCVEs || len(cves) == 0 {
-				// Still count the line for progress
-				progressFn(int64(len(line)))
+				if batchSize >= 50*1024*1024 { // 50MB batches
+					if err := executeBatch(db, baseInsertSQL, batch); err != nil {
+						return err
+					}
+					progressFn(batchSize)
+					batch = batch[:0]
+					batchSize = 0
+				}
+			}
+		}
+	} else {
+		// Original line-by-line processing
+		scanner := bufio.NewScanner(file)
+		scanner.Buffer(make([]byte, 4*1024*1024), 4*1024*1024)
+
+		for scanner.Scan() {
+			line := scanner.Bytes()
+
+			// Fast path for fallback schema
+			if len(schema.Columns) == 1 && schema.Columns[0].Name == "data" {
+				if !json.Valid(line) {
+					return fmt.Errorf("invalid JSON")
+				}
+				batch = append(batch, []interface{}{string(line)})
+				batchSize += int64(len(line))
 				continue
 			}
-		}
-		values := make([]interface{}, len(schema.Columns))
-		for i, col := range schema.Columns {
-			val, exists := entry[col.Name]
-			if !exists {
-				if col.NotNull {
-					return fmt.Errorf("missing required field %s", col.Name)
+
+			var entry map[string]interface{}
+			if err := json.Unmarshal(line, &entry); err != nil {
+				return fmt.Errorf("failed to unmarshal JSON: %w", err)
+			}
+
+			if values, size, err := processEntry(entry, schema, jsonColumns); err == nil {
+				batch = append(batch, values)
+				batchSize += size
+
+				if batchSize >= 50*1024*1024 {
+					if err := executeBatch(db, baseInsertSQL, batch); err != nil {
+						return err
+					}
+					progressFn(batchSize)
+					batch = batch[:0]
+					batchSize = 0
 				}
-				values[i] = nil
-				continue
 			}
-
-			if jsonColumns[i] {
-				// Only marshal JSON for array fields
-				if arr, ok := val.([]interface{}); ok {
-					jsonStr, _ := json.Marshal(arr)
-					values[i] = string(jsonStr)
-				} else {
-					jsonStr, _ := json.Marshal(val)
-					values[i] = string(jsonStr)
-				}
-			} else {
-				values[i] = val
-			}
-		}
-
-		batch = append(batch, values)
-		batchSize += int64(len(line))
-
-		// Use larger batch size for better performance
-		if batchSize >= 50*1024*1024 { // 50MB batches
-			err := executeBatch(db, baseInsertSQL, batch)
-			if err != nil {
-				return err
-			}
-			progressFn(batchSize)
-
-			batch = batch[:0] // Reuse slice
-			batchSize = 0
 		}
 	}
 
-	// Process any remaining rows in the batch
+	// Process remaining batch
 	if len(batch) > 0 {
-		err := executeBatch(db, baseInsertSQL, batch)
-		if err != nil {
+		if err := executeBatch(db, baseInsertSQL, batch); err != nil {
 			return err
 		}
 		progressFn(batchSize)
 	}
 
 	return nil
+}
+
+func processEntry(entry map[string]interface{}, schema *Schema, jsonColumns map[int]bool) ([]interface{}, int64, error) {
+	// Only check for CVEs if it's a PM schema
+	if schema.Name == "purl PM" {
+		cves, hasCVEs := entry["cves"].([]interface{})
+		if !hasCVEs || len(cves) == 0 {
+			return nil, 0, fmt.Errorf("skip entry without CVEs")
+		}
+	}
+
+	// Rest of the function remains the same...
+	values := make([]interface{}, len(schema.Columns))
+	for i, col := range schema.Columns {
+		val, exists := entry[col.Name]
+		if !exists {
+			if col.NotNull {
+				return nil, 0, fmt.Errorf("missing required field %s", col.Name)
+			}
+			values[i] = nil
+			continue
+		}
+
+		if jsonColumns[i] {
+			if arr, ok := val.([]interface{}); ok {
+				jsonStr, _ := json.Marshal(arr)
+				values[i] = string(jsonStr)
+			} else {
+				jsonStr, _ := json.Marshal(val)
+				values[i] = string(jsonStr)
+			}
+		} else {
+			values[i] = val
+		}
+	}
+
+	size := int64(len(fmt.Sprintf("%v", entry)))
+	return values, size, nil
 }
 
 func executeBatch(db *sql.DB, baseSQL string, batch [][]interface{}) error {
