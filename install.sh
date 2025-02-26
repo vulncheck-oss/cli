@@ -38,11 +38,11 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     fi
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     OS="Linux"
-    ARCH="x86_64"
+    ARCH="amd64"
     INSTALL_DIR="/usr/local/bin"
 elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
     OS="Windows"
-    ARCH="x86_64"
+    ARCH="amd64"
     INSTALL_DIR="/c/Windows/System32"
 else
     echo "Unsupported operating system"
