@@ -53,9 +53,9 @@ fi
 if [[ "$OS" == "macOS" ]]; then
     FILENAME="vulncheck_${VERSION}_macOS_${ARCH}.zip"
 elif [[ "$OS" == "Linux" ]]; then
-    FILENAME="vulncheck_${VERSION}_Linux_${ARCH}.tar.gz"
+    FILENAME="vulncheck_${VERSION}_linux_${ARCH}.tar.gz"
 elif [[ "$OS" == "Windows" ]]; then
-    FILENAME="vulncheck_${VERSION}_Windows_${ARCH}.zip"
+    FILENAME="vulncheck_${VERSION}_windows_${ARCH}.zip"
 fi
 
 # Download URL
