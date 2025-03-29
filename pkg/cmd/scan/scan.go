@@ -16,11 +16,11 @@ import (
 )
 
 type Options struct {
-	File        bool
-	FileName    string
-	SbomFile    string
-	SbomInput   string
-	OfflinePurl bool
+	File      bool
+	FileName  string
+	SbomFile  string
+	SbomInput string
+	Offline   bool
 }
 
 func Command() *cobra.Command {
@@ -93,7 +93,7 @@ func Command() *cobra.Command {
 				},
 			}...)
 
-			if opts.OfflinePurl {
+			if opts.Offline {
 				tasks = append(tasks, taskin.Tasks{
 					{
 						Title: i18n.C.ScanScanPurlStartOffline,
@@ -221,7 +221,7 @@ func Command() *cobra.Command {
 	cmd.Flags().StringVarP(&opts.FileName, "file-name", "n", "output.json", i18n.C.FlagSpecifyFile)
 	cmd.Flags().StringVarP(&opts.SbomFile, "sbom-output-file", "o", "", i18n.C.FlagSpecifySbomFile)
 	cmd.Flags().StringVarP(&opts.SbomInput, "sbom-input-file", "i", "", i18n.C.FlagSpecifySbomFile)
-	cmd.Flags().BoolVar(&opts.OfflinePurl, "offline-purl", false, "Use offline PURL functionality to find CVEs")
+	cmd.Flags().BoolVar(&opts.Offline, "offline", false, "Use offline mode to find CVEs - requires indices to be cached")
 
 	return cmd
 

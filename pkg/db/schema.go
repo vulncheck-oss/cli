@@ -51,7 +51,7 @@ var Schemas = []Schema{
 	{
 		Name: "purl PM",
 		Indices: []string{
-			"cargo", "npm", "gem", "pypi", "maven", "nuget", "composer", "hackage", "cran", "pub", "conan", "swift", "go", "dub", "elixir", "julia", "luarocks", "opam", "r", "vcpkg",
+			"cargo", "golang", "npm", "gem", "pypi", "maven", "nuget", "composer", "hackage", "cran", "pub", "conan", "swift", "go", "dub", "elixir", "julia", "luarocks", "opam", "r", "vcpkg",
 		},
 		Columns: []Column{
 			{Name: "name", Type: "TEXT", Index: false, NotNull: true},

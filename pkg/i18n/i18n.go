@@ -19,6 +19,9 @@ type Copy struct {
 	AuthLogoutErrorFailed       string
 	AuthLogoutErrorInvalidToken string
 
+	OfflineStatusShort string
+	OfflineStatusLong  string
+
 	AuthLoginToken string
 	AuthLoginWeb   string
 
@@ -256,6 +259,9 @@ var En = Copy{
 
 	ErrorUnauthorized: "Error: Unauthorized, Try authenticating with: vulncheck auth login",
 	ErrorNoToken:      "No token found. Please run `vulncheck auth login` to authenticate or populate the environment variable `VC_TOKEN`.",
+
+	OfflineStatusShort: "Check the status of the offline database",
+	OfflineStatusLong:  "Check the status of the offline database",
 }
 
 func Init() {

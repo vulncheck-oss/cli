@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/octoper/go-ray"
 	"github.com/package-url/packageurl-go"
 	"github.com/vulncheck-oss/sdk-go"
 	"strings"
@@ -29,8 +28,10 @@ func PURLSearch(indexName string, instance packageurl.PackageURL) ([]PurlEntry, 
 	}
 
 	tableName := strings.ReplaceAll(indexName, "-", "_")
-	schema := GetSchema(indexName)
-	ray.Ray(schema.Name, instance)
+	/*
+		schema := GetSchema(indexName)
+		ray.Ray(schema.Name, instance)
+	*/
 	query := fmt.Sprintf("SELECT name, version, purl, cves, vulnerabilities FROM `%s` WHERE purl LIKE ?", tableName)
 
 	rows, err := db.Query(query, "%"+instance.String()+"%")
