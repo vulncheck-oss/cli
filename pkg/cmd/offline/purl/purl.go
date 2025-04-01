@@ -92,7 +92,13 @@ func Command() *cobra.Command {
 				return nil
 			}
 
+			vulnsFound := 0
+			for _, result := range results {
+				vulnsFound += len(result.Vulnerabilities)
+			}
+
 			ui.Stat("Results found", fmt.Sprintf("%d", len(results)))
+			ui.Stat("Vulnerabilities found", fmt.Sprintf("%d", vulnsFound))
 			ui.Stat("Search duration", stats.Duration.String())
 
 			for _, result := range results {

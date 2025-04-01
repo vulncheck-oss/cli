@@ -16,6 +16,7 @@ import (
 )
 
 type Options struct {
+	Json      bool
 	File      bool
 	FileName  string
 	SbomFile  string
@@ -25,6 +26,7 @@ type Options struct {
 
 func Command() *cobra.Command {
 	opts := &Options{
+		Json:      false,
 		File:      false,
 		FileName:  "output.json",
 		SbomFile:  "",
@@ -201,8 +203,13 @@ func Command() *cobra.Command {
 					ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
 				}
 				if len(vulns) > 0 {
-					if err := ui.ScanResults(output.Vulnerabilities); err != nil {
-						return err
+					if opts.Json {
+						ui.Json(output)
+						return nil
+					} else {
+						if err := ui.ScanResults(output.Vulnerabilities); err != nil {
+							return err
+						}
 					}
 				}
 			} else {
@@ -217,6 +224,7 @@ func Command() *cobra.Command {
 		},
 	}
 
+	cmd.Flags().BoolVarP(&opts.Json, "json", "j", false, i18n.C.FlagOutputJson)
 	cmd.Flags().BoolVarP(&opts.File, "file", "f", false, i18n.C.FlagSaveResults)
 	cmd.Flags().StringVarP(&opts.FileName, "file-name", "n", "output.json", i18n.C.FlagSpecifyFile)
 	cmd.Flags().StringVarP(&opts.SbomFile, "sbom-output-file", "o", "", i18n.C.FlagSpecifySbomFile)

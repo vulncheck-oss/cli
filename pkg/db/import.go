@@ -41,7 +41,13 @@ func ImportIndex(filePath string, indexDir string, progressCallback func(int)) e
 		}
 		cols[i] = def
 	}
-	createTableSQL := fmt.Sprintf(`CREATE TABLE "%s" (%s)`, tableName, strings.Join(cols, ", "))
+	createTableSQL := fmt.Sprintf(`CREATE TABLE "%s" (%s`, tableName, strings.Join(cols, ", "))
+
+	if indexName == "golang" {
+		createTableSQL += `, UNIQUE("name", "version")`
+	}
+
+	createTableSQL += ")"
 
 	if _, err := db.Exec(createTableSQL); err != nil {
 		return fmt.Errorf("failed to create table: %w", err)
@@ -71,8 +77,16 @@ func ImportIndex(filePath string, indexDir string, progressCallback func(int)) e
 		colNames[i] = fmt.Sprintf(`"%s"`, col.Name)
 		placeholders[i] = "?"
 	}
-	baseInsertSQL := fmt.Sprintf(`INSERT INTO "%s" (%s) VALUES`,
-		tableName, strings.Join(colNames, ","))
+
+	var baseInsertSQL string
+
+	if indexName == "golang" {
+		baseInsertSQL = fmt.Sprintf(`INSERT OR REPLACE INTO "%s" (%s) VALUES`,
+			tableName, strings.Join(colNames, ","))
+	} else {
+		baseInsertSQL = fmt.Sprintf(`INSERT INTO "%s" (%s) VALUES`,
+			tableName, strings.Join(colNames, ","))
+	}
 
 	totalSize := int64(0)
 	for _, f := range files {
@@ -237,6 +251,14 @@ func processEntry(entry map[string]interface{}, schema *Schema, jsonColumns map[
 			continue
 		}
 
+		// Process the version field to extract base version
+		if col.Name == "version" {
+			if versionStr, ok := val.(string); ok {
+				// Extract base version (part before first hyphen)
+				parts := strings.Split(versionStr, "-")
+				val = parts[0]
+			}
+		}
 		if jsonColumns[i] {
 			if arr, ok := val.([]interface{}); ok {
 				jsonStr, _ := json.Marshal(arr)

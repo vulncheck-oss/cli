@@ -28,10 +28,7 @@ func PURLSearch(indexName string, instance packageurl.PackageURL) ([]PurlEntry, 
 	}
 
 	tableName := strings.ReplaceAll(indexName, "-", "_")
-	/*
-		schema := GetSchema(indexName)
-		ray.Ray(schema.Name, instance)
-	*/
+
 	query := fmt.Sprintf("SELECT name, version, purl, cves, vulnerabilities FROM `%s` WHERE purl LIKE ?", tableName)
 
 	rows, err := db.Query(query, "%"+instance.String()+"%")
@@ -72,7 +69,10 @@ func PURLSearch(indexName string, instance packageurl.PackageURL) ([]PurlEntry, 
 			}
 		}
 
-		results = append(results, result)
+		// only add the result if Version !== Fixed
+		if len(result.Vulnerabilities) > 0 && result.Version != result.Vulnerabilities[0].FixedVersion {
+			results = append(results, result)
+		}
 	}
 
 	stats := &Stats{
