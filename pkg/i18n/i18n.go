@@ -19,10 +19,14 @@ type Copy struct {
 	AuthLogoutErrorFailed       string
 	AuthLogoutErrorInvalidToken string
 
+	OfflineStatusShort string
+	OfflineStatusLong  string
+
 	AuthLoginToken string
 	AuthLoginWeb   string
 
 	FlagSaveResults      string
+	FlagOutputJson       string
 	FlagSpecifyFile      string
 	FlagSpecifySbomFile  string
 	FlagSpecifySbomInput string
@@ -160,6 +164,7 @@ var En = Copy{
 	AuthLogoutErrorInvalidToken: "Token was invalid, removing from config",
 
 	FlagSaveResults:      "Save Results as a file",
+	FlagOutputJson:       "Output JSON Results",
 	FlagSpecifyFile:      "Specify the file to save the results to",
 	FlagSpecifySbomFile:  "Specify the file to save your SBOM scan to",
 	FlagSpecifySbomInput: "Specify an existing SBOM file to scan instead of creating one from a folder",
@@ -256,6 +261,9 @@ var En = Copy{
 
 	ErrorUnauthorized: "Error: Unauthorized, Try authenticating with: vulncheck auth login",
 	ErrorNoToken:      "No token found. Please run `vulncheck auth login` to authenticate or populate the environment variable `VC_TOKEN`.",
+
+	OfflineStatusShort: "Check the status of the offline database",
+	OfflineStatusLong:  "Check the status of the offline database",
 }
 
 func Init() {
