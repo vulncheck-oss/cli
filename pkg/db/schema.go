@@ -65,19 +65,27 @@ var Schemas = []Schema{
 	{
 		Name: "purl OS",
 		Indices: []string{
-			"alma", "alpine", "amazon", "arch", "cbl-mariner", "centos", "chainguard", "debian", "fedora", "oracle", "redhat", "rocky", "suse", "ubuntu", "wolfi",
+			"alpine-purls", "rocky-purls",
 		},
 		Columns: []Column{
-			{Name: "os_version", Type: "TEXT", Index: true, NotNull: true},
-			{Name: "os_arch", Type: "TEXT", Index: true, NotNull: true},
-			{Name: "id", Type: "TEXT", Index: true, NotNull: true},
-			{Name: "title", Type: "TEXT", Index: false, NotNull: true},
-			{Name: "cve", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
-			{Name: "severity", Type: "TEXT", Index: true, NotNull: false},
-			{Name: "type", Type: "TEXT", Index: true, NotNull: false},
-			{Name: "description", Type: "TEXT", Index: false, NotNull: false},
-			{Name: "references", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
-			{Name: "packages", Type: "TEXT", Index: false, NotNull: true, IsJSON: true},
+			{Name: "name", Type: "TEXT", Index: false, NotNull: true},
+			{Name: "version", Type: "TEXT", Index: false, NotNull: true},
+			{Name: "purl", Type: "TEXT", Index: true, NotNull: true, IsJSON: true},
+			{Name: "licenses", Type: "TEXT", Index: false, NotNull: false, IsJSON: true}, // Add licenses
+			{Name: "cves", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
+			{Name: "vulnerabilities", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
+			/*
+				{Name: "os_version", Type: "TEXT", Index: true, NotNull: true},
+				{Name: "os_arch", Type: "TEXT", Index: true, NotNull: true},
+				{Name: "id", Type: "TEXT", Index: true, NotNull: true},
+				{Name: "title", Type: "TEXT", Index: false, NotNull: true},
+				{Name: "cve", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
+				{Name: "severity", Type: "TEXT", Index: true, NotNull: false},
+				{Name: "type", Type: "TEXT", Index: true, NotNull: false},
+				{Name: "description", Type: "TEXT", Index: false, NotNull: false},
+				{Name: "references", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
+				{Name: "packages", Type: "TEXT", Index: false, NotNull: true, IsJSON: true},
+			*/
 		},
 	},
 

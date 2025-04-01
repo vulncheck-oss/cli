@@ -32,9 +32,13 @@ func Command() *cobra.Command {
 				return err
 			}
 
+			if packages.IsOS(instance) {
+				return fmt.Errorf("offline PURL lookups for this operating system are not supported yet - please contact support@vulncheck.com")
+			}
+
 			/*
-				if packages.IsOS(instance) {
-					return fmt.Errorf("operating system package support coming soon")
+				if !packages.ISOSSupported(instance) {
+					return fmt.Errorf("offline PURL lookups for this operating system is not supported yet")
 				}
 			*/
 

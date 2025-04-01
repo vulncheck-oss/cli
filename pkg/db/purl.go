@@ -28,7 +28,6 @@ func PURLSearch(indexName string, instance packageurl.PackageURL) ([]PurlEntry, 
 	}
 
 	tableName := strings.ReplaceAll(indexName, "-", "_")
-
 	query := fmt.Sprintf("SELECT name, version, purl, cves, vulnerabilities FROM `%s` WHERE purl LIKE ?", tableName)
 
 	rows, err := db.Query(query, "%"+instance.String()+"%")
