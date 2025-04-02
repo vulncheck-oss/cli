@@ -9,12 +9,10 @@ import (
 	"time"
 )
 
-var DBFunc = DB
-
 func CPESearch(indexName string, cpe cpeutils.CPE) ([]cpeutils.CPEVulnerabilities, *Stats, error) {
 	startTime := time.Now()
 
-	db, err := DBFunc()
+	db, err := DB()
 	if err != nil {
 		return nil, nil, err
 	}
