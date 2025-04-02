@@ -211,7 +211,7 @@ func BrowseCreate() error {
 
 	fmt.Println(boxStyle.Render(content))
 	fmt.Println("\nPress Enter to continue...")
-	fmt.Scanln() // Wait for user to press Enter
+	_, _ = fmt.Scanln() // Wait for user to press Enter
 
 	return nil
 }

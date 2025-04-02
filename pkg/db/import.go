@@ -286,7 +286,9 @@ func executeBatch(db *sql.DB, baseSQL string, batch [][]interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func(tx *sql.Tx) {
+		_ = tx.Rollback()
+	}(tx)
 
 	varsPerRow := len(batch[0])
 	maxRowsPerBatch := maxSQLiteVariables / varsPerRow
