@@ -14,6 +14,17 @@ var maxInsertSize int64 = 1_000_000_000 // Default max length in bytes
 const maxSQLiteVariables = 900          // Slightly below SQLite's limit of 999 to be safe
 // DB provides a cached database connection.
 func DB() (*sql.DB, error) {
+	if os.Getenv("TEST_ENV") == "true" {
+		if dbInstance == nil {
+			var err error
+			dbInstance, err = sql.Open("sqlite3", ":memory:")
+			if err != nil {
+				return nil, fmt.Errorf("failed to open in-memory database: %w", err)
+			}
+		}
+		return dbInstance, nil
+	}
+
 	if dbInstance != nil {
 		return dbInstance, nil
 	}
