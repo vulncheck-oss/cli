@@ -64,13 +64,9 @@ func IPIntelSearch(indexName, country, asn, cidr, countryCode, hostname, id stri
 		args = append(args, countryCode)
 	}
 	if hostname != "" {
-		conditions = append(conditions, "json_array_contains(hostnames, ?)")
+		conditions = append(conditions, "EXISTS (SELECT 1 FROM json_each(hostnames) WHERE value = ?)")
 		args = append(args, hostname)
 	}
-	//if id != "" {
-	//	conditions = append(conditions, "type_id = ?") // no longer type_id
-	//	args = append(args, id)
-	//}
 	if id != "" {
 		conditions = append(conditions, "json_extract(type, '$.id') = ?")
 		args = append(args, id)
