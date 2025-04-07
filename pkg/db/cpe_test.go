@@ -14,7 +14,7 @@ func TestCPESearch(t *testing.T) {
 	// Insert test data with values for all columns and correct CVEs format (array of strings)
 	_, err := testDB.Exec(`INSERT INTO cpecve (vendor, product, version, "update", edition, language, sw_edition, target_sw, target_hw, other, cpe23Uri, cves) 
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		"test_vendor", "test_product", "", "", "", "", "", "", "", "", 
+		"test_vendor", "test_product", "", "", "", "", "", "", "", "",
 		"cpe:/a:test_vendor:test_product", `["CVE-1234-5678"]`)
 	if err != nil {
 		t.Fatalf("failed to insert test data: %v", err)

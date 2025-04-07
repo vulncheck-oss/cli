@@ -34,10 +34,10 @@ func setupPurlTable(t *testing.T) {
 	_, err = testDB.Exec(`INSERT INTO npm (
 		name, version, purl, licenses, cves, vulnerabilities
 	) VALUES (?, ?, ?, ?, ?, ?)`,
-		"express", "4.17.1", 
+		"express", "4.17.1",
 		`["pkg:npm/express@4.17.1"]`, // purl json array
-		`["MIT"]`, // licenses json array
-		`["CVE-2022-12345"]`, // cves json array
+		`["MIT"]`,                    // licenses json array
+		`["CVE-2022-12345"]`,         // cves json array
 		`[{"detection":"CVE-2022-12345","fixed_version":"4.18.0"}]`, // vulnerabilities json array
 	)
 	if err != nil {
@@ -48,11 +48,11 @@ func setupPurlTable(t *testing.T) {
 	_, err = testDB.Exec(`INSERT INTO npm (
 		name, version, purl, licenses, cves, vulnerabilities
 	) VALUES (?, ?, ?, ?, ?, ?)`,
-		"express", "4.18.0", 
+		"express", "4.18.0",
 		`["pkg:npm/express@4.18.0"]`, // purl json array
-		`["MIT"]`, // licenses json array
-		`[]`, // No CVEs for the fixed version
-		`[]`, // No vulnerabilities for the fixed version
+		`["MIT"]`,                    // licenses json array
+		`[]`,                         // No CVEs for the fixed version
+		`[]`,                         // No vulnerabilities for the fixed version
 	)
 	if err != nil {
 		t.Fatalf("failed to insert second test data: %v", err)
