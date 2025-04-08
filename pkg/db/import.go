@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/octoper/go-ray"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
 	"os"
 	"path/filepath"
@@ -21,7 +20,6 @@ func ImportIndex(filePath string, indexDir string, progressCallback func(int)) e
 	// Get schema for this index type
 	indexName := packages.IndexFromName(filepath.Base(indexDir))
 	schema := GetSchema(indexName)
-	ray.Ray(indexName, schema)
 	if schema == nil {
 		return fmt.Errorf("no schema found for index %s", indexName)
 	}
@@ -288,7 +286,9 @@ func executeBatch(db *sql.DB, baseSQL string, batch [][]interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func(tx *sql.Tx) {
+		_ = tx.Rollback()
+	}(tx)
 
 	varsPerRow := len(batch[0])
 	maxRowsPerBatch := maxSQLiteVariables / varsPerRow
