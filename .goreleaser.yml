@@ -35,9 +35,12 @@ builds:
     ldflags:
       - -s -w -X github.com/vulncheck-oss/cli/internal/build.Version={{.Version}} -X github.com/vulncheck-oss/cli/internal/build.Date={{time "2006-01-02"}}
 
-  - id: windows #build:windows
+  - id: windows #build:windows - needs brew install mingw-w64
     goos: [windows]
-    goarch: [386, amd64, arm64]
+    goarch: [amd64]
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
     hooks:
       post:
         - cmd: >-
