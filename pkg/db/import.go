@@ -11,6 +11,9 @@ import (
 	"strings"
 )
 
+// Maximum batch size in bytes for database inserts
+const maxInsertSize int64 = 50 * 1024 * 1024 // 50 MB
+
 func ImportIndex(filePath string, indexDir string, progressCallback func(int)) error {
 	db, err := DB()
 	if err != nil {
@@ -112,7 +115,7 @@ func ImportIndex(filePath string, indexDir string, progressCallback func(int)) e
 
 	// Process each file
 	for _, file := range files {
-		if err := importFile(db, file, schema, baseInsertSQL, 50*1024*1024, updateProgress); err != nil {
+		if err := importFile(db, file, schema, baseInsertSQL, maxInsertSize, updateProgress); err != nil {
 			return fmt.Errorf("failed to import file %s: %w", file, err)
 		}
 	}
@@ -180,7 +183,7 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 				batch = append(batch, values)
 				batchSize += size
 
-				if batchSize >= 50*1024*1024 { // 50MB batches
+				if batchSize >= maxSize { // Use maxSize parameter instead of hardcoded value
 					if err := executeBatch(db, baseInsertSQL, batch); err != nil {
 						return err
 					}
@@ -217,7 +220,7 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 				batch = append(batch, values)
 				batchSize += size
 
-				if batchSize >= 50*1024*1024 {
+				if batchSize >= maxSize { // Use maxSize parameter instead of hardcoded value
 					if err := executeBatch(db, baseInsertSQL, batch); err != nil {
 						return err
 					}
