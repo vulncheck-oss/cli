@@ -7,7 +7,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
 	"github.com/vulncheck-oss/cli/pkg/config"
-	"github.com/vulncheck-oss/cli/pkg/search"
+	"github.com/vulncheck-oss/cli/pkg/db"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/cli/pkg/utils"
 	"slices"
@@ -67,13 +67,11 @@ func Command() *cobra.Command {
 				return fmt.Errorf("index ipintel-%s is required for this command, and is not cached", args[0])
 			}
 
-			query := search.QueryIPIntel(country, asn, cidr, countryCode, hostname, id)
-
 			if !jsonOutput && !config.IsCI() {
 				ui.Info(fmt.Sprintf("Searching index %s, last updated on %s", index.Name, utils.ParseDate(index.LastUpdated)))
 			}
 
-			results, stats, err := search.IPIndex(index.Name, query)
+			results, stats, err := db.IPIntelSearch(index.Name, country, asn, cidr, countryCode, hostname, id)
 			if err != nil {
 				return err
 			}
@@ -84,7 +82,6 @@ func Command() *cobra.Command {
 			}
 
 			ui.Stat("Results found", fmt.Sprintf("%d", len(results)))
-			ui.Stat("Files/Lines processed", fmt.Sprintf("%d/%d", stats.TotalFiles, stats.TotalLines))
 			ui.Stat("Search duration", stats.Duration.String())
 
 			for i, result := range results {

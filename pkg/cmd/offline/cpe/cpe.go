@@ -6,10 +6,9 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
 	"github.com/vulncheck-oss/cli/pkg/config"
-	"github.com/vulncheck-oss/cli/pkg/cpe/cpeoffline"
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpeuri"
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
-	"github.com/vulncheck-oss/cli/pkg/search"
+	"github.com/vulncheck-oss/cli/pkg/db"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 )
 
@@ -47,13 +46,7 @@ func Command() *cobra.Command {
 				return fmt.Errorf("index cpecve is required to proceed")
 			}
 
-			query, err := cpeoffline.Query(cpe)
-
-			if err != nil {
-				return err
-			}
-
-			results, stats, err := search.IndexCPE("cpecve", *cpe, query)
+			results, stats, err := db.CPESearch("cpecve", *cpe)
 
 			if err != nil {
 				return err
@@ -70,7 +63,6 @@ func Command() *cobra.Command {
 			}
 
 			ui.Stat("Results found/filtered", fmt.Sprintf("%d/%d", len(results), len(cves)))
-			ui.Stat("Files/Lines processed", fmt.Sprintf("%d/%d", stats.TotalFiles, stats.TotalLines))
 			ui.Stat("Search duration", fmt.Sprintf("%.2f seconds", stats.Duration.Seconds()))
 
 			if !statsOnly {

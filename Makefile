@@ -13,7 +13,7 @@ bin/vulncheck$(EXE): script/build$(EXE)
 
 script/build$(EXE): script/build.go
 ifeq ($(EXE),)
-	GOOS= GOARCH= GOARM= GOFLAGS= CGO_ENABLED= go build -o $@ $<
+	GOOS= GOARCH= GOARM= GOFLAGS= CGO_ENABLED go build -o $@ $<
 else
 	go build -o $@ $<
 endif
@@ -44,5 +44,9 @@ ray:
 update:
 	go get -u ./... && go mod tidy
 
+format:
+	go fmt  ./...
+
 lint:
 	@golangci-lint run
+
