@@ -11,8 +11,8 @@ import (
 	"strings"
 )
 
-// Maximum batch size in bytes for database inserts
-const maxInsertSize int64 = 50 * 1024 * 1024 // 50 MB
+const maxInsertSize int64 = 1_000_000_000 // Default max length in bytes
+const maxSQLiteVariables = 900            // Slightly below limit of 999 to be safe
 
 func ImportIndex(filePath string, indexDir string, progressCallback func(int)) error {
 	db, err := DB()
