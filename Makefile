@@ -44,5 +44,9 @@ ray:
 update:
 	go get -u ./... && go mod tidy
 
+format:
+	go fmt  ./...
+
 lint:
 	@golangci-lint run
+

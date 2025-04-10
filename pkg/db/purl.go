@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/package-url/packageurl-go"
 	"github.com/vulncheck-oss/sdk-go"
+	_ "modernc.org/sqlite"
 	"strings"
 	"time"
 )

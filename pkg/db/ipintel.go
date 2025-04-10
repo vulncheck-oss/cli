@@ -3,7 +3,7 @@ package db
 import (
 	"encoding/json"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 	"strings"
 	"time"
 )

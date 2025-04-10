@@ -3,8 +3,8 @@ package db
 import (
 	"encoding/json"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
+	_ "modernc.org/sqlite"
 	"strings"
 	"time"
 )

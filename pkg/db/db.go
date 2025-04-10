@@ -3,21 +3,21 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/vulncheck-oss/cli/pkg/config"
+	_ "modernc.org/sqlite"
 	"os"
 	"path/filepath"
 )
 
 var dbInstance *sql.DB
-var maxInsertSize int64 = 1_000_000_000 // Default max length in bytes
-const maxSQLiteVariables = 900          // Slightly below SQLite's limit of 999 to be safe
+
+const maxSQLiteVariables = 900 // Slightly below SQLite's limit of 999 to be safe
 // DB provides a cached database connection.
 func DB() (*sql.DB, error) {
 	if os.Getenv("TEST_ENV") == "true" {
 		if dbInstance == nil {
 			var err error
-			dbInstance, err = sql.Open("sqlite3", ":memory:")
+			dbInstance, err = sql.Open("sqlite", ":memory:")
 			if err != nil {
 				return nil, fmt.Errorf("failed to open in-memory database: %w", err)
 			}
@@ -37,7 +37,7 @@ func DB() (*sql.DB, error) {
 	dbPath := filepath.Join(configDir, "data.db")
 	if _, err := os.Stat(dbPath); err == nil {
 		// File exists, open the existing database
-		dbInstance, err = sql.Open("sqlite3", dbPath)
+		dbInstance, err = sql.Open("sqlite", dbPath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to open database: %w", err)
 		}
@@ -51,7 +51,7 @@ func DB() (*sql.DB, error) {
 		}
 		file.Close()
 
-		dbInstance, err = sql.Open("sqlite3", dbPath)
+		dbInstance, err = sql.Open("sqlite", dbPath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to open database: %w", err)
 		}
