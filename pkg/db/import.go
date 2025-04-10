@@ -96,16 +96,25 @@ func ImportIndex(filePath string, indexDir string, progressCallback func(int)) e
 		}
 	}
 
+	// Define a consistent progress tracking function
 	processedSize := int64(0)
-	for fileNum, file := range files {
-		if err := importFile(db, file, schema, baseInsertSQL, maxInsertSize, func(size int64) {
-			processedSize += size
+	updateProgress := func(size int64) {
+		processedSize += size
+		if totalSize > 0 {
 			progress := int(float64(processedSize) / float64(totalSize) * 100)
+			// Ensure progress doesn't exceed 100%
+			if progress > 100 {
+				progress = 100
+			}
 			progressCallback(progress)
-		}); err != nil {
+		}
+	}
+
+	// Process each file
+	for _, file := range files {
+		if err := importFile(db, file, schema, baseInsertSQL, 50*1024*1024, updateProgress); err != nil {
 			return fmt.Errorf("failed to import file %s: %w", file, err)
 		}
-		progressCallback(int(float64(fileNum+1) / float64(len(files)) * 100))
 	}
 
 	// Recreate indexes after import
