@@ -9,6 +9,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"slices"
+	"time"
 )
 
 var specialIndices = []string{"cpecve"}
@@ -113,9 +114,13 @@ func Command() *cobra.Command {
 				}
 			}
 
+			// RECORD START TIME HERE
+			startTime := time.Now()
 			if err := cache.IndicesSync(selectedIndices, force); err != nil {
 				return err
 			}
+			elapsedTime := time.Since(startTime)
+			ui.Info(fmt.Sprintf("Sync completed in: %s", elapsedTime))
 
 			return nil
 		},

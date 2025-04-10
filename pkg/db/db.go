@@ -11,7 +11,6 @@ import (
 
 var dbInstance *sql.DB
 
-const maxSQLiteVariables = 900 // Slightly below SQLite's limit of 999 to be safe
 // DB provides a cached database connection.
 func DB() (*sql.DB, error) {
 	if os.Getenv("TEST_ENV") == "true" {
