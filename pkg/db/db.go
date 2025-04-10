@@ -3,8 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/vulncheck-oss/cli/pkg/config"
+	_ "modernc.org/sqlite"
 	"os"
 	"path/filepath"
 )
