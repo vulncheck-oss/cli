@@ -223,8 +223,7 @@ func Command() *cobra.Command {
 				elapsedTime := time.Since(startTime)
 				ui.Info(fmt.Sprintf(i18n.C.ScanBenchmark, elapsedTime))
 			} else if opts.SbomFile != "" {
-				// If in SbomOnly mode and an SBOM was saved, let the user know we're done
-				ui.Info(fmt.Sprintf("SBOM generation completed successfully"))
+				ui.Info("SBOM generation completed successfully")
 			}
 
 			return nil
