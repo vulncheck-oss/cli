@@ -21,6 +21,7 @@ type Options struct {
 	FileName  string
 	SbomFile  string
 	SbomInput string
+	SbomOnly  bool
 	Offline   bool
 }
 
@@ -31,6 +32,7 @@ func Command() *cobra.Command {
 		FileName:  "output.json",
 		SbomFile:  "",
 		SbomInput: "",
+		SbomOnly:  false,
 	}
 
 	cmd := &cobra.Command{
@@ -83,81 +85,81 @@ func Command() *cobra.Command {
 				})
 			}
 
-			// Add other necessary tasks after the SBOM task
-			tasks = append(tasks, taskin.Tasks{
-				{
-					Title: i18n.C.ScanExtractPurlStart,
-					Task: func(t *taskin.Task) error {
-						purls = bill.GetPURLDetail(sbm, inputRefs)
-						t.Title = fmt.Sprintf(i18n.C.ScanExtractPurlEnd, len(purls))
-						return nil
-					},
-				},
-			}...)
-
-			if opts.Offline {
+			if !opts.SbomOnly {
 				tasks = append(tasks, taskin.Tasks{
 					{
-						Title: i18n.C.ScanScanPurlStartOffline,
+						Title: i18n.C.ScanExtractPurlStart,
 						Task: func(t *taskin.Task) error {
-
-							indices, err := cache.Indices()
-							if err != nil {
-								return err
-							}
-
-							vulns = []models.ScanResultVulnerabilities{}
-							results, err := bill.GetOfflineVulns(indices, purls, func(cur int, total int) {
-								t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgressOffline, cur, total)
-								t.Progress(cur, total)
-							})
-							if err != nil {
-								return err
-							}
-							vulns = results
-							output = models.ScanResult{
-								Vulnerabilities: vulns,
-							}
-							t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEndOffline, len(vulns), len(purls))
-							return nil
-						},
-					},
-				}...)
-			} else {
-				tasks = append(tasks, taskin.Tasks{
-					{
-						Title: i18n.C.ScanScanPurlStart,
-						Task: func(t *taskin.Task) error {
-							vulns = []models.ScanResultVulnerabilities{}
-							results, err := bill.GetVulns(purls, func(cur int, total int) {
-								t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgress, cur, total)
-								t.Progress(cur, total)
-							})
-							if err != nil {
-								return err
-							}
-							vulns = results
-							t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(vulns), len(purls))
-							return nil
-						},
-					},
-					{
-						Title: i18n.C.ScanVulnMetaStart,
-						Task: func(t *taskin.Task) error {
-							results, err := bill.GetMeta(vulns)
-							if err != nil {
-								return err
-							}
-							vulns = results
-							t.Title = i18n.C.ScanVulnMetaEnd
-							output = models.ScanResult{
-								Vulnerabilities: vulns,
-							}
+							purls = bill.GetPURLDetail(sbm, inputRefs)
+							t.Title = fmt.Sprintf(i18n.C.ScanExtractPurlEnd, len(purls))
 							return nil
 						},
 					},
 				}...)
 
+				if opts.Offline {
+					tasks = append(tasks, taskin.Tasks{
+						{
+							Title: i18n.C.ScanScanPurlStartOffline,
+							Task: func(t *taskin.Task) error {
+
+								indices, err := cache.Indices()
+								if err != nil {
+									return err
+								}
+
+								vulns = []models.ScanResultVulnerabilities{}
+								results, err := bill.GetOfflineVulns(indices, purls, func(cur int, total int) {
+									t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgressOffline, cur, total)
+									t.Progress(cur, total)
+								})
+								if err != nil {
+									return err
+								}
+								vulns = results
+								output = models.ScanResult{
+									Vulnerabilities: vulns,
+								}
+								t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEndOffline, len(vulns), len(purls))
+								return nil
+							},
+						},
+					}...)
+				} else {
+					tasks = append(tasks, taskin.Tasks{
+						{
+							Title: i18n.C.ScanScanPurlStart,
+							Task: func(t *taskin.Task) error {
+								vulns = []models.ScanResultVulnerabilities{}
+								results, err := bill.GetVulns(purls, func(cur int, total int) {
+									t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgress, cur, total)
+									t.Progress(cur, total)
+								})
+								if err != nil {
+									return err
+								}
+								vulns = results
+								t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(vulns), len(purls))
+								return nil
+							},
+						},
+						{
+							Title: i18n.C.ScanVulnMetaStart,
+							Task: func(t *taskin.Task) error {
+								results, err := bill.GetMeta(vulns)
+								if err != nil {
+									return err
+								}
+								vulns = results
+								t.Title = i18n.C.ScanVulnMetaEnd
+								output = models.ScanResult{
+									Vulnerabilities: vulns,
+								}
+								return nil
+							},
+						},
+					}...)
+				}
 			}
 
 			if opts.SbomFile != "" {
@@ -173,7 +175,7 @@ func Command() *cobra.Command {
 				})
 			}
 
-			if opts.File {
+			if !opts.SbomOnly && opts.File {
 				tasks = append(tasks, taskin.Task{
 					Title: fmt.Sprintf("Saving results to %s", opts.FileName),
 					Task: func(t *taskin.Task) error {
@@ -198,27 +200,32 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			if vulns != nil {
-				if len(vulns) == 0 {
-					ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
-				}
-				if len(vulns) > 0 {
-					if opts.Json {
-						ui.Json(output)
-						return nil
-					} else {
-						if err := ui.ScanResults(output.Vulnerabilities); err != nil {
-							return err
+			// Only display scan results if we're not in SbomOnly mode
+			if !opts.SbomOnly {
+				if vulns != nil {
+					if len(vulns) == 0 {
+						ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
+					}
+					if len(vulns) > 0 {
+						if opts.Json {
+							ui.Json(output)
+							return nil
+						} else {
+							if err := ui.ScanResults(output.Vulnerabilities); err != nil {
+								return err
+							}
 						}
 					}
+				} else {
+					ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
 				}
-			} else {
-				ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
+
+				elapsedTime := time.Since(startTime)
+				ui.Info(fmt.Sprintf(i18n.C.ScanBenchmark, elapsedTime))
+			} else if opts.SbomFile != "" {
+				// If in SbomOnly mode and an SBOM was saved, let the user know we're done
+				ui.Info(fmt.Sprintf("SBOM generation completed successfully"))
 			}
-
-			elapsedTime := time.Since(startTime)
-
-			ui.Info(fmt.Sprintf(i18n.C.ScanBenchmark, elapsedTime))
 
 			return nil
 		},
@@ -229,8 +236,8 @@ func Command() *cobra.Command {
 	cmd.Flags().StringVarP(&opts.FileName, "file-name", "n", "output.json", i18n.C.FlagSpecifyFile)
 	cmd.Flags().StringVarP(&opts.SbomFile, "sbom-output-file", "o", "", i18n.C.FlagSpecifySbomFile)
 	cmd.Flags().StringVarP(&opts.SbomInput, "sbom-input-file", "i", "", i18n.C.FlagSpecifySbomFile)
+	cmd.Flags().BoolVarP(&opts.SbomOnly, "sbom-only", "s", false, i18n.C.FlagSpecifySbomOnly)
 	cmd.Flags().BoolVar(&opts.Offline, "offline", false, "Use offline mode to find CVEs - requires indices to be cached")
 
 	return cmd
-
 }

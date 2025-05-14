@@ -30,6 +30,7 @@ type Copy struct {
 	FlagSpecifyFile      string
 	FlagSpecifySbomFile  string
 	FlagSpecifySbomInput string
+	FlagSpecifySbomOnly  string
 	SavingResultsStart   string
 	SavingResultsEnd     string
 
@@ -168,6 +169,7 @@ var En = Copy{
 	FlagSpecifyFile:      "Specify the file to save the results to",
 	FlagSpecifySbomFile:  "Specify the file to save your SBOM scan to",
 	FlagSpecifySbomInput: "Specify an existing SBOM file to scan instead of creating one from a folder",
+	FlagSpecifySbomOnly:  "Do not run a scan and only create a SBOM file",
 	SavingResultsStart:   "Saving Results to %s",
 	SavingResultsEnd:     "Results saved to %s",
 
