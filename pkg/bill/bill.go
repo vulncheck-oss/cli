@@ -8,6 +8,7 @@ import (
 	"github.com/anchore/syft/syft/format"
 	"github.com/anchore/syft/syft/format/cyclonedxjson"
 	"github.com/anchore/syft/syft/sbom"
+	"github.com/dbugapp/dbug-go/dbug"
 	"github.com/package-url/packageurl-go"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
@@ -122,6 +123,26 @@ func LoadSBOM(inputFile string) (*sbom.SBOM, []InputSbomRef, error) {
 	}
 
 	return sbm, inputSbomRefs, nil
+}
+
+func GetCPEDetail(sbm *sbom.SBOM) []string {
+	if sbm == nil {
+		return []string{}
+	}
+
+	var cpes []string
+
+	for p := range sbm.Artifacts.Packages.Enumerate() {
+		if p.CPEs != nil && len(p.CPEs) > 0 {
+			for _, cpe := range p.CPEs {
+				if !strings.HasPrefix(cpe.Attributes.BindToFmtString(), ".github/workflows") {
+					cpes = append(cpes, cpe.Attributes.BindToFmtString())
+				}
+			}
+		}
+	}
+	dbug.Go(cpes)
+	return cpes
 }
 
 func GetPURLDetail(sbm *sbom.SBOM, inputRefs []InputSbomRef) []models.PurlDetail {

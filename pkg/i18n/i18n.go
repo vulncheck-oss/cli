@@ -113,6 +113,8 @@ type Copy struct {
 	ScanScanPurlProgressOffline string
 	ScanScanPurlEnd             string
 	ScanScanPurlEndOffline      string
+	ScanExtractCpeStart         string
+	ScanExtractCpeEnd           string
 	ScanVulnMetaStart           string
 	ScanVulnMetaEnd             string
 	ScanNoCvesFound             string
@@ -253,6 +255,9 @@ var En = Copy{
 	ScanScanPurlProgressOffline: "[OFFLINE] Scanning PURLs [%d/%d]",
 	ScanScanPurlEnd:             "Scanning PURLs: %d vulns found in %d packages",
 	ScanScanPurlEndOffline:      "[OFFLINE] Scanning PURLs: %d vulns found in %d packages",
+
+	ScanExtractCpeStart: "Extracting CPEs",
+	ScanExtractCpeEnd:   "%d CPEs extracted",
 
 	ScanVulnMetaStart: "Fetching vulnerability metadata",
 	ScanVulnMetaEnd:   "Vulnerability metadata fetched",

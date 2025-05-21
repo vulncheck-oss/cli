@@ -2,6 +2,7 @@ package scan
 
 import (
 	"fmt"
+	"github.com/dbugapp/dbug-go/dbug"
 	"github.com/vulncheck-oss/cli/pkg/bill"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"time"
@@ -48,6 +49,7 @@ func Command() *cobra.Command {
 			var sbm *sbom.SBOM
 			var inputRefs []bill.InputSbomRef
 			var purls []models.PurlDetail
+			var cpes []string
 			var vulns []models.ScanResultVulnerabilities
 
 			var output models.ScanResult
@@ -92,6 +94,15 @@ func Command() *cobra.Command {
 						Task: func(t *taskin.Task) error {
 							purls = bill.GetPURLDetail(sbm, inputRefs)
 							t.Title = fmt.Sprintf(i18n.C.ScanExtractPurlEnd, len(purls))
+							return nil
+						},
+					},
+					{
+						Title: i18n.C.ScanExtractCpeStart,
+						Task: func(t *taskin.Task) error {
+							cpes = bill.GetCPEDetail(sbm)
+							t.Title = fmt.Sprintf(i18n.C.ScanExtractCpeEnd, len(cpes))
+							dbug.Go(cpes)
 							return nil
 						},
 					},
