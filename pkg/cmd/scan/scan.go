@@ -23,6 +23,7 @@ type Options struct {
 	SbomFile  string
 	SbomInput string
 	SbomOnly  bool
+	Cpes      bool
 	Offline   bool
 }
 
@@ -34,6 +35,7 @@ func Command() *cobra.Command {
 		SbomFile:  "",
 		SbomInput: "",
 		SbomOnly:  false,
+		Cpes:      false,
 	}
 
 	cmd := &cobra.Command{
@@ -97,18 +99,56 @@ func Command() *cobra.Command {
 							return nil
 						},
 					},
-					{
-						Title: i18n.C.ScanExtractCpeStart,
-						Task: func(t *taskin.Task) error {
-							cpes = bill.GetCPEDetail(sbm)
-							t.Title = fmt.Sprintf(i18n.C.ScanExtractCpeEnd, len(cpes))
-							dbug.Go(cpes)
-							return nil
-						},
-					},
 				}...)
 
+				if opts.Cpes {
+					tasks = append(tasks, taskin.Tasks{
+						{
+							Title: i18n.C.ScanExtractCpeStart,
+							Task: func(t *taskin.Task) error {
+								cpes = bill.GetCPEDetail(sbm)
+								t.Title = fmt.Sprintf(i18n.C.ScanExtractCpeEnd, len(cpes))
+								dbug.Go(cpes)
+								return nil
+							},
+						},
+					}...)
+				}
+
+				if !opts.Offline && opts.Cpes {
+					return ui.Error("CPE extraction/scanning for online mode is coming soon")
+				}
+
 				if opts.Offline {
+					if opts.Cpes {
+						tasks = append(tasks, taskin.Tasks{
+							{
+								Title: i18n.C.ScanScanCpeStartOffline,
+								Task: func(t *taskin.Task) error {
+
+									indices, err := cache.Indices()
+									if err != nil {
+										return err
+									}
+
+									vulns = []models.ScanResultVulnerabilities{}
+									results, err := bill.GetOfflineCpeVulns(indices, cpes, func(cur int, total int) {
+										t.Title = fmt.Sprintf(i18n.C.ScanScanCpeProgressOffline, cur, total)
+										t.Progress(cur, total)
+									})
+									if err != nil {
+										return err
+									}
+									vulns = results
+									output = models.ScanResult{
+										Vulnerabilities: vulns,
+									}
+									t.Title = fmt.Sprintf(i18n.C.ScanScanCpeEndOffline, len(vulns), len(purls))
+									return nil
+								},
+							},
+						})
+					}
 					tasks = append(tasks, taskin.Tasks{
 						{
 							Title: i18n.C.ScanScanPurlStartOffline,
@@ -247,6 +287,7 @@ func Command() *cobra.Command {
 	cmd.Flags().StringVarP(&opts.SbomFile, "sbom-output-file", "o", "", i18n.C.FlagSpecifySbomFile)
 	cmd.Flags().StringVarP(&opts.SbomInput, "sbom-input-file", "i", "", i18n.C.FlagSpecifySbomFile)
 	cmd.Flags().BoolVarP(&opts.SbomOnly, "sbom-only", "s", false, i18n.C.FlagSpecifySbomOnly)
+	cmd.Flags().BoolVarP(&opts.Cpes, "include-cpes", "c", false, i18n.C.FlagIncludeCpes)
 	cmd.Flags().BoolVar(&opts.Offline, "offline", false, "Use offline mode to find CVEs - requires indices to be cached")
 
 	return cmd

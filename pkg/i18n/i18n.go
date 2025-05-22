@@ -31,6 +31,7 @@ type Copy struct {
 	FlagSpecifySbomFile  string
 	FlagSpecifySbomInput string
 	FlagSpecifySbomOnly  string
+	FlagIncludeCpes      string
 	SavingResultsStart   string
 	SavingResultsEnd     string
 
@@ -115,10 +116,14 @@ type Copy struct {
 	ScanScanPurlEndOffline      string
 	ScanExtractCpeStart         string
 	ScanExtractCpeEnd           string
-	ScanVulnMetaStart           string
-	ScanVulnMetaEnd             string
-	ScanNoCvesFound             string
-	ScanBenchmark               string
+	ScanScanCpeStartOffline     string
+	ScanScanCpeProgressOffline  string
+	ScanScanCpeEndOffline       string
+
+	ScanVulnMetaStart string
+	ScanVulnMetaEnd   string
+	ScanNoCvesFound   string
+	ScanBenchmark     string
 
 	ErrorNoToken      string
 	ErrorUnauthorized string
@@ -172,6 +177,7 @@ var En = Copy{
 	FlagSpecifySbomFile:  "Specify the file to save your SBOM scan to",
 	FlagSpecifySbomInput: "Specify an existing SBOM file to scan instead of creating one from a folder",
 	FlagSpecifySbomOnly:  "Do not run a scan and only create a SBOM file",
+	FlagIncludeCpes:      "Include and Scan CPEs",
 	SavingResultsStart:   "Saving Results to %s",
 	SavingResultsEnd:     "Results saved to %s",
 
@@ -255,6 +261,10 @@ var En = Copy{
 	ScanScanPurlProgressOffline: "[OFFLINE] Scanning PURLs [%d/%d]",
 	ScanScanPurlEnd:             "Scanning PURLs: %d vulns found in %d packages",
 	ScanScanPurlEndOffline:      "[OFFLINE] Scanning PURLs: %d vulns found in %d packages",
+
+	ScanScanCpeStartOffline:    "[OFFLINE] Scanning CPEs",
+	ScanScanCpeProgressOffline: "Scanning CPEs [%d/%d]",
+	ScanScanCpeEndOffline:      "[OFFLINE] Scanning PURLs: %d vulns found in %d packages",
 
 	ScanExtractCpeStart: "Extracting CPEs",
 	ScanExtractCpeEnd:   "%d CPEs extracted",

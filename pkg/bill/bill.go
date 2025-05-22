@@ -8,7 +8,6 @@ import (
 	"github.com/anchore/syft/syft/format"
 	"github.com/anchore/syft/syft/format/cyclonedxjson"
 	"github.com/anchore/syft/syft/sbom"
-	"github.com/dbugapp/dbug-go/dbug"
 	"github.com/package-url/packageurl-go"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
@@ -19,6 +18,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/sdk-go"
 	"github.com/vulncheck-oss/sdk-go/pkg/client"
+	"golang.org/x/exp/slices"
 	"io"
 	"os"
 	"strings"
@@ -135,13 +135,13 @@ func GetCPEDetail(sbm *sbom.SBOM) []string {
 	for p := range sbm.Artifacts.Packages.Enumerate() {
 		if p.CPEs != nil && len(p.CPEs) > 0 {
 			for _, cpe := range p.CPEs {
-				if !strings.HasPrefix(cpe.Attributes.BindToFmtString(), ".github/workflows") {
+				if !strings.Contains(cpe.Attributes.BindToFmtString(), ".github/workflows") &&
+					!slices.Contains(cpes, cpe.Attributes.BindToFmtString()) {
 					cpes = append(cpes, cpe.Attributes.BindToFmtString())
 				}
 			}
 		}
 	}
-	dbug.Go(cpes)
 	return cpes
 }
 
