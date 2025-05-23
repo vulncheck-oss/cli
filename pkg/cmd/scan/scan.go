@@ -52,6 +52,8 @@ func Command() *cobra.Command {
 			var inputRefs []bill.InputSbomRef
 			var purls []models.PurlDetail
 			var cpes []string
+			var cpeVulns []models.ScanResultVulnerabilities
+			var purlVulns []models.ScanResultVulnerabilities
 			var vulns []models.ScanResultVulnerabilities
 
 			var output models.ScanResult
@@ -101,6 +103,10 @@ func Command() *cobra.Command {
 					},
 				}...)
 
+				if !opts.Offline && opts.Cpes {
+					return ui.Error("CPE extraction/scanning for online mode is coming soon")
+				}
+
 				if opts.Cpes {
 					tasks = append(tasks, taskin.Tasks{
 						{
@@ -108,15 +114,10 @@ func Command() *cobra.Command {
 							Task: func(t *taskin.Task) error {
 								cpes = bill.GetCPEDetail(sbm)
 								t.Title = fmt.Sprintf(i18n.C.ScanExtractCpeEnd, len(cpes))
-								dbug.Go(cpes)
 								return nil
 							},
 						},
 					}...)
-				}
-
-				if !opts.Offline && opts.Cpes {
-					return ui.Error("CPE extraction/scanning for online mode is coming soon")
 				}
 
 				if opts.Offline {
@@ -131,7 +132,6 @@ func Command() *cobra.Command {
 										return err
 									}
 
-									vulns = []models.ScanResultVulnerabilities{}
 									results, err := bill.GetOfflineCpeVulns(indices, cpes, func(cur int, total int) {
 										t.Title = fmt.Sprintf(i18n.C.ScanScanCpeProgressOffline, cur, total)
 										t.Progress(cur, total)
@@ -139,15 +139,13 @@ func Command() *cobra.Command {
 									if err != nil {
 										return err
 									}
-									vulns = results
-									output = models.ScanResult{
-										Vulnerabilities: vulns,
-									}
-									t.Title = fmt.Sprintf(i18n.C.ScanScanCpeEndOffline, len(vulns), len(purls))
+									cpeVulns = results
+									dbug.Go(cpeVulns)
+									t.Title = fmt.Sprintf(i18n.C.ScanScanCpeEndOffline, len(cpeVulns), len(cpes))
 									return nil
 								},
 							},
-						})
+						}...)
 					}
 					tasks = append(tasks, taskin.Tasks{
 						{
@@ -159,7 +157,7 @@ func Command() *cobra.Command {
 									return err
 								}
 
-								vulns = []models.ScanResultVulnerabilities{}
+								purlVulns = []models.ScanResultVulnerabilities{}
 								results, err := bill.GetOfflineVulns(indices, purls, func(cur int, total int) {
 									t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgressOffline, cur, total)
 									t.Progress(cur, total)
@@ -167,11 +165,13 @@ func Command() *cobra.Command {
 								if err != nil {
 									return err
 								}
-								vulns = results
+								purlVulns = results
+								t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEndOffline, len(purlVulns), len(purls))
+								// we need to mege vulns and cpeVulns here
+								vulns = append(cpeVulns, purlVulns...)
 								output = models.ScanResult{
 									Vulnerabilities: vulns,
 								}
-								t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEndOffline, len(vulns), len(purls))
 								return nil
 							},
 						},
@@ -181,7 +181,7 @@ func Command() *cobra.Command {
 						{
 							Title: i18n.C.ScanScanPurlStart,
 							Task: func(t *taskin.Task) error {
-								vulns = []models.ScanResultVulnerabilities{}
+								purlVulns = []models.ScanResultVulnerabilities{}
 								results, err := bill.GetVulns(purls, func(cur int, total int) {
 									t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgress, cur, total)
 									t.Progress(cur, total)
@@ -189,8 +189,10 @@ func Command() *cobra.Command {
 								if err != nil {
 									return err
 								}
-								vulns = results
-								t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(vulns), len(purls))
+								purlVulns = results
+								t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(purlVulns), len(purls))
+								// we will combine cpeVUlns when cpe online scanning is available
+								vulns = purlVulns
 								return nil
 							},
 						},

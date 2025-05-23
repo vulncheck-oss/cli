@@ -20,5 +20,6 @@ type ScanResultVulnerabilities struct {
 	CVSSBaseScore     string     `json:"cvss_base_score"`
 	CVSSTemporalScore string     `json:"cvss_temporal_score"`
 	FixedVersions     string     `json:"fixed_versions"`
-	PurlDetail        PurlDetail `json:"purl_detail"`
+	PurlDetail        PurlDetail `json:"purl_detail,omitempty"`
+	CPE               string     `json:"cpe"`
 }

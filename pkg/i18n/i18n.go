@@ -263,8 +263,8 @@ var En = Copy{
 	ScanScanPurlEndOffline:      "[OFFLINE] Scanning PURLs: %d vulns found in %d packages",
 
 	ScanScanCpeStartOffline:    "[OFFLINE] Scanning CPEs",
-	ScanScanCpeProgressOffline: "Scanning CPEs [%d/%d]",
-	ScanScanCpeEndOffline:      "[OFFLINE] Scanning PURLs: %d vulns found in %d packages",
+	ScanScanCpeProgressOffline: "[OFFLINE] Scanning CPEs [%d/%d]",
+	ScanScanCpeEndOffline:      "[OFFLINE] Scanning CPEs: %d vulns found in %d CPE urls",
 
 	ScanExtractCpeStart: "Extracting CPEs",
 	ScanExtractCpeEnd:   "%d CPEs extracted",
