@@ -135,7 +135,7 @@ func GetCPEDetail(sbm *sbom.SBOM) []string {
 	seen := make(map[string]struct{})
 
 	for p := range sbm.Artifacts.Packages.Enumerate() {
-		if p.CPEs != nil && len(p.CPEs) > 0 {
+		if len(p.CPEs) > 0 {
 			for _, cpe := range p.CPEs {
 				cpeStr := strings.TrimSpace(cpe.Attributes.BindToFmtString())
 				norm := cpeutils.NormalizeCPEString(cpeStr)
