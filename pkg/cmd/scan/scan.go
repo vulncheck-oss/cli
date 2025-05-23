@@ -2,7 +2,6 @@ package scan
 
 import (
 	"fmt"
-	"github.com/dbugapp/dbug-go/dbug"
 	"github.com/vulncheck-oss/cli/pkg/bill"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"time"
@@ -140,7 +139,6 @@ func Command() *cobra.Command {
 										return err
 									}
 									cpeVulns = results
-									dbug.Go(cpeVulns)
 									t.Title = fmt.Sprintf(i18n.C.ScanScanCpeEndOffline, len(cpeVulns), len(cpes))
 									return nil
 								},
