@@ -264,7 +264,7 @@ var En = Copy{
 
 	ScanScanCpeStartOffline:    "[OFFLINE] Scanning CPEs",
 	ScanScanCpeProgressOffline: "[OFFLINE] Scanning CPEs [%d/%d]",
-	ScanScanCpeEndOffline:      "[OFFLINE] Scanning CPEs: %d vulns found in %d CPE urls",
+	ScanScanCpeEndOffline:      "[OFFLINE] Scanning CPEs: %d vulns found in %d",
 
 	ScanExtractCpeStart: "Extracting CPEs",
 	ScanExtractCpeEnd:   "%d CPEs extracted",
