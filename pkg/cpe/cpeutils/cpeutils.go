@@ -225,15 +225,18 @@ func processQuotedChars(s string) string {
 			result = fmt.Sprintf("%s%c", result, c)
 
 		} else {
-
+			// Check if there is a next character to avoid out-of-range panic
+			if idx+1 >= len(s) {
+				// Treat trailing backslash as literal
+				result = fmt.Sprintf("%s%c", result, c)
+				idx++
+				continue
+			}
 			nextchr := s[idx+1]
 			switch nextchr {
-			case '.',
-				'-',
-				'_':
+			case '.', '-', '_':
 				result = fmt.Sprintf("%s%c", result, nextchr)
 				idx += 2
-
 			default:
 				result = fmt.Sprintf("%s\\%c", result, nextchr)
 				idx += 2
@@ -243,4 +246,12 @@ func processQuotedChars(s string) string {
 		idx++
 	}
 	return result
+}
+
+// NormalizeCPEString normalizes a CPE string for deduplication purposes.
+func NormalizeCPEString(s string) string {
+	s = strings.ToLower(s)
+	s = strings.ReplaceAll(s, "-", "_")
+	s = strings.TrimSpace(s)
+	return s
 }

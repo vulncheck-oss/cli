@@ -34,7 +34,6 @@ func CPESearch(indexName string, cpe cpeutils.CPE) ([]cpeutils.CPEVulnerabilitie
 		args = append(args, "%"+strings.ToLower(cpe.Product)+"%")
 	}
 
-	// Create WHERE clause if we have conditions
 	whereClause := ""
 	if len(conditions) > 0 {
 		whereClause = "WHERE " + strings.Join(conditions, " AND ")

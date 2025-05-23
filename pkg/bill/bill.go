@@ -13,6 +13,8 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
 	"github.com/vulncheck-oss/cli/pkg/config"
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpeuri"
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
 	"github.com/vulncheck-oss/cli/pkg/db"
 	"github.com/vulncheck-oss/cli/pkg/models"
 	"github.com/vulncheck-oss/cli/pkg/session"
@@ -124,6 +126,31 @@ func LoadSBOM(inputFile string) (*sbom.SBOM, []InputSbomRef, error) {
 	return sbm, inputSbomRefs, nil
 }
 
+func GetCPEDetail(sbm *sbom.SBOM) []string {
+	if sbm == nil {
+		return []string{}
+	}
+
+	var cpes []string
+	seen := make(map[string]struct{})
+
+	for p := range sbm.Artifacts.Packages.Enumerate() {
+		if len(p.CPEs) > 0 {
+			for _, cpe := range p.CPEs {
+				cpeStr := strings.TrimSpace(cpe.Attributes.BindToFmtString())
+				norm := cpeutils.NormalizeCPEString(cpeStr)
+				if !strings.Contains(cpeStr, ".github/workflows") {
+					if _, exists := seen[norm]; !exists {
+						cpes = append(cpes, cpeStr)
+						seen[norm] = struct{}{}
+					}
+				}
+			}
+		}
+	}
+	return cpes
+}
+
 func GetPURLDetail(sbm *sbom.SBOM, inputRefs []InputSbomRef) []models.PurlDetail {
 
 	if sbm == nil {
@@ -183,6 +210,53 @@ func GetVulns(purls []models.PurlDetail, iterator func(cur int, total int)) ([]m
 			}
 		}
 		iterator(i, len(purls))
+	}
+
+	return vulns, nil
+}
+
+func GetOfflineCpeVulns(indices cache.InfoFile, cpes []string, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
+	var vulns []models.ScanResultVulnerabilities
+	i := 0
+	seen := make(map[string]struct{})
+
+	indexAvailable, err := sync.EnsureIndexSync(indices, "cpecve", true)
+	if err != nil {
+		return nil, err
+	}
+
+	if !indexAvailable {
+		return nil, fmt.Errorf("index cpecve is required to proceed")
+	}
+
+	for _, cpestring := range cpes {
+		i++
+		cpe, err := cpeuri.ToStruct(cpestring)
+		if err != nil {
+			return nil, err
+		}
+
+		results, _, err := db.CPESearch("cpecve", *cpe)
+		if err != nil {
+			return nil, err
+		}
+
+		cves, err := cpeutils.Process(cpe, results)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, cve := range cves {
+			key := cpestring + "|" + cve
+			if _, exists := seen[key]; !exists {
+				vulns = append(vulns, models.ScanResultVulnerabilities{
+					CVE: cve,
+					CPE: cpestring,
+				})
+				seen[key] = struct{}{}
+			}
+		}
+		iterator(i, len(cpes))
 	}
 
 	return vulns, nil
