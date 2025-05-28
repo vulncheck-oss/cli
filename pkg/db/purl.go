@@ -4,11 +4,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/package-url/packageurl-go"
-	"github.com/vulncheck-oss/sdk-go"
-	_ "modernc.org/sqlite"
 	"strings"
 	"time"
+
+	"github.com/package-url/packageurl-go"
+	"github.com/vulncheck-oss/cli/pkg/sdk"
+	_ "modernc.org/sqlite"
 )
 
 type PurlEntry struct {

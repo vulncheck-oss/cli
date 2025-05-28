@@ -4,19 +4,20 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/itchyny/gojq"
-	"github.com/package-url/packageurl-go"
-	"github.com/tidwall/gjson"
-	"github.com/vulncheck-oss/cli/pkg/config"
-	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
-	"github.com/vulncheck-oss/cli/pkg/ui"
-	"github.com/vulncheck-oss/sdk-go"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/itchyny/gojq"
+	"github.com/package-url/packageurl-go"
+	"github.com/tidwall/gjson"
+	"github.com/vulncheck-oss/cli/pkg/config"
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
+	"github.com/vulncheck-oss/cli/pkg/sdk"
+	"github.com/vulncheck-oss/cli/pkg/ui"
 )
 
 type PurlEntry struct {
