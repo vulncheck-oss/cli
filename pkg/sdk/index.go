@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/vulncheck-oss/cli/pkg/utils"
 )
 
 type IndexQueryParameters struct {
@@ -74,7 +76,7 @@ func setIndexQueryParameters(query url.Values, queryParameters ...IndexQueryPara
 	for _, queryParameter := range queryParameters {
 		// INDEX RELATED
 		if queryParameter.Cve != "" {
-			query.Add("cve", FormatCVE(queryParameter.Cve))
+			query.Add("cve", utils.FormatCVE(queryParameter.Cve))
 		}
 		if queryParameter.Alias != "" {
 			query.Add("alias", queryParameter.Alias)
