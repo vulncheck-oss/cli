@@ -2,18 +2,19 @@ package ui
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/package-url/packageurl-go"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/utils"
-	"os"
-	"strings"
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	ltable "github.com/charmbracelet/lipgloss/table"
 	"github.com/vulncheck-oss/cli/pkg/models"
-	"github.com/vulncheck-oss/sdk-go"
+	"github.com/vulncheck-oss/cli/pkg/sdk"
 	"golang.org/x/term"
 )
 

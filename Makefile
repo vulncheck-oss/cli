@@ -38,8 +38,8 @@ completions: bin/gh$(EXE)
 test:
 	go test ./...
 
-ray:
-	@go get github.com/octoper/go-ray
+dbug:
+	@go get github.com/dbugapp/dbug-go
 
 update:
 	go get -u ./... && go mod tidy

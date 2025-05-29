@@ -2,10 +2,11 @@ package cpeutils
 
 import (
 	"fmt"
-	hcversion "github.com/hashicorp/go-version"
 	"regexp"
 	"strconv"
 	"strings"
+
+	hcversion "github.com/hashicorp/go-version"
 )
 
 type CPE struct {
