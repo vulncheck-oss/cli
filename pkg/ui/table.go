@@ -2,6 +2,9 @@ package ui
 
 import (
 	"fmt"
+	"github.com/package-url/packageurl-go"
+	"github.com/vulncheck-oss/cli/pkg/cache"
+	"github.com/vulncheck-oss/cli/pkg/utils"
 	"os"
 	"strings"
 
@@ -222,6 +225,17 @@ func PurlMeta(purl sdk.PurlMeta) error {
 	return nil
 }
 
+func PurlInstance(purl packageurl.PackageURL) error {
+	qualifiers := make([]string, 0, len(purl.Qualifiers))
+	t := ltable.New().
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
+		Headers("Type", "Namespace", "Name", "Version", "Qualifiers", "Subpath").
+		Row(purl.Type, purl.Namespace, purl.Name, purl.Version, strings.Join(qualifiers, ","), purl.Subpath).
+		Width(TermWidth())
+	fmt.Println(t)
+	return nil
+}
+
 func PurlVulns(vulns []sdk.PurlVulnerability) error {
 	t := ltable.New().
 		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
@@ -249,6 +263,20 @@ func ScanResults(results []models.ScanResultVulnerabilities) error {
 		}
 
 		t.Row(result.CVE, result.Name, result.Version, inKev, result.CVSSBaseScore, result.CVSSTemporalScore, result.FixedVersions)
+	}
+
+	fmt.Println(t)
+	return nil
+}
+
+func CacheResults(results []cache.IndexInfo) error {
+	t := ltable.New().
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
+		Headers("Index", "Last Sync", "Size").
+		Width(TermWidth())
+
+	for _, result := range results {
+		t.Row(result.Name, utils.GetDateHuman(result.LastSync), utils.GetSizeHuman(result.Size))
 	}
 
 	fmt.Println(t)

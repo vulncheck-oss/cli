@@ -128,3 +128,7 @@ func GetDirectorySize(path string) (uint64, error) {
 func GetSizeHuman(size uint64) string {
 	return humanize.Bytes(size)
 }
+
+func GetDateHuman(date time.Time) string {
+	return humanize.Time(date)
+}

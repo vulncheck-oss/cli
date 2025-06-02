@@ -19,13 +19,21 @@ type Copy struct {
 	AuthLogoutErrorFailed       string
 	AuthLogoutErrorInvalidToken string
 
+	OfflineStatusShort string
+	OfflineStatusLong  string
+
 	AuthLoginToken string
 	AuthLoginWeb   string
 
-	FlagSaveResults    string
-	FlagSpecifyFile    string
-	SavingResultsStart string
-	SavingResultsEnd   string
+	FlagSaveResults      string
+	FlagOutputJson       string
+	FlagSpecifyFile      string
+	FlagSpecifySbomFile  string
+	FlagSpecifySbomInput string
+	FlagSpecifySbomOnly  string
+	FlagIncludeCpes      string
+	SavingResultsStart   string
+	SavingResultsEnd     string
 
 	TokenShort string
 
@@ -91,20 +99,31 @@ type Copy struct {
 	PdnsExample               string
 	PdnsErrorListNameRequired string
 
-	ScanShort                  string
-	ScanExample                string
-	ScanErrorDirectoryRequired string
-	ScanSbomStart              string
-	ScanSbomEnd                string
-	ScanExtractPurlStart       string
-	ScanExtractPurlEnd         string
-	ScanScanPurlStart          string
-	ScanScanPurlProgress       string
-	ScanScanPurlEnd            string
-	ScanVulnMetaStart          string
-	ScanVulnMetaEnd            string
-	ScanNoCvesFound            string
-	ScanBenchmark              string
+	ScanShort                   string
+	ScanExample                 string
+	ScanErrorDirectoryRequired  string
+	ScanSbomStart               string
+	ScanSbomLoad                string
+	ScanSbomEnd                 string
+	ScanSbomLoaded              string
+	ScanExtractPurlStart        string
+	ScanExtractPurlEnd          string
+	ScanScanPurlStart           string
+	ScanScanPurlStartOffline    string
+	ScanScanPurlProgress        string
+	ScanScanPurlProgressOffline string
+	ScanScanPurlEnd             string
+	ScanScanPurlEndOffline      string
+	ScanExtractCpeStart         string
+	ScanExtractCpeEnd           string
+	ScanScanCpeStartOffline     string
+	ScanScanCpeProgressOffline  string
+	ScanScanCpeEndOffline       string
+
+	ScanVulnMetaStart string
+	ScanVulnMetaEnd   string
+	ScanNoCvesFound   string
+	ScanBenchmark     string
 
 	ErrorNoToken      string
 	ErrorUnauthorized string
@@ -152,10 +171,15 @@ var En = Copy{
 	AuthLogoutErrorFailed:       "Failed to remove token",
 	AuthLogoutErrorInvalidToken: "Token was invalid, removing from config",
 
-	FlagSaveResults:    "Save Results as a file",
-	FlagSpecifyFile:    "Specify the file to save the results to",
-	SavingResultsStart: "Saving Results to %s",
-	SavingResultsEnd:   "Results saved to %s",
+	FlagSaveResults:      "Save Results as a file",
+	FlagOutputJson:       "Output JSON Results",
+	FlagSpecifyFile:      "Specify the file to save the results to",
+	FlagSpecifySbomFile:  "Specify the file to save your SBOM scan to",
+	FlagSpecifySbomInput: "Specify an existing SBOM file to scan instead of creating one from a folder",
+	FlagSpecifySbomOnly:  "Do not run a scan and only create a SBOM file",
+	FlagIncludeCpes:      "Include and Scan CPEs",
+	SavingResultsStart:   "Saving Results to %s",
+	SavingResultsEnd:     "Results saved to %s",
 
 	TokenShort: "Manage Tokens",
 
@@ -223,15 +247,27 @@ var En = Copy{
 	PdnsExample:               "vulncheck pdns \"%s\"",
 	PdnsErrorListNameRequired: "list name is required",
 
-	ScanShort:            "Scan a directory for vulnerabilities",
-	ScanExample:          "vulncheck scan /path/to/directory",
-	ScanSbomStart:        "Generating SBOM",
-	ScanSbomEnd:          "SBOM created",
-	ScanExtractPurlStart: "Extracting PURLs",
-	ScanExtractPurlEnd:   "%d PURLs extracted",
-	ScanScanPurlStart:    "Scanning PURLs",
-	ScanScanPurlProgress: "Scanning PURLs [%d/%d]",
-	ScanScanPurlEnd:      "Scanning PURLs: %d vulns found in %d packages",
+	ScanShort:                   "Scan a directory for vulnerabilities",
+	ScanExample:                 "vulncheck scan /path/to/directory",
+	ScanSbomStart:               "Generating SBOM",
+	ScanSbomLoad:                "Loading SBOM file %s",
+	ScanSbomEnd:                 "SBOM created",
+	ScanSbomLoaded:              "SBOM file loadded",
+	ScanExtractPurlStart:        "Extracting PURLs",
+	ScanExtractPurlEnd:          "%d PURLs extracted",
+	ScanScanPurlStart:           "Scanning PURLs",
+	ScanScanPurlStartOffline:    "[OFFLINE] Scanning PURLs",
+	ScanScanPurlProgress:        "Scanning PURLs [%d/%d]",
+	ScanScanPurlProgressOffline: "[OFFLINE] Scanning PURLs [%d/%d]",
+	ScanScanPurlEnd:             "Scanning PURLs: %d vulns found in %d packages",
+	ScanScanPurlEndOffline:      "[OFFLINE] Scanning PURLs: %d vulns found in %d packages",
+
+	ScanScanCpeStartOffline:    "[OFFLINE] Scanning CPEs",
+	ScanScanCpeProgressOffline: "[OFFLINE] Scanning CPEs [%d/%d]",
+	ScanScanCpeEndOffline:      "[OFFLINE] Scanning CPEs: %d vulns found in %d",
+
+	ScanExtractCpeStart: "Extracting CPEs",
+	ScanExtractCpeEnd:   "%d CPEs extracted",
 
 	ScanVulnMetaStart: "Fetching vulnerability metadata",
 	ScanVulnMetaEnd:   "Vulnerability metadata fetched",
@@ -242,6 +278,9 @@ var En = Copy{
 
 	ErrorUnauthorized: "Error: Unauthorized, Try authenticating with: vulncheck auth login",
 	ErrorNoToken:      "No token found. Please run `vulncheck auth login` to authenticate or populate the environment variable `VC_TOKEN`.",
+
+	OfflineStatusShort: "Check the status of the offline database",
+	OfflineStatusLong:  "Check the status of the offline database",
 }
 
 func Init() {

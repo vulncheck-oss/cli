@@ -1,7 +1,31 @@
 #!/bin/bash
 
-# Set the version
-VERSION="0.7.2"
+# Parse command line arguments
+for arg in "$@"
+do
+    case $arg in
+        --version=*)
+        SPECIFIED_VERSION="${arg#*=}"
+        shift # Remove --version= from processing
+        ;;
+    esac
+done
+
+if [ -n "$SPECIFIED_VERSION" ]; then
+    VERSION="$SPECIFIED_VERSION"
+    echo "Using specified version: $VERSION"
+else
+    # Fetch the latest version from GitHub
+    echo "Fetching latest version..."
+    VERSION=$(curl -s https://api.github.com/repos/vulncheck-oss/cli/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/v//')
+
+    if [ -z "$VERSION" ]; then
+        echo "Failed to fetch the latest version. Please check your internet connection and try again."
+        exit 1
+    fi
+
+    echo "Latest version: $VERSION"
+fi
 
 # Detect the operating system and architecture
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -14,11 +38,11 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     fi
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     OS="Linux"
-    ARCH="x86_64"
+    ARCH="amd64"
     INSTALL_DIR="/usr/local/bin"
 elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
     OS="Windows"
-    ARCH="x86_64"
+    ARCH="amd64"
     INSTALL_DIR="/c/Windows/System32"
 else
     echo "Unsupported operating system"
@@ -29,9 +53,9 @@ fi
 if [[ "$OS" == "macOS" ]]; then
     FILENAME="vulncheck_${VERSION}_macOS_${ARCH}.zip"
 elif [[ "$OS" == "Linux" ]]; then
-    FILENAME="vulncheck_${VERSION}_Linux_${ARCH}.tar.gz"
+    FILENAME="vulncheck_${VERSION}_linux_${ARCH}.tar.gz"
 elif [[ "$OS" == "Windows" ]]; then
-    FILENAME="vulncheck_${VERSION}_Windows_${ARCH}.zip"
+    FILENAME="vulncheck_${VERSION}_windows_${ARCH}.zip"
 fi
 
 # Download URL

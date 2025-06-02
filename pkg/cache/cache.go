@@ -2,14 +2,14 @@ package cache
 
 import (
 	"fmt"
+	"github.com/fumeapp/taskin"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
-	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/cli/pkg/utils"
+	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
-	"slices"
 	"time"
 )
 
@@ -65,7 +65,66 @@ func (i *InfoFile) GetIndex(name string) *IndexInfo {
 	return nil
 }
 
-func IndicesSync(indices []string) error {
+func syncSingleIndex(index string, configDir string, indexInfo *InfoFile, force bool) taskin.Tasks {
+	response, err := session.Connect(config.Token()).GetIndexBackup(index)
+	if err != nil {
+		return taskin.Tasks{
+			{
+				Title: fmt.Sprintf("Error syncing index: %s", index),
+				Task: func(t *taskin.Task) error {
+					return err
+				},
+			},
+		}
+	}
+
+	if len(response.GetData()) == 0 {
+		return taskin.Tasks{
+			{
+				Title: fmt.Sprintf("No data received for index: %s", index),
+				Task: func(t *taskin.Task) error {
+					return fmt.Errorf("no data received for index %s", index)
+				},
+			},
+		}
+	}
+
+	file, err := utils.ExtractFile(response.GetData()[0].URL)
+	if err != nil {
+		return taskin.Tasks{
+			{
+				Title: fmt.Sprintf("Error extracting file for index: %s", index),
+				Task: func(t *taskin.Task) error {
+					return err
+				},
+			},
+		}
+	}
+
+	filePath := filepath.Join(configDir, file)
+	lastUpdated := response.GetData()[0].DateAdded
+
+	if indexInfo.IndexExists(index) && indexInfo.GetIndex(index).LastUpdated == lastUpdated && !force {
+		return taskin.Tasks{
+			{
+				Title: fmt.Sprintf("Index %s is already up to date", index),
+				Task: func(t *taskin.Task) error {
+					return nil
+				},
+			},
+		}
+	}
+
+	childTasks := taskin.Tasks{
+		taskDownload(response.GetData()[0].URL, index, filePath),
+		taskExtract(index, configDir, filePath),
+		taskDB(index, configDir, filePath, lastUpdated, indexInfo),
+	}
+
+	return childTasks
+}
+
+func IndicesSync(indices []string, force bool) error {
 	configDir, err := config.IndicesDir()
 	if err != nil {
 		return err
@@ -77,96 +136,36 @@ func IndicesSync(indices []string) error {
 		return fmt.Errorf("failed to get cached indices: %w", err)
 	}
 
-	// Remove indices not in the provided list
 	for i := len(indexInfo.Indices) - 1; i >= 0; i-- {
 		if !slices.Contains(indices, indexInfo.Indices[i].Name) {
-			// Remove the index folder
 			indexDir := filepath.Join(configDir, indexInfo.Indices[i].Name)
 			if err := os.RemoveAll(indexDir); err != nil {
 				return fmt.Errorf("failed to remove index directory: %w", err)
 			}
-			// Remove the index from the list
 			indexInfo.Indices = append(indexInfo.Indices[:i], indexInfo.Indices[i+1:]...)
 		}
 	}
 
+	tasks := taskin.Tasks{}
+
 	for _, index := range indices {
-		response, err := session.Connect(config.Token()).GetIndexBackup(index)
-		if err != nil {
-			return err
+		parentTask := taskin.Task{
+			Title: fmt.Sprintf("Sync index %s", index),
+			Task: func(t *taskin.Task) error {
+				t.Title = fmt.Sprintf("Syncing index %s", index)
+				return nil
+			},
+			Tasks: syncSingleIndex(index, configDir, &indexInfo, force),
 		}
 
-		file, err := utils.ExtractFile(response.GetData()[0].URL)
-		if err != nil {
-			return err
-		}
-
-		filePath := fmt.Sprintf("%s/%s", configDir, file)
-		indexDir := fmt.Sprintf("%s/%s", configDir, index)
-
-		lastUpdated := response.GetData()[0].DateAdded
-		date := utils.ParseDate(lastUpdated)
-
-		ui.Info(fmt.Sprintf("[%s] last updated %s", index, date))
-		ui.Info(fmt.Sprintf("[%s] Downloading %s", index, file))
-
-		if err := ui.Download(response.GetData()[0].URL, filePath); err != nil {
-			return err
-		}
-
-		// Check if the index directory exists
-		if _, err := os.Stat(indexDir); !os.IsNotExist(err) {
-			// Remove the existing directory and its contents
-			if err := os.RemoveAll(indexDir); err != nil {
-				return fmt.Errorf("failed to remove existing index directory: %w", err)
-			}
-		}
-
-		// Create the index directory
-		if err := os.MkdirAll(indexDir, 0755); err != nil {
-			return fmt.Errorf("failed to create index directory: %w", err)
-		}
-
-		// Unzip the downloaded file into the index directory
-		if err := utils.Unzip(filePath, indexDir); err != nil {
-			return fmt.Errorf("failed to unzip index file: %w", err)
-		}
-
-		// Calculate and display the size of the extracted index
-		size, err := utils.GetDirectorySize(indexDir)
-		if err != nil {
-			_ = ui.Error(fmt.Sprintf("Failed to calculate size of index directory: %s", err))
-		}
-
-		// Update or add sync info for this specific index
-		updatedInfo := IndexInfo{
-			Name:        index,
-			LastSync:    time.Now(),
-			Size:        size,
-			LastUpdated: lastUpdated,
-		}
-
-		found := false
-		for i, info := range indexInfo.Indices {
-			if info.Name == index {
-				indexInfo.Indices[i] = updatedInfo
-				found = true
-				break
-			}
-		}
-		if !found {
-			indexInfo.Indices = append(indexInfo.Indices, updatedInfo)
-		}
-
-		ui.Info(fmt.Sprintf("Successfully synced %s (Size: %s)", index, utils.GetSizeHuman(size)))
-
-		// Optionally, remove the downloaded zip file
-		if err := os.Remove(filePath); err != nil {
-			_ = ui.Error(fmt.Sprintf("Failed to remove downloaded zip file: %s", err))
-		}
+		tasks = append(tasks, parentTask)
 	}
 
-	// Save updated sync info
+	runner := taskin.New(tasks, taskin.Defaults)
+	if err := runner.Run(); err != nil {
+		return err
+	}
+
 	data, err := yaml.Marshal(indexInfo)
 	if err != nil {
 		return fmt.Errorf("failed to marshal sync info: %w", err)
@@ -174,6 +173,25 @@ func IndicesSync(indices []string) error {
 
 	if err := os.WriteFile(infoPath, data, 0644); err != nil {
 		return fmt.Errorf("failed to write sync info: %w", err)
+	}
+
+	return nil
+}
+
+func PurgeIndices() error {
+	configDir, err := config.IndicesDir()
+	if err != nil {
+		return fmt.Errorf("failed to get indices directory: %w", err)
+	}
+
+	// Remove the entire indices directory
+	if err := os.RemoveAll(configDir); err != nil {
+		return fmt.Errorf("failed to remove indices directory: %w", err)
+	}
+
+	// Recreate an empty indices directory
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return fmt.Errorf("failed to recreate indices directory: %w", err)
 	}
 
 	return nil

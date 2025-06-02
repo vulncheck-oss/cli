@@ -5,12 +5,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/vulncheck-oss/cli/pkg/cache"
+	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
 	"github.com/vulncheck-oss/cli/pkg/config"
-	"github.com/vulncheck-oss/cli/pkg/search"
+	"github.com/vulncheck-oss/cli/pkg/db"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/cli/pkg/utils"
 	"slices"
-	"strings"
 )
 
 func Command() *cobra.Command {
@@ -46,19 +46,32 @@ func Command() *cobra.Command {
 				return err
 			}
 
+			indexAvailable, err := sync.EnsureIndexSync(indices, fmt.Sprintf("ipintel-%s", args[0]), false)
+			if err != nil {
+				return err
+			}
+
+			if !indexAvailable {
+				return fmt.Errorf("index %s is required to proceed", fmt.Sprintf("ipintel-%s", args[0]))
+			}
+
+			indices, err = cache.Indices()
+
+			if err != nil {
+				return err
+			}
+
 			index := indices.GetIndex(fmt.Sprintf("ipintel-%s", args[0]))
 
 			if index == nil {
 				return fmt.Errorf("index ipintel-%s is required for this command, and is not cached", args[0])
 			}
 
-			query := buildQuery(country, asn, cidr, countryCode, hostname, id)
-
 			if !jsonOutput && !config.IsCI() {
 				ui.Info(fmt.Sprintf("Searching index %s, last updated on %s", index.Name, utils.ParseDate(index.LastUpdated)))
 			}
 
-			results, stats, err := search.Index(index.Name, query)
+			results, stats, err := db.IPIntelSearch(index.Name, country, asn, cidr, countryCode, hostname, id)
 			if err != nil {
 				return err
 			}
@@ -69,7 +82,6 @@ func Command() *cobra.Command {
 			}
 
 			ui.Stat("Results found", fmt.Sprintf("%d", len(results)))
-			ui.Stat("Files/Lines processed", fmt.Sprintf("%d/%d", stats.TotalFiles, stats.TotalLines))
 			ui.Stat("Search duration", stats.Duration.String())
 
 			for i, result := range results {
@@ -138,34 +150,4 @@ func AliasCommands() []*cobra.Command {
 	}
 
 	return commands
-}
-
-func buildQuery(country, asn, cidr, countryCode, hostname, id string) string {
-	conditions := []string{}
-
-	if country != "" {
-		conditions = append(conditions, fmt.Sprintf(".country == %q", country))
-	}
-	if asn != "" {
-		conditions = append(conditions, fmt.Sprintf(".asn == %q", asn))
-	}
-	if cidr != "" {
-		// Note: CIDR matching would require additional logic
-		conditions = append(conditions, fmt.Sprintf(".ip == %q", cidr))
-		// conditions = append(conditions, fmt.Sprintf(".ip | startswith(%q)", strings.Split(cidr, "/")[0]))
-	}
-	if countryCode != "" {
-		conditions = append(conditions, fmt.Sprintf(".country_code == %q", countryCode))
-	}
-	if hostname != "" {
-		conditions = append(conditions, fmt.Sprintf(".hostnames | any(. == %q)", hostname))
-	}
-	if id != "" {
-		conditions = append(conditions, fmt.Sprintf(".type.id == %q", id))
-	}
-
-	if len(conditions) == 0 {
-		return "true"
-	}
-	return strings.Join(conditions, " and ")
 }

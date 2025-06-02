@@ -3,6 +3,7 @@ package search
 import (
 	"fmt"
 	"github.com/itchyny/gojq"
+	"github.com/package-url/packageurl-go"
 	"os"
 	"path/filepath"
 	"sort"
@@ -11,6 +12,104 @@ import (
 
 	"github.com/stretchr/testify/assert"
 )
+
+// ... existing code ...
+
+func TestQueryIPIntel(t *testing.T) {
+	testCases := []struct {
+		name          string
+		country       string
+		asn           string
+		cidr          string
+		countryCode   string
+		hostname      string
+		id            string
+		expectedQuery string
+	}{
+		{
+			name:          "All fields",
+			country:       "United States",
+			asn:           "AS15169",
+			cidr:          "172.217.0.0/16",
+			countryCode:   "US",
+			hostname:      "google.com",
+			id:            "initial-access",
+			expectedQuery: `.country == "United States" and .asn == "AS15169" and .ip == "172.217.0.0/16" and .country_code == "US" and .hostnames | any(. == "google.com") and .type.id == "initial-access"`,
+		},
+		{
+			name:          "Partial fields",
+			country:       "Canada",
+			asn:           "AS577",
+			expectedQuery: `.country == "Canada" and .asn == "AS577"`,
+		},
+		{
+			name:          "No fields",
+			expectedQuery: "true",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := QueryIPIntel(tc.country, tc.asn, tc.cidr, tc.countryCode, tc.hostname, tc.id)
+			assert.Equal(t, tc.expectedQuery, result, "Unexpected query for IP Intel")
+		})
+	}
+}
+
+func TestQueryPURL(t *testing.T) {
+	testCases := []struct {
+		name          string
+		purl          packageurl.PackageURL
+		expectedQuery string
+	}{
+		{
+			name: "Maven package",
+			purl: packageurl.PackageURL{
+				Type:      "maven",
+				Namespace: "org.apache",
+				Name:      "log4j",
+				Version:   "2.14.1",
+			},
+			expectedQuery: `.name == "org.apache:log4j" and .version == "2.14.1"`,
+		},
+		{
+			name: "NPM package",
+			purl: packageurl.PackageURL{
+				Type:    "npm",
+				Name:    "lodash",
+				Version: "4.17.21",
+			},
+			expectedQuery: `.name == "lodash" and .version == "4.17.21"`,
+		},
+		{
+			name: "Alpine package",
+			purl: packageurl.PackageURL{
+				Type:      "alpine",
+				Namespace: "alpine",
+				Name:      "busybox",
+				Version:   "1.33.1-r3",
+			},
+			expectedQuery: `.package_name == "busybox" and .version == "1.33.1-r3"`,
+		},
+		{
+			name: "Golang package",
+			purl: packageurl.PackageURL{
+				Type:      "golang",
+				Namespace: "github.com/gin-gonic",
+				Name:      "gin",
+				Version:   "v1.7.2",
+			},
+			expectedQuery: `.name == "github.com/gin-gonic/gin" and (.version | index("v1.7.2")) != null and (.version | rindex("v1.7.2")) == (.version | length - 6)`,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := QueryPURL(tc.purl)
+			assert.Equal(t, tc.expectedQuery, result, "Unexpected query for PURL")
+		})
+	}
+}
 
 func TestQuickFilter(t *testing.T) {
 	testCases := []struct {
@@ -150,7 +249,7 @@ func TestProcessFile(t *testing.T) {
 		t.Fatalf("Failed to compile query: %v", err)
 	}
 
-	resultsChan := make(chan Entry, 10)
+	resultsChan := make(chan IPEntry, 10)
 	errorsChan := make(chan error, 10)
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -171,7 +270,7 @@ func TestProcessFile(t *testing.T) {
 	}
 
 	// Collect and check results
-	var results []Entry
+	var results []IPEntry
 	for entry := range resultsChan {
 		results = append(results, entry)
 	}

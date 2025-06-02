@@ -24,7 +24,7 @@ func CmdToken(cmd *cobra.Command, args []string) error {
 	input := huh.
 		NewInput().
 		Title("Enter your authentication token").
-		Password(true).
+		EchoMode(huh.EchoModePassword).
 		Placeholder("vulncheck_******************").
 		Value(&token)
 
