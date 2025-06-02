@@ -94,32 +94,37 @@ vulncheck index browse|list <index> [flags]
 
 #### Flags
  
-| Flag               | Type   | Description           |
-|--------------------|--------|-----------------------|
-| --alias            | string | Alias                 |
-| --asn              | string | Asn                   |
-| --botnet           | string | Botnet                |
-| --country          | string | Country               |
-| --countrycode      | string | CountryCode           |
-| --cursor           | string | Cursor                |
-| --cve              | string | Cve                   |
-| --hostname         | string | Hostname              |
-| --iava             | string | Iava                  |
-| --id               | string | ID                    |
-| --lastmodenddate   | string | LastModEndDate        |
-| --lastmodstartdate | string | LastModStartDate      |
-| --limit            | string | Limit                 |
-| --mispid           | string | MispId                |
-| --mitreid          | string | MitreId               |
-| --nextcursor       | string | NextCursor            |
-| --order            | string | Order                 |
-| --page             | string | Page                  |
-| --prevcursor       | string | PrevCursor            |
-| --pubenddate       | string | PubEndDate            |
-| --pubstartdate     | string | PubStartDate          |
-| --ransomware       | string | Ransomware            |
-| --sort             | string | Sort                  |
-| --threatactor      | string | ThreatActor           |
+| Flag                   | Type   | Description           |
+|------------------------|--------|-----------------------|
+| --alias                | string | Alias                 |
+| --asn                  | string | Asn                   |
+| --botnet               | string | Botnet                |
+| --cidr                 | string | Cidr                  |
+| --country              | string | Country               |
+| --country_code         | string | CountryCode           |
+| --cursor               | string | Cursor                |
+| --cve                  | string | Cve                   |
+| --hostname             | string | Hostname              |
+| --iava                 | string | Iava                  |
+| --id                   | string | ID                    |
+| --ilvn                 | string | Ilvn                  |
+| --jvndb                | string | Jvndb                 |
+| --kind                 | string | Kind                  |
+| --lastModEndDate       | string | LastModEndDate        |
+| --lastModStartDate     | string | LastModStartDate      |
+| --limit                | string | Limit                 |
+| --misp_id              | string | MispId                |
+| --mitre_id             | string | MitreId               |
+| --order                | string | Order                 |
+| --page                 | string | Page                  |
+| --pubEndDate           | string | PubEndDate            |
+| --pubStartDate         | string | PubStartDate          |
+| --ransomware           | string | Ransomware            |
+| --sort                 | string | Sort                  |
+| --start_cursor         | string | StartCursor           |
+| --threat_actor         | string | ThreatActor           |
+| --updatedAtEndDate     | string | UpdatedAtEndDate      |
+| --updatedAtStartDate   | string | UpdatedAtStartDate    |
 | --help             |        | Show help for command |
 
 
