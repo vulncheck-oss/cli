@@ -125,7 +125,7 @@ vulncheck index browse|list <index> [flags]
 | --threat_actor         | string | ThreatActor           |
 | --updatedAtEndDate     | string | UpdatedAtEndDate      |
 | --updatedAtStartDate   | string | UpdatedAtStartDate    |
-| --help             |        | Show help for command |
+| --help                 |        | Show help for command |
 
 
 
