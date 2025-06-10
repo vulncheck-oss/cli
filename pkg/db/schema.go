@@ -31,8 +31,10 @@ var Schemas = []Schema{
 		Results: true,
 		Columns: []Column{
 			{Name: "id", Type: "TEXT", Index: true, NotNull: true},
-			{Name: "VulncheckKEVExploitAdd", Type: "TEXT", Index: false, NotNull: false, IsJSON: false},
-			{Name: "Metrics", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
+			{Name: "published", Type: "TEXT", Index: false, NotNull: false, IsJSON: false},
+			{Name: "vulncheckKEVExploitAdd", Type: "TEXT", Index: false, NotNull: false, IsJSON: false},
+			{Name: "metrics", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
+			{Name: "weaknesses", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
 		},
 	},
 	{

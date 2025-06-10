@@ -5,10 +5,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
 )
 
 const maxInsertSize int64 = 1_000_000_000 // Default max length in bytes
@@ -244,6 +245,15 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 }
 
 func processEntry(entry map[string]interface{}, schema *Schema, jsonColumns map[int]bool) ([]interface{}, int64, error) {
+	// Handle Results wrapper if schema requires it
+	if schema.Results {
+		if results, ok := entry["results"].([]interface{}); ok && len(results) > 0 {
+			if resultEntry, ok := results[0].(map[string]interface{}); ok {
+				entry = resultEntry
+			}
+		}
+	}
+
 	// Only check for CVEs if it's a PM schema
 	if schema.Name == "purl PM" {
 		cves, hasCVEs := entry["cves"].([]interface{})
@@ -252,7 +262,6 @@ func processEntry(entry map[string]interface{}, schema *Schema, jsonColumns map[
 		}
 	}
 
-	// Rest of the function remains the same...
 	values := make([]interface{}, len(schema.Columns))
 	for i, col := range schema.Columns {
 		val, exists := entry[col.Name]
