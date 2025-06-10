@@ -16,14 +16,15 @@ import (
 )
 
 type Options struct {
-	Json      bool
-	File      bool
-	FileName  string
-	SbomFile  string
-	SbomInput string
-	SbomOnly  bool
-	Cpes      bool
-	Offline   bool
+	Json        bool
+	File        bool
+	FileName    string
+	SbomFile    string
+	SbomInput   string
+	SbomOnly    bool
+	Cpes        bool
+	Offline     bool
+	OfflineMeta bool
 }
 
 func Command() *cobra.Command {
@@ -289,6 +290,7 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVarP(&opts.SbomOnly, "sbom-only", "s", false, i18n.C.FlagSpecifySbomOnly)
 	cmd.Flags().BoolVarP(&opts.Cpes, "include-cpes", "c", false, i18n.C.FlagIncludeCpes)
 	cmd.Flags().BoolVar(&opts.Offline, "offline", false, "Use offline mode to find CVEs - requires indices to be cached")
+	cmd.Flags().BoolVar(&opts.OfflineMeta, "offline-meta", false, "Use with offline mode to populate CVE metadata - requires the vulncheck-nvd2 index to be cached")
 
 	return cmd
 }
