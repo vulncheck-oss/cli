@@ -18,10 +18,10 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.23
+      - name: Set up Go 1.24
         uses: actions/setup-go@v5
         with:
-          go-version: 1.23
+          go-version: 1.24
           cache-dependency-path: "/home/runner/work/cli/go.sum"
 
       - name: Check out code
@@ -40,7 +40,7 @@ jobs:
           go mod verify
           go mod download
 
-          LINT_VERSION=1.64.5
+          LINT_VERSION=2.1.6
           curl -fsSL https://github.com/golangci/golangci-lint/releases/download/v${LINT_VERSION}/golangci-lint-${LINT_VERSION}-linux-amd64.tar.gz | \
             tar xz --strip-components 1 --wildcards \*/golangci-lint
           mkdir -p bin && mv golangci-lint bin/
