@@ -289,7 +289,7 @@ func Command() *cobra.Command {
 							ui.Json(output)
 							return nil
 						} else {
-							if err := ui.ScanResults(output.Vulnerabilities); err != nil {
+							if err := ui.ScanResults(output.Vulnerabilities, opts.Offline && !opts.OfflineMeta); err != nil {
 								return err
 							}
 						}
