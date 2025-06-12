@@ -435,3 +435,8 @@ func getCompURI(uri string, i int) string {
 
 	return parts[i]
 }
+
+// RemoveSlashes - remove backslashes from a string
+func RemoveSlashes(s string) string {
+	return strings.ReplaceAll(s, "\\", "")
+}

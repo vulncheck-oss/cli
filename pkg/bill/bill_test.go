@@ -1,10 +1,11 @@
 package bill
 
 import (
-	"github.com/anchore/syft/syft/sbom"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/anchore/syft/syft/sbom"
 )
 
 func TestSaveSBOM(t *testing.T) {
@@ -12,7 +13,11 @@ func TestSaveSBOM(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp directory: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			t.Errorf("Failed to remove temp directory: %v", err)
+		}
+	}()
 
 	sbomFile := filepath.Join(tempDir, "test_sbom.json")
 	mockSBOM := &sbom.SBOM{}
@@ -33,7 +38,11 @@ func TestLoadSBOM(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp directory: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			t.Errorf("Failed to remove temp directory: %v", err)
+		}
+	}()
 
 	sbomFile := filepath.Join(tempDir, "test_sbom.json")
 	mockSBOM := &sbom.SBOM{}

@@ -53,7 +53,11 @@ func SaveSBOM(sbm *sbom.SBOM, file string) error {
 	if err != nil {
 		return fmt.Errorf("unable to create file %s: %w", file, err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			_ = err
+		}
+	}()
 	encoder, err := cyclonedxjson.NewFormatEncoderWithConfig(cyclonedxjson.DefaultEncoderConfig())
 	if err != nil {
 		return err
@@ -63,8 +67,6 @@ func SaveSBOM(sbm *sbom.SBOM, file string) error {
 	if err != nil {
 		return fmt.Errorf("unable to encode SBOM: %w", err)
 	}
-
-	defer f.Close()
 
 	_, err = f.Write(data)
 	if err != nil {
@@ -251,8 +253,10 @@ func GetOfflineCpeVulns(indices cache.InfoFile, cpes []string, iterator func(cur
 			key := cpestring + "|" + cve
 			if _, exists := seen[key]; !exists {
 				vulns = append(vulns, models.ScanResultVulnerabilities{
-					CVE: cve,
-					CPE: cpestring,
+					Name:    cpeuri.RemoveSlashes(cpe.Product),
+					Version: cpeuri.RemoveSlashes(cpe.Version),
+					CVE:     cve,
+					CPE:     cpestring,
 				})
 				seen[key] = struct{}{}
 			}

@@ -2,14 +2,15 @@ package cache
 
 import (
 	"fmt"
-	"github.com/fumeapp/taskin"
-	"github.com/vulncheck-oss/cli/pkg/db"
-	"github.com/vulncheck-oss/cli/pkg/utils"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/fumeapp/taskin"
+	"github.com/vulncheck-oss/cli/pkg/db"
+	"github.com/vulncheck-oss/cli/pkg/utils"
 )
 
 // DownloadTask creates a task for downloading a file from the given URL.
@@ -22,7 +23,11 @@ func taskDownload(url string, index string, filename string) taskin.Task {
 			if err != nil {
 				return fmt.Errorf("failed to get URL: %w", err)
 			}
-			defer resp.Body.Close()
+			defer func() {
+				if err := resp.Body.Close(); err != nil {
+					_ = err
+				}
+			}()
 
 			if resp.StatusCode != http.StatusOK {
 				return fmt.Errorf("received non-200 status code: %d", resp.StatusCode)
@@ -32,7 +37,11 @@ func taskDownload(url string, index string, filename string) taskin.Task {
 			if err != nil {
 				return fmt.Errorf("failed to create file: %w", err)
 			}
-			defer file.Close()
+			defer func() {
+				if err := file.Close(); err != nil {
+					_ = err
+				}
+			}()
 
 			size := resp.ContentLength
 			if size <= 0 {
