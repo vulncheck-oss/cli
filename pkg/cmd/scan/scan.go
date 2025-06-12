@@ -178,7 +178,6 @@ func Command() *cobra.Command {
 					/*
 						1. check if the vulncheck-nvd2 index is cached
 						2. populate vulns with metadata
-
 					*/
 					if opts.OfflineMeta {
 

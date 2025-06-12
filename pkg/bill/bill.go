@@ -351,9 +351,18 @@ func GetOfflineMeta(indices cache.InfoFile, vulns []models.ScanResultVulnerabili
 	}
 
 	for i, vuln := range vulns {
-		// TODO: implement a db call that goes after hte vulncheck-nvd2 table
-		// query for the field "id" for CVE ID
+		nvd2Response, err := db.MetaByCVE(vuln.CVE)
+		if err != nil {
+			continue
+		}
 
+		if len(nvd2Response.Data) > 0 {
+			vulns[i].InKEV = nvd2Response.Data[0].VulncheckKEVExploitAdd != nil
+			vulns[i].Published = *nvd2Response.Data[0].Published
+			vulns[i].CVSSBaseScore = baseScore(nvd2Response.Data[0])
+			vulns[i].CVSSTemporalScore = temporalScore(nvd2Response.Data[0])
+			vulns[i].Weaknesses = nvd2Response.Data[0].Weaknesses
+		}
 	}
 	return vulns, nil
 }
