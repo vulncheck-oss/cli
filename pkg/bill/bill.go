@@ -4,6 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"strings"
+
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/format"
 	"github.com/anchore/syft/syft/format/cyclonedxjson"
@@ -20,9 +24,6 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/sdk-go"
 	"github.com/vulncheck-oss/sdk-go/pkg/client"
-	"io"
-	"os"
-	"strings"
 )
 
 type InputSbomRef struct {
@@ -329,8 +330,29 @@ func GetMeta(vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulne
 		}
 
 		vulns[i].InKEV = nvd2Response.Data[0].VulncheckKEVExploitAdd != nil
+		vulns[i].Published = *nvd2Response.Data[0].Published
 		vulns[i].CVSSBaseScore = baseScore(nvd2Response.Data[0])
 		vulns[i].CVSSTemporalScore = temporalScore(nvd2Response.Data[0])
+		vulns[i].Weaknesses = nvd2Response.Data[0].Weaknesses
+
+	}
+	return vulns, nil
+}
+func GetOfflineMeta(indices cache.InfoFile, vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulnerabilities, error) {
+
+	indexAvailable, err := sync.EnsureIndexSync(indices, "vulncheck-nvd2", true)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !indexAvailable {
+		return nil, fmt.Errorf("index vulncheck-nvd2 is required to proceed")
+	}
+
+	for i, vuln := range vulns {
+		// TODO: implement a db call that goes after hte vulncheck-nvd2 table
+		// query for the field "id" for CVE ID
 
 	}
 	return vulns, nil

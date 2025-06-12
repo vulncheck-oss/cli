@@ -175,6 +175,33 @@ func Command() *cobra.Command {
 							},
 						},
 					}...)
+					/*
+						1. check if the vulncheck-nvd2 index is cached
+						2. populate vulns with metadata
+
+					*/
+					if opts.OfflineMeta {
+
+						tasks = append(tasks, taskin.Tasks{
+							{
+								Title: i18n.C.ScanVulnOfflineMetaStart,
+								Task: func(t *taskin.Task) error {
+									indices, err := cache.Indices()
+									results, err := bill.GetOfflineMeta(indices, vulns)
+									if err != nil {
+										return err
+									}
+									vulns = results
+									t.Title = i18n.C.ScanVulnOfflineMetaEnd
+									output = models.ScanResult{
+										Vulnerabilities: vulns,
+									}
+									return nil
+								},
+							},
+						}...)
+
+					}
 				} else {
 					tasks = append(tasks, taskin.Tasks{
 						{
