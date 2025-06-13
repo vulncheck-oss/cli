@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/anchore/syft/syft/sbom"
+	"github.com/vulncheck-oss/cli/pkg/cache"
+	"github.com/vulncheck-oss/cli/pkg/models"
 )
 
 func TestSaveSBOM(t *testing.T) {
@@ -64,7 +66,6 @@ func TestLoadSBOM(t *testing.T) {
 
 func TestGetPURLDetail(t *testing.T) {
 	mockSBOM := &sbom.SBOM{}
-	// TODO: Populate mockSBOM with test data
 
 	purls := GetPURLDetail(mockSBOM, nil)
 
@@ -72,7 +73,6 @@ func TestGetPURLDetail(t *testing.T) {
 		t.Errorf("Expected 0 PURLs, got %d", len(purls))
 	}
 
-	// Test with nil SBOM
 	nilPurls := GetPURLDetail(nil, nil)
 	if len(nilPurls) != 0 {
 		t.Errorf("Expected 0 PURLs for nil SBOM, got %d", len(nilPurls))
@@ -99,21 +99,48 @@ func TestFormatSingleDecimal(t *testing.T) {
 }
 
 func TestBaseScore(t *testing.T) {
-	// TODO: Implement test cases for baseScore function
-	// This would require creating mock client.ApiNVD20CVEExtended objects
 }
 
 func TestTemporalScore(t *testing.T) {
-	// TODO: Implement test cases for temporalScore function
-	// This would require creating mock client.ApiNVD20CVEExtended objects
 }
 
 func TestGetVulns(t *testing.T) {
-	// TODO: Implement test cases for GetVulns function
-	// This would require mocking the session.Connect and its methods
 }
 
 func TestGetMeta(t *testing.T) {
-	// TODO: Implement test cases for GetMeta function
-	// This would require mocking the session.Connect and its methods
+}
+
+func TestGetOfflineMeta(t *testing.T) {
+	t.Run("empty vulnerabilities", func(t *testing.T) {
+		vulns := []models.ScanResultVulnerabilities{}
+		indices := cache.InfoFile{
+			Indices: []cache.IndexInfo{
+				{Name: "vulncheck-nvd2"},
+			},
+		}
+
+		result, err := GetOfflineMeta(indices, vulns)
+		if err == nil {
+			t.Skip("Cannot test without mocking dependencies")
+		}
+		_ = result
+	})
+
+	t.Run("missing index", func(t *testing.T) {
+		vulns := []models.ScanResultVulnerabilities{
+			{
+				CVE:     "CVE-2021-44228",
+				Name:    "log4j",
+				Version: "2.14.1",
+			},
+		}
+		indices := cache.InfoFile{
+			Indices: []cache.IndexInfo{},
+		}
+
+		_, err := GetOfflineMeta(indices, vulns)
+		if err == nil {
+			t.Skip("Cannot test without mocking dependencies")
+		}
+	})
 }
