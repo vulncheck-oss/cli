@@ -22,32 +22,21 @@
 
 You can easily install vulncheck using an install script. Choose the script and method that matches your operating system:
 
-> [!NOTE]
-> The installation script will prompt you to choose between system-wide installation (requires sudo) or local user installation. You can skip this prompt by using the `--sudo` or `--non-sudo` flags.
-
 ### macOS and Linux
 
-Open a terminal and run one of the following commands:
+Open a terminal and run:
 
-**Interactive installation (prompts for sudo/non-sudo):**
 ```bash
 curl -sSL https://raw.githubusercontent.com/vulncheck-oss/cli/main/install.sh | bash
 ```
 
-**System-wide installation (requires sudo, no prompt):**
-```bash
-curl -sSL https://raw.githubusercontent.com/vulncheck-oss/cli/main/install.sh | bash -s -- --sudo
-```
+This will prompt you to choose between system-wide installation (requires sudo) or local user installation.
 
-**Local user installation (no sudo required, no prompt):**
-```bash
-curl -sSL https://raw.githubusercontent.com/vulncheck-oss/cli/main/install.sh | bash -s -- --non-sudo
-```
-
-**Install specific version:**
-```bash
-curl -sSL https://raw.githubusercontent.com/vulncheck-oss/cli/main/install.sh | bash -s -- --version=1.2.3
-```
+> [!NOTE]
+> The install script also supports non-interactive installation options. Use `--help` or `-h` to see all available options:
+> ```bash
+> curl -sSL https://raw.githubusercontent.com/vulncheck-oss/cli/main/install.sh | bash -s -- --help
+> ```
 
 ### Windows
 Option 1: Using PowerShell
