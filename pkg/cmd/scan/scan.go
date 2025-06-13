@@ -313,7 +313,7 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVarP(&opts.File, "file", "f", false, i18n.C.FlagSaveResults)
 	cmd.Flags().StringVarP(&opts.FileName, "file-name", "n", "output.json", i18n.C.FlagSpecifyFile)
 	cmd.Flags().StringVarP(&opts.SbomFile, "sbom-output-file", "o", "", i18n.C.FlagSpecifySbomFile)
-	cmd.Flags().StringVarP(&opts.SbomInput, "sbom-input-file", "i", "", i18n.C.FlagSpecifySbomFile)
+	cmd.Flags().StringVarP(&opts.SbomInput, "sbom-input-file", "i", "", i18n.C.FlagSpecifySbomInput)
 	cmd.Flags().BoolVarP(&opts.SbomOnly, "sbom-only", "s", false, i18n.C.FlagSpecifySbomOnly)
 	cmd.Flags().BoolVarP(&opts.Cpes, "include-cpes", "c", false, i18n.C.FlagIncludeCpes)
 	cmd.Flags().BoolVar(&opts.Offline, "offline", false, "Use offline mode to find CVEs - requires indices to be cached")
