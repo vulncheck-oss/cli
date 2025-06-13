@@ -1,5 +1,7 @@
 #!/bin/bash
 
+INSTALL_MODE=""
+
 # Parse command line arguments
 for arg in "$@"
 do
@@ -7,6 +9,24 @@ do
         --version=*)
         SPECIFIED_VERSION="${arg#*=}"
         shift # Remove --version= from processing
+        ;;
+        --sudo)
+        INSTALL_MODE="sudo"
+        shift
+        ;;
+        --non-sudo)
+        INSTALL_MODE="non-sudo"
+        shift
+        ;;
+        --help|-h)
+        echo "Usage: $0 [OPTIONS]"
+        echo ""
+        echo "Options:"
+        echo "  --sudo          Install system-wide (requires sudo)"
+        echo "  --non-sudo      Install for current user only (no sudo required)"
+        echo "  --version=X.Y.Z Install specific version instead of latest"
+        echo "  --help, -h      Show this help message"
+        exit 0
         ;;
     esac
 done
@@ -54,30 +74,47 @@ fi
 
 # Ask user for installation preference (skip for Windows as it doesn't use sudo)
 if [[ "$OS" != "Windows" ]]; then
-    echo ""
-    echo "Installation Options:"
-    echo "1) System-wide installation (requires sudo) - installs to $DEFAULT_INSTALL_DIR"
-    echo "2) Local user installation (no sudo required) - installs to $LOCAL_INSTALL_DIR"
-    echo ""
-    read -p "Please select an option (1 or 2): " install_choice
-    
-    case $install_choice in
-        1)
-            INSTALL_DIR="$DEFAULT_INSTALL_DIR"
-            SYSTEM_WIDE=true
-            echo "Selected: System-wide installation"
-            ;;
-        2)
-            INSTALL_DIR="$LOCAL_INSTALL_DIR"
-            SYSTEM_WIDE=false
-            echo "Selected: Local user installation"
-            ;;
-        *)
-            echo "Invalid choice. Defaulting to system-wide installation."
-            INSTALL_DIR="$DEFAULT_INSTALL_DIR"
-            SYSTEM_WIDE=true
-            ;;
-    esac
+    if [[ -z "$INSTALL_MODE" ]]; then
+        echo ""
+        echo "Installation Options:"
+        echo "1) System-wide installation (requires sudo) - installs to $DEFAULT_INSTALL_DIR"
+        echo "2) Local user installation (no sudo required) - installs to $LOCAL_INSTALL_DIR"
+        echo ""
+        echo "To skip this prompt in the future, use --sudo or --non-sudo flags"
+        echo ""
+        read -p "Please select an option (1 or 2): " install_choice
+        
+        case $install_choice in
+            1)
+                INSTALL_DIR="$DEFAULT_INSTALL_DIR"
+                SYSTEM_WIDE=true
+                echo "Selected: System-wide installation"
+                ;;
+            2)
+                INSTALL_DIR="$LOCAL_INSTALL_DIR"
+                SYSTEM_WIDE=false
+                echo "Selected: Local user installation"
+                ;;
+            *)
+                echo "Invalid choice. Defaulting to system-wide installation."
+                INSTALL_DIR="$DEFAULT_INSTALL_DIR"
+                SYSTEM_WIDE=true
+                ;;
+        esac
+    else
+        case $INSTALL_MODE in
+            "sudo")
+                INSTALL_DIR="$DEFAULT_INSTALL_DIR"
+                SYSTEM_WIDE=true
+                echo "Selected: System-wide installation (via --sudo flag)"
+                ;;
+            "non-sudo")
+                INSTALL_DIR="$LOCAL_INSTALL_DIR"
+                SYSTEM_WIDE=false
+                echo "Selected: Local user installation (via --non-sudo flag)"
+                ;;
+        esac
+    fi
 else
     # Windows doesn't need this choice
     INSTALL_DIR="$DEFAULT_INSTALL_DIR"
