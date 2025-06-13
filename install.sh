@@ -97,6 +97,12 @@ if [[ "$OS" != "Windows" ]]; then
 fi
 
 
+# Ensure the install directory exists
+if [[ "$OS" != "Windows" ]] && [[ ! -d "$INSTALL_DIR" ]]; then
+    echo "Creating directory $INSTALL_DIR..."
+    sudo mkdir -p "$INSTALL_DIR"
+fi
+
 # Copy the binary to the install directory
 echo "Installing vulncheck to $INSTALL_DIR..."
 if [[ "$OS" == "Windows" ]]; then
