@@ -263,8 +263,12 @@ func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
 	tabWriter := tabwriter.NewWriter(&buf, maxLabelWidth, 0, 1, ' ', 0)
 
 	// Write content to tabWriter
-	fmt.Fprint(tabWriter, content)
-	tabWriter.Flush()
+	if _, err := fmt.Fprint(tabWriter, content); err != nil {
+		return fmt.Errorf("failed to write to tabWriter: %w", err)
+	}
+	if err := tabWriter.Flush(); err != nil {
+		return fmt.Errorf("failed to flush tabWriter: %w", err)
+	}
 
 	// Render the box with all content
 	ui.ClearScreen()

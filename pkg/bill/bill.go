@@ -4,6 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"strings"
+
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/format"
 	"github.com/anchore/syft/syft/format/cyclonedxjson"
@@ -20,9 +24,6 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/sdk-go"
 	"github.com/vulncheck-oss/sdk-go/pkg/client"
-	"io"
-	"os"
-	"strings"
 )
 
 type InputSbomRef struct {
@@ -52,7 +53,11 @@ func SaveSBOM(sbm *sbom.SBOM, file string) error {
 	if err != nil {
 		return fmt.Errorf("unable to create file %s: %w", file, err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			_ = err
+		}
+	}()
 	encoder, err := cyclonedxjson.NewFormatEncoderWithConfig(cyclonedxjson.DefaultEncoderConfig())
 	if err != nil {
 		return err
@@ -62,8 +67,6 @@ func SaveSBOM(sbm *sbom.SBOM, file string) error {
 	if err != nil {
 		return fmt.Errorf("unable to encode SBOM: %w", err)
 	}
-
-	defer f.Close()
 
 	_, err = f.Write(data)
 	if err != nil {
@@ -78,7 +81,11 @@ func LoadSBOM(inputFile string) (*sbom.SBOM, []InputSbomRef, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to open SBOM file %s: %w", inputFile, err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	// Read the entire file content
 	content, err := io.ReadAll(file)
@@ -250,8 +257,10 @@ func GetOfflineCpeVulns(indices cache.InfoFile, cpes []string, iterator func(cur
 			key := cpestring + "|" + cve
 			if _, exists := seen[key]; !exists {
 				vulns = append(vulns, models.ScanResultVulnerabilities{
-					CVE: cve,
-					CPE: cpestring,
+					Name:    cpeuri.RemoveSlashes(cpe.Product),
+					Version: cpeuri.RemoveSlashes(cpe.Version),
+					CVE:     cve,
+					CPE:     cpestring,
 				})
 				seen[key] = struct{}{}
 			}
@@ -329,9 +338,39 @@ func GetMeta(vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulne
 		}
 
 		vulns[i].InKEV = nvd2Response.Data[0].VulncheckKEVExploitAdd != nil
+		vulns[i].Published = *nvd2Response.Data[0].Published
 		vulns[i].CVSSBaseScore = baseScore(nvd2Response.Data[0])
 		vulns[i].CVSSTemporalScore = temporalScore(nvd2Response.Data[0])
+		vulns[i].Weaknesses = nvd2Response.Data[0].Weaknesses
 
+	}
+	return vulns, nil
+}
+func GetOfflineMeta(indices cache.InfoFile, vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulnerabilities, error) {
+
+	indexAvailable, err := sync.EnsureIndexSync(indices, "vulncheck-nvd2", true)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !indexAvailable {
+		return nil, fmt.Errorf("index vulncheck-nvd2 is required to proceed")
+	}
+
+	for i, vuln := range vulns {
+		nvd2Response, err := db.MetaByCVE(vuln.CVE)
+		if err != nil {
+			continue
+		}
+
+		if len(nvd2Response.Data) > 0 {
+			vulns[i].InKEV = nvd2Response.Data[0].VulncheckKEVExploitAdd != nil
+			vulns[i].Published = *nvd2Response.Data[0].Published
+			vulns[i].CVSSBaseScore = baseScore(nvd2Response.Data[0])
+			vulns[i].CVSSTemporalScore = temporalScore(nvd2Response.Data[0])
+			vulns[i].Weaknesses = nvd2Response.Data[0].Weaknesses
+		}
 	}
 	return vulns, nil
 }

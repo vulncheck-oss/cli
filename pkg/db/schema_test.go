@@ -19,6 +19,7 @@ func TestGetSchema(t *testing.T) {
 		{"alpine-purls", "purl OS"},
 		{"rocky-purls", "purl OS"},
 		{"cpecve", "cpecve"},
+		{"vulncheck-nvd2", "nvd"},
 	}
 
 	for _, tc := range testCases {
@@ -57,11 +58,13 @@ func TestSchemaStructure(t *testing.T) {
 		expectedColumns int
 		testColumn      string
 		columnIsJSON    bool
+		hasResults      bool
 	}{
-		{"ipintel", 15, "hostnames", true},
-		{"purl PM", 6, "purl", true},
-		{"cpecve", 12, "cves", true},
-		{"fallback", 1, "data", true},
+		{"ipintel", 15, "hostnames", true, false},
+		{"purl PM", 6, "purl", true, false},
+		{"cpecve", 12, "cves", true, false},
+		{"fallback", 1, "data", true, false},
+		{"nvd", 5, "weaknesses", true, true},
 	}
 
 	for _, tc := range testCases {
@@ -99,6 +102,11 @@ func TestSchemaStructure(t *testing.T) {
 
 			if !found {
 				t.Errorf("Column %q not found in schema %q", tc.testColumn, tc.schemaName)
+			}
+
+			// Test Results field
+			if schema.Results != tc.hasResults {
+				t.Errorf("Schema %q has Results=%v, expected %v", tc.schemaName, schema.Results, tc.hasResults)
 			}
 		})
 	}

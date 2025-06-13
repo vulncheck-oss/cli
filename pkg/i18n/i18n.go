@@ -122,8 +122,12 @@ type Copy struct {
 
 	ScanVulnMetaStart string
 	ScanVulnMetaEnd   string
-	ScanNoCvesFound   string
-	ScanBenchmark     string
+
+	ScanVulnOfflineMetaStart string
+	ScanVulnOfflineMetaEnd   string
+
+	ScanNoCvesFound string
+	ScanBenchmark   string
 
 	ErrorNoToken      string
 	ErrorUnauthorized string
@@ -271,6 +275,9 @@ var En = Copy{
 
 	ScanVulnMetaStart: "Fetching vulnerability metadata",
 	ScanVulnMetaEnd:   "Vulnerability metadata fetched",
+
+	ScanVulnOfflineMetaStart: "[OFFLINE] Fetching vulnerability metadata",
+	ScanVulnOfflineMetaEnd:   "[OFFLINE] Vulnerability metadata fetched",
 
 	ScanNoCvesFound:            "No vulnerabilities found in %d packages",
 	ScanBenchmark:              "Scan completed in %s",

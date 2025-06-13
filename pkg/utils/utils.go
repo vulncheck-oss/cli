@@ -3,13 +3,14 @@ package utils
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/dustin/go-humanize"
 	"io"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/dustin/go-humanize"
 )
 
 // NormalizeString normalizes a string by converting it to lowercase and replacing spaces and underscores with hyphens.
@@ -55,7 +56,11 @@ func Unzip(src, dest string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open zip file: %w", err)
 	}
-	defer r.Close()
+	defer func() {
+		if err := r.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	if err := os.MkdirAll(dest, 0755); err != nil {
 		return fmt.Errorf("failed to create destination directory: %w", err)
@@ -76,7 +81,11 @@ func extractZipFile(f *zip.File, dest string) error {
 	if err != nil {
 		return err
 	}
-	defer rc.Close()
+	defer func() {
+		if err := rc.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	path := filepath.Join(dest, f.Name)
 
@@ -97,7 +106,11 @@ func extractZipFile(f *zip.File, dest string) error {
 		if err != nil {
 			return err
 		}
-		defer f.Close()
+		defer func() {
+			if err := f.Close(); err != nil {
+				_ = err
+			}
+		}()
 
 		_, err = io.Copy(f, rc)
 		if err != nil {

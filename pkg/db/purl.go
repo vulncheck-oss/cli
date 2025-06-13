@@ -4,11 +4,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/package-url/packageurl-go"
 	"github.com/vulncheck-oss/sdk-go"
 	_ "modernc.org/sqlite"
-	"strings"
-	"time"
 )
 
 type PurlEntry struct {
@@ -34,7 +35,11 @@ func PURLSearch(indexName string, instance packageurl.PackageURL) ([]PurlEntry, 
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to execute query: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	var results []PurlEntry
 	for rows.Next() {
