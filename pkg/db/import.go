@@ -29,7 +29,7 @@ func ImportIndex(filePath string, indexDir string, progressCallback func(int)) e
 	}
 
 	// Convert table name to use underscores instead of hyphens
-	tableName := strings.Replace(indexName, "-", "_", -1)
+	tableName := strings.ReplaceAll(indexName, "-", "_")
 
 	// Drop existing table if it exists
 	dropTableSQL := fmt.Sprintf(`DROP TABLE IF EXISTS "%s"`, tableName)
@@ -139,7 +139,11 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	// Read first character to check if it's an array
 	firstByte := make([]byte, 1)

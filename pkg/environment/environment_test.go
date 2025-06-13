@@ -8,7 +8,11 @@ import (
 func TestInit(t *testing.T) {
 	// Saving the current environment variable state to restore after tests
 	originalEnv := os.Getenv("VC_ENV")
-	defer os.Setenv("VC_ENV", originalEnv)
+	defer func() {
+		if err := os.Setenv("VC_ENV", originalEnv); err != nil {
+			t.Errorf("Failed to restore VC_ENV: %v", err)
+		}
+	}()
 
 	// Test cases
 	tests := []struct {

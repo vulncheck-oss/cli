@@ -2,9 +2,10 @@ package scan
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/vulncheck-oss/cli/pkg/bill"
 	"github.com/vulncheck-oss/cli/pkg/cache"
-	"time"
 
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/charmbracelet/bubbles/progress"
@@ -185,7 +186,7 @@ func Command() *cobra.Command {
 							{
 								Title: i18n.C.ScanVulnOfflineMetaStart,
 								Task: func(t *taskin.Task) error {
-									indices, err := cache.Indices()
+									indices, _ := cache.Indices()
 									results, err := bill.GetOfflineMeta(indices, vulns)
 									if err != nil {
 										return err

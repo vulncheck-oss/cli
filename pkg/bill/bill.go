@@ -81,7 +81,11 @@ func LoadSBOM(inputFile string) (*sbom.SBOM, []InputSbomRef, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to open SBOM file %s: %w", inputFile, err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	// Read the entire file content
 	content, err := io.ReadAll(file)
