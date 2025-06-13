@@ -33,7 +33,10 @@ curl -sSL https://raw.githubusercontent.com/vulncheck-oss/cli/main/install.sh | 
 This will prompt you to choose between system-wide installation (requires sudo) or local user installation.
 
 > [!NOTE]
-> The install script also supports non-interactive installation options. Use `--help` or `-h` to see all available options:
+> The install script also supports non-interactive installation options:
+> - `--sudo` for system-wide installation without prompts
+> - `--non-sudo` for local user installation without prompts
+> - `--help` or `-h` to see all available options
 > ```bash
 > curl -sSL https://raw.githubusercontent.com/vulncheck-oss/cli/main/install.sh | bash -s -- --help
 > ```
