@@ -2,6 +2,7 @@ package cpe
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"

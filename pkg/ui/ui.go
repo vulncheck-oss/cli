@@ -98,13 +98,26 @@ func (fe *FlagError) Unwrap() error {
 	return fe.err
 }
 
-func Error(format string, args ...interface{}) error {
-	// If no args are provided, treat format as a plain string
-	// This avoids the non-constant format string linter error
+func Error(args ...interface{}) error {
 	if len(args) == 0 {
-		return FlagErrorWrap(fmt.Errorf("%s", format))
+		return FlagErrorWrap(fmt.Errorf("error"))
 	}
-	return FlagErrorWrap(fmt.Errorf(format, args...))
+	if len(args) == 1 {
+		switch v := args[0].(type) {
+		case string:
+			return FlagErrorWrap(fmt.Errorf("%s", v))
+		case error:
+			return FlagErrorWrap(v)
+		default:
+			return FlagErrorWrap(fmt.Errorf("%v", v))
+		}
+	}
+	// Multiple args - treat first as format string
+	format, ok := args[0].(string)
+	if !ok {
+		return FlagErrorWrap(fmt.Errorf("invalid format string"))
+	}
+	return FlagErrorWrap(fmt.Errorf(format, args[1:]...))
 }
 
 // FlagErrorWrap FlagError returns a new FlagError that wraps the specified error.
