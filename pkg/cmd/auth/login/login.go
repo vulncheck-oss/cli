@@ -26,7 +26,7 @@ func Command() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			if config.IsCI() {
-				return ui.Error(i18n.C.AuthLoginErrorCI)
+				return ui.Error("%s", i18n.C.AuthLoginErrorCI)
 			}
 
 			if config.HasConfig() && config.HasToken() {
@@ -47,7 +47,7 @@ func Command() *cobra.Command {
 			case "web":
 				return web.CmdWeb(cmd, args)
 			default:
-				return ui.Error("Invalid choice")
+				return ui.Error("%s", "Invalid choice")
 			}
 		},
 	}
