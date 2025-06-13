@@ -3,10 +3,11 @@ package ui
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/charmbracelet/lipgloss"
 	"os"
 	"os/exec"
 	"runtime"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 var format = "%s %s\n"
@@ -98,6 +99,11 @@ func (fe *FlagError) Unwrap() error {
 }
 
 func Error(format string, args ...interface{}) error {
+	// If no args are provided, treat format as a plain string
+	// This avoids the non-constant format string linter error
+	if len(args) == 0 {
+		return FlagErrorWrap(fmt.Errorf("%s", format))
+	}
 	return FlagErrorWrap(fmt.Errorf(format, args...))
 }
 
