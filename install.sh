@@ -30,7 +30,8 @@ fi
 # Detect the operating system and architecture
 if [[ "$OSTYPE" == "darwin"* ]]; then
     OS="macOS"
-    INSTALL_DIR="/usr/local/bin"
+    DEFAULT_INSTALL_DIR="/usr/local/bin"
+    LOCAL_INSTALL_DIR="$HOME/.local/bin"
     if [[ $(uname -m) == "arm64" ]]; then
         ARCH="arm64"
     else
@@ -39,14 +40,48 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     OS="Linux"
     ARCH="amd64"
-    INSTALL_DIR="/usr/local/bin"
+    DEFAULT_INSTALL_DIR="/usr/local/bin"
+    LOCAL_INSTALL_DIR="$HOME/.local/bin"
 elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
     OS="Windows"
     ARCH="amd64"
-    INSTALL_DIR="/c/Windows/System32"
+    DEFAULT_INSTALL_DIR="/c/Windows/System32"
+    LOCAL_INSTALL_DIR="$USERPROFILE/bin"
 else
     echo "Unsupported operating system"
     exit 1
+fi
+
+# Ask user for installation preference (skip for Windows as it doesn't use sudo)
+if [[ "$OS" != "Windows" ]]; then
+    echo ""
+    echo "Installation Options:"
+    echo "1) System-wide installation (requires sudo) - installs to $DEFAULT_INSTALL_DIR"
+    echo "2) Local user installation (no sudo required) - installs to $LOCAL_INSTALL_DIR"
+    echo ""
+    read -p "Please select an option (1 or 2): " install_choice
+    
+    case $install_choice in
+        1)
+            INSTALL_DIR="$DEFAULT_INSTALL_DIR"
+            SYSTEM_WIDE=true
+            echo "Selected: System-wide installation"
+            ;;
+        2)
+            INSTALL_DIR="$LOCAL_INSTALL_DIR"
+            SYSTEM_WIDE=false
+            echo "Selected: Local user installation"
+            ;;
+        *)
+            echo "Invalid choice. Defaulting to system-wide installation."
+            INSTALL_DIR="$DEFAULT_INSTALL_DIR"
+            SYSTEM_WIDE=true
+            ;;
+    esac
+else
+    # Windows doesn't need this choice
+    INSTALL_DIR="$DEFAULT_INSTALL_DIR"
+    SYSTEM_WIDE=true
 fi
 
 # Set the appropriate filename based on the OS and architecture
@@ -87,41 +122,78 @@ if [[ "$FILENAME" == *.tar.gz ]]; then
     EXTRACTED_FOLDER="${EXTRACTED_FOLDER%.tar}"
 fi
 
-# Explain sudo usage
-if [[ "$OS" != "Windows" ]]; then
+# Explain sudo usage for system-wide installation
+if [[ "$OS" != "Windows" ]] && [[ "$SYSTEM_WIDE" == true ]]; then
+    echo ""
     echo "To install vulncheck system-wide, we need to copy the binary to $INSTALL_DIR."
     echo "This requires administrator privileges."
     echo "You will be prompted for your password to perform this action."
     echo "This allows all users on this system to use the vulncheck command."
     echo "Press Ctrl+C to cancel the installation if you don't want to proceed."
+    echo ""
 fi
 
-
 # Ensure the install directory exists
-if [[ "$OS" != "Windows" ]] && [[ ! -d "$INSTALL_DIR" ]]; then
+if [[ ! -d "$INSTALL_DIR" ]]; then
     echo "Creating directory $INSTALL_DIR..."
-    sudo mkdir -p "$INSTALL_DIR"
+    if [[ "$SYSTEM_WIDE" == true ]] && [[ "$OS" != "Windows" ]]; then
+        sudo mkdir -p "$INSTALL_DIR"
+    else
+        mkdir -p "$INSTALL_DIR"
+    fi
 fi
 
 # Copy the binary to the install directory
 echo "Installing vulncheck to $INSTALL_DIR..."
 if [[ "$OS" == "Windows" ]]; then
     mv "$EXTRACTED_FOLDER/bin/vulncheck.exe" "$INSTALL_DIR"
-else
+elif [[ "$SYSTEM_WIDE" == true ]]; then
     sudo mv "$EXTRACTED_FOLDER/bin/vulncheck" "$INSTALL_DIR"
+else
+    mv "$EXTRACTED_FOLDER/bin/vulncheck" "$INSTALL_DIR"
+    # Make sure it's executable for local installs
+    chmod +x "$INSTALL_DIR/vulncheck"
 fi
 
 # Clean up
 cd ..
 rm -rf "$TEMP_DIR"
 
-echo "Installation complete. You can now use 'vulncheck' command."
+echo "Installation complete!"
+echo ""
 
-if [[ "$OS" != "Windows" ]]; then
+if [[ "$OS" == "Windows" ]]; then
+    echo "The vulncheck binary has been installed to $INSTALL_DIR."
+    echo "This directory should already be in your system's PATH."
+    echo "You can run it by typing 'vulncheck' in your command prompt or PowerShell."
+elif [[ "$SYSTEM_WIDE" == true ]]; then
     echo "The vulncheck binary has been installed to $INSTALL_DIR, which is already in your system's PATH."
     echo "You can run it by typing 'vulncheck' in your terminal."
 else
     echo "The vulncheck binary has been installed to $INSTALL_DIR."
-    echo "This directory should already be in your system's PATH."
-    echo "You can run it by typing 'vulncheck' in your command prompt or PowerShell."
+    echo ""
+    # Check if local bin is in PATH
+    if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+        echo "⚠️  WARNING: $INSTALL_DIR is not in your PATH."
+        echo ""
+        echo "To use vulncheck, you need to add this directory to your PATH."
+        echo "Add one of the following lines to your shell configuration file:"
+        echo ""
+        if [[ -f "$HOME/.bashrc" ]] || [[ "$SHELL" == *"bash"* ]]; then
+            echo "For bash (~/.bashrc):"
+            echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
+        fi
+        if [[ -f "$HOME/.zshrc" ]] || [[ "$SHELL" == *"zsh"* ]]; then
+            echo "For zsh (~/.zshrc):"
+            echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
+        fi
+        echo ""
+        echo "After adding the line, reload your shell configuration:"
+        echo "  source ~/.bashrc  # or ~/.zshrc"
+        echo ""
+        echo "Alternatively, you can run vulncheck using its full path:"
+        echo "  $INSTALL_DIR/vulncheck"
+    else
+        echo "You can now use 'vulncheck' command."
+    fi
 fi
