@@ -24,6 +24,7 @@ type ScanResultVulnerabilities struct {
 	Published         string                             `json:"published"`
 	CVSSBaseScore     string                             `json:"cvss_base_score"`
 	CVSSTemporalScore string                             `json:"cvss_temporal_score"`
+	Metrics           *client.ApiNVD20MetricExtended     `json:"metrics,omitempty"`
 	FixedVersions     string                             `json:"fixed_versions"`
 	PurlDetail        PurlDetail                         `json:"purl_detail,omitempty"`
 	Weaknesses        *[]client.ApiNVD20WeaknessExtended `json:"weaknesses,omitempty"`
