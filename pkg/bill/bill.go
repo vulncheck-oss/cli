@@ -341,6 +341,7 @@ func GetMeta(vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulne
 		vulns[i].Published = *nvd2Response.Data[0].Published
 		vulns[i].CVSSBaseScore = baseScore(nvd2Response.Data[0])
 		vulns[i].CVSSTemporalScore = temporalScore(nvd2Response.Data[0])
+		vulns[i].Metrics = nvd2Response.Data[0].Metrics
 		vulns[i].Weaknesses = nvd2Response.Data[0].Weaknesses
 
 	}
@@ -369,6 +370,7 @@ func GetOfflineMeta(indices cache.InfoFile, vulns []models.ScanResultVulnerabili
 			vulns[i].Published = *nvd2Response.Data[0].Published
 			vulns[i].CVSSBaseScore = baseScore(nvd2Response.Data[0])
 			vulns[i].CVSSTemporalScore = temporalScore(nvd2Response.Data[0])
+			vulns[i].Metrics = nvd2Response.Data[0].Metrics
 			vulns[i].Weaknesses = nvd2Response.Data[0].Weaknesses
 		}
 	}
