@@ -12,17 +12,21 @@ import (
 )
 
 func TestIndices(t *testing.T) {
-	// Setup
+	originalDir, err := config.IndicesDir()
+	assert.NoError(t, err)
+	defer func() {
+		err := config.SetIndicesDir(originalDir)
+		assert.NoError(t, err)
+	}()
+
 	tempDir := t.TempDir()
-	err := config.SetIndicesDir(tempDir)
+	err = config.SetIndicesDir(tempDir)
 	assert.NoError(t, err)
 
-	// Test when no sync_info.yaml exists
 	info, err := Indices()
 	assert.NoError(t, err)
 	assert.Empty(t, info.Indices)
 
-	// Create a mock sync_info.yaml
 	mockInfo := InfoFile{
 		Indices: []IndexInfo{
 			{Name: "test1", LastSync: time.Now(), Size: 1000, LastUpdated: "2023-05-01"},
@@ -34,7 +38,6 @@ func TestIndices(t *testing.T) {
 	err = os.WriteFile(filepath.Join(tempDir, "sync_info.yaml"), data, 0644)
 	assert.NoError(t, err)
 
-	// Test reading existing sync_info.yaml
 	info, err = Indices()
 	assert.NoError(t, err)
 	assert.Len(t, info.Indices, 2)
@@ -54,6 +57,9 @@ func TestInfoFile_IndexExists(t *testing.T) {
 	assert.True(t, info.IndexExists("test2"))
 	assert.False(t, info.IndexExists("test3"))
 }
+
+// TestIndicesSync is not included as it requires mocking external API calls.
+// Consider writing an integration test for IndicesSync or mocking the session.Connect function.
 
 func TestInfoFile_GetIndex(t *testing.T) {
 	info := InfoFile{
@@ -76,6 +82,3 @@ func TestInfoFile_GetIndex(t *testing.T) {
 	index = info.GetIndex("test3")
 	assert.Nil(t, index)
 }
-
-// TestIndicesSync is not included as it requires mocking external API calls.
-// Consider writing an integration test for IndicesSync or mocking the session.Connect function.
