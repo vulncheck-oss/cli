@@ -82,7 +82,17 @@ if [[ "$OS" != "Windows" ]]; then
         echo ""
         echo "To skip this prompt in the future, use --sudo or --non-sudo flags"
         echo ""
-        read -p "Please select an option (1 or 2): " install_choice
+        
+        # Read from /dev/tty to work even when script is piped
+        if [[ -t 0 ]] || [[ -e /dev/tty ]]; then
+            echo -n "Please select an option (1 or 2): "
+            read install_choice < /dev/tty
+        else
+            # Fallback if /dev/tty is not available
+            echo "Unable to read user input. Please use --sudo or --non-sudo flag."
+            echo "Example: curl -sSL ... | bash -s -- --non-sudo"
+            exit 1
+        fi
         
         case $install_choice in
             1)
@@ -96,9 +106,8 @@ if [[ "$OS" != "Windows" ]]; then
                 echo "Selected: Local user installation"
                 ;;
             *)
-                echo "Invalid choice. Defaulting to system-wide installation."
-                INSTALL_DIR="$DEFAULT_INSTALL_DIR"
-                SYSTEM_WIDE=true
+                echo "Invalid choice. Please run the script again and select 1 or 2."
+                exit 1
                 ;;
         esac
     else
