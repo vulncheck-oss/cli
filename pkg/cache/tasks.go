@@ -9,15 +9,28 @@ import (
 	"time"
 
 	"github.com/fumeapp/taskin"
+	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/db"
+	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/utils"
 )
 
 // DownloadTask creates a task for downloading a file from the given URL.
-func taskDownload(url string, index string, filename string) taskin.Task {
+func taskDownload(index string, filename string) taskin.Task {
 	return taskin.Task{
 		Title: fmt.Sprintf("Download %s", index),
 		Task: func(t *taskin.Task) error {
+			response, err := session.Connect(config.Token()).GetIndexBackup(index)
+			if err != nil {
+				return fmt.Errorf("failed to get index backup: %w", err)
+			}
+
+			if len(response.GetData()) == 0 {
+				return fmt.Errorf("no data received for index %s", index)
+			}
+
+			url := response.GetData()[0].URL
+
 			eta := utils.NewETACalculator()
 			resp, err := http.Get(url)
 			if err != nil {
