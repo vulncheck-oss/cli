@@ -43,7 +43,8 @@ func taskDownload(index string, filename string) taskin.Task {
 			}()
 
 			if resp.StatusCode != http.StatusOK {
-				return fmt.Errorf("received non-200 status code: %d", resp.StatusCode)
+				body, _ := io.ReadAll(resp.Body)
+				return fmt.Errorf("S3 request failed with status %d: %s", resp.StatusCode, string(body))
 			}
 
 			file, err := os.Create(filename)
