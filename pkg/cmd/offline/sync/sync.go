@@ -86,7 +86,9 @@ func Command() *cobra.Command {
 				})
 			}
 
-			if len(selectedIndices) == 0 || choose {
+			// if we have no indices and that is not the result of a remove,  or they specified, we need to prompt the user
+			// if len(selectedIndices) == 0 || choose {
+			if (len(selectedIndices) == 0 && len(removeIndices) == 0) || choose {
 
 				options := make([]huh.Option[string], len(indices))
 
@@ -112,6 +114,11 @@ func Command() *cobra.Command {
 				if err != nil {
 					return err
 				}
+			}
+
+			if len(selectedIndices) == 0 {
+				ui.Info("No indices to sync")
+				return nil
 			}
 
 			// RECORD START TIME HERE
