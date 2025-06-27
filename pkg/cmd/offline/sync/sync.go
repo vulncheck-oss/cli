@@ -2,14 +2,15 @@ package sync
 
 import (
 	"fmt"
+	"slices"
+	"time"
+
 	"github.com/charmbracelet/huh"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
-	"slices"
-	"time"
 )
 
 var specialIndices = []string{"cpecve"}
@@ -86,7 +87,7 @@ func Command() *cobra.Command {
 				})
 			}
 
-			if len(selectedIndices) == 0 || choose {
+			if (len(selectedIndices) == 0 && len(removeIndices) == 0) || choose {
 
 				options := make([]huh.Option[string], len(indices))
 
