@@ -13,7 +13,7 @@ bin/vulncheck$(EXE): script/build$(EXE)
 
 script/build$(EXE): script/build.go
 ifeq ($(EXE),)
-	GOOS= GOARCH= GOARM= GOFLAGS= CGO_ENABLED go build -o $@ $<
+	GOOS= GOARCH= GOARM= GOFLAGS= go build -o $@ $<
 else
 	go build -o $@ $<
 endif
@@ -40,6 +40,9 @@ test:
 
 dbug:
 	@go get github.com/dbugapp/dbug-go
+
+nodbug:
+	@go mod edit -droprequire github.com/dbugapp/dbug-go && go mod tidy
 
 update:
 	go get -u ./... && go mod tidy

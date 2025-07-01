@@ -2,15 +2,16 @@ package cache
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/fumeapp/taskin"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/utils"
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 type IndexInfo struct {
@@ -116,7 +117,7 @@ func syncSingleIndex(index string, configDir string, indexInfo *InfoFile, force 
 	}
 
 	childTasks := taskin.Tasks{
-		taskDownload(response.GetData()[0].URL, index, filePath),
+		taskDownload(index, filePath),
 		taskExtract(index, configDir, filePath),
 		taskDB(index, configDir, filePath, lastUpdated, indexInfo),
 	}
@@ -146,24 +147,28 @@ func IndicesSync(indices []string, force bool) error {
 		}
 	}
 
-	tasks := taskin.Tasks{}
+	// If there are indices to sync, run the sync tasks
+	if len(indices) > 0 {
+		tasks := taskin.Tasks{}
 
-	for _, index := range indices {
-		parentTask := taskin.Task{
-			Title: fmt.Sprintf("Sync index %s", index),
-			Task: func(t *taskin.Task) error {
-				t.Title = fmt.Sprintf("Syncing index %s", index)
-				return nil
-			},
-			Tasks: syncSingleIndex(index, configDir, &indexInfo, force),
+		for _, index := range indices {
+			idx := index
+			parentTask := taskin.Task{
+				Title: fmt.Sprintf("Sync index %s", idx),
+				Task: func(t *taskin.Task) error {
+					t.Title = fmt.Sprintf("Syncing index %s", idx)
+					return nil
+				},
+				Tasks: syncSingleIndex(idx, configDir, &indexInfo, force),
+			}
+
+			tasks = append(tasks, parentTask)
 		}
 
-		tasks = append(tasks, parentTask)
-	}
-
-	runner := taskin.New(tasks, taskin.Defaults)
-	if err := runner.Run(); err != nil {
-		return err
+		runner := taskin.New(tasks, taskin.Defaults)
+		if err := runner.Run(); err != nil {
+			return err
+		}
 	}
 
 	data, err := yaml.Marshal(indexInfo)

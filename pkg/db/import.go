@@ -5,10 +5,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
 )
 
 const maxInsertSize int64 = 1_000_000_000 // Default max length in bytes
@@ -28,7 +29,7 @@ func ImportIndex(filePath string, indexDir string, progressCallback func(int)) e
 	}
 
 	// Convert table name to use underscores instead of hyphens
-	tableName := strings.Replace(indexName, "-", "_", -1)
+	tableName := strings.ReplaceAll(indexName, "-", "_")
 
 	// Drop existing table if it exists
 	dropTableSQL := fmt.Sprintf(`DROP TABLE IF EXISTS "%s"`, tableName)
@@ -138,7 +139,11 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	// Read first character to check if it's an array
 	firstByte := make([]byte, 1)
@@ -244,6 +249,15 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 }
 
 func processEntry(entry map[string]interface{}, schema *Schema, jsonColumns map[int]bool) ([]interface{}, int64, error) {
+	// Handle Results wrapper if schema requires it
+	if schema.Results {
+		if results, ok := entry["results"].([]interface{}); ok && len(results) > 0 {
+			if resultEntry, ok := results[0].(map[string]interface{}); ok {
+				entry = resultEntry
+			}
+		}
+	}
+
 	// Only check for CVEs if it's a PM schema
 	if schema.Name == "purl PM" {
 		cves, hasCVEs := entry["cves"].([]interface{})
@@ -252,7 +266,6 @@ func processEntry(entry map[string]interface{}, schema *Schema, jsonColumns map[
 		}
 	}
 
-	// Rest of the function remains the same...
 	values := make([]interface{}, len(schema.Columns))
 	for i, col := range schema.Columns {
 		val, exists := entry[col.Name]

@@ -12,6 +12,7 @@ type Schema struct {
 	Indices  []string
 	Name     string
 	Fallback bool
+	Results  bool // whether the JSON in each file is inside a "results" array
 	Columns  []Column
 }
 
@@ -22,6 +23,18 @@ var Schemas = []Schema{
 		Indices:  []string{},
 		Columns: []Column{
 			{Name: "data", Type: "TEXT", Index: true, NotNull: true, IsJSON: true},
+		},
+	},
+	{
+		Indices: []string{"vulncheck-nvd2"},
+		Name:    "nvd",
+		Results: true,
+		Columns: []Column{
+			{Name: "id", Type: "TEXT", Index: true, NotNull: true},
+			{Name: "published", Type: "TEXT", Index: false, NotNull: false, IsJSON: false},
+			{Name: "vulncheckKEVExploitAdd", Type: "TEXT", Index: false, NotNull: false, IsJSON: false},
+			{Name: "metrics", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
+			{Name: "weaknesses", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
 		},
 	},
 	{

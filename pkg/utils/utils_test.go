@@ -210,10 +210,18 @@ func createTestZip(zipPath string) error {
 	if err != nil {
 		return err
 	}
-	defer zipFile.Close()
+	defer func() {
+		if err := zipFile.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	zipWriter := zip.NewWriter(zipFile)
-	defer zipWriter.Close()
+	defer func() {
+		if err := zipWriter.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	// Add a file to the root of the zip
 	file1, err := zipWriter.Create("file1.txt")

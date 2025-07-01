@@ -92,7 +92,11 @@ func IndexCPE(indexName string, cpe cpeutils.CPE, query string) ([]cpeutils.CPEV
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to open file %s: %w", filePath, err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	scanner := bufio.NewScanner(file)
 	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
@@ -327,7 +331,11 @@ func processPurlFile(filePath, query string, code *gojq.Code, resultsChan chan<-
 		errorsChan <- fmt.Errorf("failed to open file %s: %w", filePath, err)
 		return
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	scanner := bufio.NewScanner(file)
 	atomic.AddInt64(&stats.TotalFiles, 1)
@@ -405,7 +413,11 @@ func processFile(filePath, query string, code *gojq.Code, resultsChan chan<- IPE
 		errorsChan <- fmt.Errorf("failed to open file %s: %w", filePath, err)
 		return
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	scanner := bufio.NewScanner(file)
 	atomic.AddInt64(&stats.TotalFiles, 1)

@@ -40,9 +40,15 @@ func TestValidToken(t *testing.T) {
 func TestSaveAndLoadConfig(t *testing.T) {
 	// Setup: Create a temporary directory for config
 	tempDir := t.TempDir()
-	homeDir := os.Getenv("HOME")     // Save original HOME
-	os.Setenv("HOME", tempDir)       // Temporarily override HOME
-	defer os.Setenv("HOME", homeDir) // Restore HOME
+	homeDir := os.Getenv("HOME") // Save original HOME
+	if err := os.Setenv("HOME", tempDir); err != nil {
+		t.Fatalf("Failed to set HOME env var: %v", err)
+	}
+	defer func() {
+		if err := os.Setenv("HOME", homeDir); err != nil {
+			t.Errorf("Failed to restore HOME env var: %v", err)
+		}
+	}()
 
 	expectedToken := "vulncheck_testtoken1234567890abcdefghijklmnopqrstuvw"
 	config := &Config{Token: expectedToken}

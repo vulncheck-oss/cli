@@ -251,19 +251,28 @@ func PurlVulns(vulns []sdk.PurlVulnerability) error {
 	return nil
 }
 
-func ScanResults(results []models.ScanResultVulnerabilities) error {
+func ScanResults(results []models.ScanResultVulnerabilities, hideScores bool) error {
 	t := ltable.New().
-		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab"))).
-		Headers("CVE", "Name", "Version", "VulnCheck KEV", "CVSS Base", "CVSS Temporal", "Fixed").
-		Width(TermWidth())
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6667ab")))
+
+	if hideScores {
+		t = t.Headers("CVE", "Name", "Version", "Fixed")
+	} else {
+		t = t.Headers("CVE", "Name", "Version", "VulnCheck KEV", "CVSS Base", "CVSS Temporal", "Fixed")
+	}
+
+	t = t.Width(TermWidth())
 
 	for _, result := range results {
-		inKev := lipgloss.NewStyle().Foreground(lipgloss.Color("#34d399")).Render("✔")
-		if !result.InKEV {
-			inKev = lipgloss.NewStyle().Foreground(lipgloss.Color("#ff0000")).Render("✘")
+		if hideScores {
+			t.Row(result.CVE, result.Name, result.Version, result.FixedVersions)
+		} else {
+			inKev := lipgloss.NewStyle().Foreground(lipgloss.Color("#34d399")).Render("✔")
+			if !result.InKEV {
+				inKev = lipgloss.NewStyle().Foreground(lipgloss.Color("#ff0000")).Render("✘")
+			}
+			t.Row(result.CVE, result.Name, result.Version, inKev, result.CVSSBaseScore, result.CVSSTemporalScore, result.FixedVersions)
 		}
-
-		t.Row(result.CVE, result.Name, result.Version, inKev, result.CVSSBaseScore, result.CVSSTemporalScore, result.FixedVersions)
 	}
 
 	fmt.Println(t)

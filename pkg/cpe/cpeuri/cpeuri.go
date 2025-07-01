@@ -2,10 +2,11 @@ package cpeuri
 
 import (
 	"fmt"
-	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
 	"reflect"
 	"strings"
 	"unicode"
+
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
 )
 
 func ToStruct(s string) (*cpeutils.CPE, error) {
@@ -354,7 +355,8 @@ func decodeCompURI(s string) (string, error) {
 	}
 
 	for i := 0; i < len(s); i++ {
-		if s[i] == '%' {
+		switch s[i] {
+		case '%':
 			if i+2 >= len(s) {
 				return "", fmt.Errorf("invalid percent-encoding")
 			}
@@ -384,9 +386,9 @@ func decodeCompURI(s string) (string, error) {
 					return "", fmt.Errorf("unrecognized percent-encoding: %s", encoded)
 				}
 			}
-		} else if s[i] == '.' || s[i] == '-' || s[i] == '~' {
+		case '.', '-', '~':
 			result.WriteString("\\" + string(s[i]))
-		} else {
+		default:
 			result.WriteRune(rune(s[i]))
 		}
 	}
@@ -434,4 +436,9 @@ func getCompURI(uri string, i int) string {
 	}
 
 	return parts[i]
+}
+
+// RemoveSlashes - remove backslashes from a string
+func RemoveSlashes(s string) string {
+	return strings.ReplaceAll(s, "\\", "")
 }

@@ -3,10 +3,11 @@ package db
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
-	_ "modernc.org/sqlite"
 	"strings"
 	"time"
+
+	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
+	_ "modernc.org/sqlite"
 )
 
 func CPESearch(indexName string, cpe cpeutils.CPE) ([]cpeutils.CPEVulnerabilities, *Stats, error) {
@@ -45,7 +46,11 @@ func CPESearch(indexName string, cpe cpeutils.CPE) ([]cpeutils.CPEVulnerabilitie
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to execute query: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	var results []cpeutils.CPEVulnerabilities
 	for rows.Next() {

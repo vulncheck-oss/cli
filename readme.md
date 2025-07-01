@@ -22,16 +22,24 @@
 
 You can easily install vulncheck using an install script. Choose the script and method that matches your operating system:
 
-> [!NOTE]
-> The installation script may require administrator privileges to install vulncheck system-wide. You may be prompted for your password during the installation process.
-
 ### macOS and Linux
 
-Open a terminal and run the following command:
+Open a terminal and run:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/vulncheck-oss/cli/main/install.sh | bash
 ```
+
+This will prompt you to choose between system-wide installation (requires sudo) or local user installation.
+
+> [!NOTE]
+> The install script also supports non-interactive installation options:
+> - `--sudo` for system-wide installation without prompts
+> - `--non-sudo` for local user installation without prompts
+> - `--help` or `-h` to see all available options
+> ```bash
+> curl -sSL https://raw.githubusercontent.com/vulncheck-oss/cli/main/install.sh | bash -s -- --help
+> ```
 
 ### Windows
 Option 1: Using PowerShell
@@ -94,33 +102,38 @@ vulncheck index browse|list <index> [flags]
 
 #### Flags
  
-| Flag               | Type   | Description           |
-|--------------------|--------|-----------------------|
-| --alias            | string | Alias                 |
-| --asn              | string | Asn                   |
-| --botnet           | string | Botnet                |
-| --country          | string | Country               |
-| --countrycode      | string | CountryCode           |
-| --cursor           | string | Cursor                |
-| --cve              | string | Cve                   |
-| --hostname         | string | Hostname              |
-| --iava             | string | Iava                  |
-| --id               | string | ID                    |
-| --lastmodenddate   | string | LastModEndDate        |
-| --lastmodstartdate | string | LastModStartDate      |
-| --limit            | string | Limit                 |
-| --mispid           | string | MispId                |
-| --mitreid          | string | MitreId               |
-| --nextcursor       | string | NextCursor            |
-| --order            | string | Order                 |
-| --page             | string | Page                  |
-| --prevcursor       | string | PrevCursor            |
-| --pubenddate       | string | PubEndDate            |
-| --pubstartdate     | string | PubStartDate          |
-| --ransomware       | string | Ransomware            |
-| --sort             | string | Sort                  |
-| --threatactor      | string | ThreatActor           |
-| --help             |        | Show help for command |
+| Flag                   | Type   | Description           |
+|------------------------|--------|-----------------------|
+| --alias                | string | Alias                 |
+| --asn                  | string | Asn                   |
+| --botnet               | string | Botnet                |
+| --cidr                 | string | Cidr                  |
+| --country              | string | Country               |
+| --country_code         | string | CountryCode           |
+| --cursor               | string | Cursor                |
+| --cve                  | string | Cve                   |
+| --hostname             | string | Hostname              |
+| --iava                 | string | Iava                  |
+| --id                   | string | ID                    |
+| --ilvn                 | string | Ilvn                  |
+| --jvndb                | string | Jvndb                 |
+| --kind                 | string | Kind                  |
+| --lastModEndDate       | string | LastModEndDate        |
+| --lastModStartDate     | string | LastModStartDate      |
+| --limit                | string | Limit                 |
+| --misp_id              | string | MispId                |
+| --mitre_id             | string | MitreId               |
+| --order                | string | Order                 |
+| --page                 | string | Page                  |
+| --pubEndDate           | string | PubEndDate            |
+| --pubStartDate         | string | PubStartDate          |
+| --ransomware           | string | Ransomware            |
+| --sort                 | string | Sort                  |
+| --start_cursor         | string | StartCursor           |
+| --threat_actor         | string | ThreatActor           |
+| --updatedAtEndDate     | string | UpdatedAtEndDate      |
+| --updatedAtStartDate   | string | UpdatedAtStartDate    |
+| --help                 |        | Show help for command |
 
 
 
