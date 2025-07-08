@@ -3,8 +3,9 @@ package sdk
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dustin/go-humanize"
 	"time"
+
+	"github.com/dustin/go-humanize"
 )
 
 type TokenLocation struct {
@@ -61,7 +62,7 @@ func (c *Client) GetTokens() (responseJSON *TokenResult, err error) {
 		return nil, err
 	}
 
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
 	return responseJSON, nil
 }
@@ -72,7 +73,7 @@ func (c *Client) CreateToken(label string) (responseJSON *TokenResponse, err err
 		return nil, err
 	}
 
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
 	return responseJSON, nil
 }
@@ -82,7 +83,7 @@ func (c *Client) DeleteToken(ID string) (responseJSON *TokenResponse, err error)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
 	return responseJSON, nil
 }

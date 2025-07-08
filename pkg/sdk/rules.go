@@ -25,7 +25,7 @@ func (c *Client) GetRule(rule string) (string, error) {
 		return "", err
 	}
 
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	body, _ := io.ReadAll(res.Body)
 
 	return string(body), nil

@@ -40,7 +40,7 @@ func (c *Client) GetPurl(purl string) (responseJSON *PurlResponse, err error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
 	return responseJSON, nil
 }

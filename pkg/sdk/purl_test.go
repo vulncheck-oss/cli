@@ -18,7 +18,7 @@ func TestGetPurl(t *testing.T) {
 	mockJson := `{"_benchmark":0.046492,"_meta":{"purl_struct":{"type":"hex","namespace":"","name":"coherence","version":"0.1.2","qualifiers":null,"subpath":""},"timestamp":"2024-02-12T22:52:52.548053402Z","total_documents":1},"data":{"cves":["CVE-2018-20301"],"vulnerabilities":[{"detection":"CVE-2018-20301","fixed_version":"0.5.2"}]}}`
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, mockJson)
+		_, _ = fmt.Fprintln(w, mockJson)
 	})
 
 	handler.ServeHTTP(w, req)

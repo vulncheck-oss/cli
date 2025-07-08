@@ -36,7 +36,7 @@ func (c *Client) GetIndex7zip(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -73,7 +73,7 @@ func (c *Client) GetIndexA10(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -110,7 +110,7 @@ func (c *Client) GetIndexAbb(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -147,7 +147,7 @@ func (c *Client) GetIndexAbbott(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -184,7 +184,7 @@ func (c *Client) GetIndexAbsolute(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -221,7 +221,7 @@ func (c *Client) GetIndexAcronis(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -258,7 +258,7 @@ func (c *Client) GetIndexAdobe(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -294,7 +294,7 @@ func (c *Client) GetIndexAix(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -331,7 +331,7 @@ func (c *Client) GetIndexAlephResearch(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -368,7 +368,7 @@ func (c *Client) GetIndexAlma(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -405,7 +405,7 @@ func (c *Client) GetIndexAlpine(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -442,7 +442,7 @@ func (c *Client) GetIndexAlpinePurls(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -479,7 +479,7 @@ func (c *Client) GetIndexAmazon(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -515,7 +515,7 @@ func (c *Client) GetIndexAmazonCve(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -552,7 +552,7 @@ func (c *Client) GetIndexAmd(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -589,7 +589,7 @@ func (c *Client) GetIndexAmi(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -626,7 +626,7 @@ func (c *Client) GetIndexAnchoreNvdOverride(queryParameters ...IndexQueryParamet
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -663,7 +663,7 @@ func (c *Client) GetIndexAndroid(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -700,7 +700,7 @@ func (c *Client) GetIndexApacheActivemq(queryParameters ...IndexQueryParameters)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -737,7 +737,7 @@ func (c *Client) GetIndexApacheArchiva(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -774,7 +774,7 @@ func (c *Client) GetIndexApacheArrow(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -811,7 +811,7 @@ func (c *Client) GetIndexApacheCamel(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -848,7 +848,7 @@ func (c *Client) GetIndexApacheCommons(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -885,7 +885,7 @@ func (c *Client) GetIndexApacheCouchdb(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -922,7 +922,7 @@ func (c *Client) GetIndexApacheFlink(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -959,7 +959,7 @@ func (c *Client) GetIndexApacheGuacamole(queryParameters ...IndexQueryParameters
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -996,7 +996,7 @@ func (c *Client) GetIndexApacheHadoop(queryParameters ...IndexQueryParameters) (
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1033,7 +1033,7 @@ func (c *Client) GetIndexApacheHttp(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1070,7 +1070,7 @@ func (c *Client) GetIndexApacheJspwiki(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1107,7 +1107,7 @@ func (c *Client) GetIndexApacheKafka(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1144,7 +1144,7 @@ func (c *Client) GetIndexApacheLoggingservices(queryParameters ...IndexQueryPara
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1181,7 +1181,7 @@ func (c *Client) GetIndexApacheNifi(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1218,7 +1218,7 @@ func (c *Client) GetIndexApacheOfbiz(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1255,7 +1255,7 @@ func (c *Client) GetIndexApacheOpenmeetings(queryParameters ...IndexQueryParamet
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1292,7 +1292,7 @@ func (c *Client) GetIndexApacheOpenoffice(queryParameters ...IndexQueryParameter
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1329,7 +1329,7 @@ func (c *Client) GetIndexApachePulsar(queryParameters ...IndexQueryParameters) (
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1366,7 +1366,7 @@ func (c *Client) GetIndexApacheShiro(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1403,7 +1403,7 @@ func (c *Client) GetIndexApacheSpark(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1440,7 +1440,7 @@ func (c *Client) GetIndexApacheStruts(queryParameters ...IndexQueryParameters) (
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1477,7 +1477,7 @@ func (c *Client) GetIndexApacheSubversion(queryParameters ...IndexQueryParameter
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1514,7 +1514,7 @@ func (c *Client) GetIndexApacheSuperset(queryParameters ...IndexQueryParameters)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1551,7 +1551,7 @@ func (c *Client) GetIndexApacheTomcat(queryParameters ...IndexQueryParameters) (
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1588,7 +1588,7 @@ func (c *Client) GetIndexApacheZookeeper(queryParameters ...IndexQueryParameters
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1625,7 +1625,7 @@ func (c *Client) GetIndexAppcheck(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1662,7 +1662,7 @@ func (c *Client) GetIndexAppgate(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1699,7 +1699,7 @@ func (c *Client) GetIndexApple(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1736,7 +1736,7 @@ func (c *Client) GetIndexArch(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1773,7 +1773,7 @@ func (c *Client) GetIndexArista(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1810,7 +1810,7 @@ func (c *Client) GetIndexAruba(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1847,7 +1847,7 @@ func (c *Client) GetIndexAsrg(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1884,7 +1884,7 @@ func (c *Client) GetIndexAssetnote(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1921,7 +1921,7 @@ func (c *Client) GetIndexAsterisk(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1957,7 +1957,7 @@ func (c *Client) GetIndexAstra(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -1994,7 +1994,7 @@ func (c *Client) GetIndexAsus(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2031,7 +2031,7 @@ func (c *Client) GetIndexAtlassian(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2068,7 +2068,7 @@ func (c *Client) GetIndexAtlassianVulns(queryParameters ...IndexQueryParameters)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2105,7 +2105,7 @@ func (c *Client) GetIndexAtredis(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2142,7 +2142,7 @@ func (c *Client) GetIndexAuscert(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2179,7 +2179,7 @@ func (c *Client) GetIndexAutodesk(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2216,7 +2216,7 @@ func (c *Client) GetIndexAvaya(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2253,7 +2253,7 @@ func (c *Client) GetIndexAveva(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2290,7 +2290,7 @@ func (c *Client) GetIndexAvigilon(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2327,7 +2327,7 @@ func (c *Client) GetIndexAws(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2364,7 +2364,7 @@ func (c *Client) GetIndexAxis(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2401,7 +2401,7 @@ func (c *Client) GetIndexAzul(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2438,7 +2438,7 @@ func (c *Client) GetIndexBandr(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2475,7 +2475,7 @@ func (c *Client) GetIndexBaxter(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2512,7 +2512,7 @@ func (c *Client) GetIndexBbraun(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2549,7 +2549,7 @@ func (c *Client) GetIndexBd(queryParameters ...IndexQueryParameters) (responseJS
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2586,7 +2586,7 @@ func (c *Client) GetIndexBdu(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2623,7 +2623,7 @@ func (c *Client) GetIndexBeckhoff(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2660,7 +2660,7 @@ func (c *Client) GetIndexBelden(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2697,7 +2697,7 @@ func (c *Client) GetIndexBeyondTrust(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2734,7 +2734,7 @@ func (c *Client) GetIndexBinarly(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2771,7 +2771,7 @@ func (c *Client) GetIndexBitdefender(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2808,7 +2808,7 @@ func (c *Client) GetIndexBlackberry(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2845,7 +2845,7 @@ func (c *Client) GetIndexBls(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2882,7 +2882,7 @@ func (c *Client) GetIndexBosch(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2919,7 +2919,7 @@ func (c *Client) GetIndexBostonScientific(queryParameters ...IndexQueryParameter
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2956,7 +2956,7 @@ func (c *Client) GetIndexBotnets(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -2993,7 +2993,7 @@ func (c *Client) GetIndexCaCyberCentre(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3030,7 +3030,7 @@ func (c *Client) GetIndexCanvas(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3067,7 +3067,7 @@ func (c *Client) GetIndexCarestream(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3104,7 +3104,7 @@ func (c *Client) GetIndexCargo(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3141,7 +3141,7 @@ func (c *Client) GetIndexCarrier(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3178,7 +3178,7 @@ func (c *Client) GetIndexCblMariner(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3215,7 +3215,7 @@ func (c *Client) GetIndexCentos(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3252,7 +3252,7 @@ func (c *Client) GetIndexCertBe(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3289,7 +3289,7 @@ func (c *Client) GetIndexCertIn(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3326,7 +3326,7 @@ func (c *Client) GetIndexCertIrSecurityAlerts(queryParameters ...IndexQueryParam
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3363,7 +3363,7 @@ func (c *Client) GetIndexCertSe(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3400,7 +3400,7 @@ func (c *Client) GetIndexCertUa(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3437,7 +3437,7 @@ func (c *Client) GetIndexCerteu(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3474,7 +3474,7 @@ func (c *Client) GetIndexCertfr(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3511,7 +3511,7 @@ func (c *Client) GetIndexChainguard(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3548,7 +3548,7 @@ func (c *Client) GetIndexCheckpoint(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3585,7 +3585,7 @@ func (c *Client) GetIndexChrome(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3622,7 +3622,7 @@ func (c *Client) GetIndexCisaAlerts(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3659,7 +3659,7 @@ func (c *Client) GetIndexCisaKev(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3696,7 +3696,7 @@ func (c *Client) GetIndexCisco(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3732,7 +3732,7 @@ func (c *Client) GetIndexCiscoCsaf(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3769,7 +3769,7 @@ func (c *Client) GetIndexCiscoTalos(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3806,7 +3806,7 @@ func (c *Client) GetIndexCitrix(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3843,7 +3843,7 @@ func (c *Client) GetIndexClaroty(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3880,7 +3880,7 @@ func (c *Client) GetIndexCloudbees(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3917,7 +3917,7 @@ func (c *Client) GetIndexCloudvulndb(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3954,7 +3954,7 @@ func (c *Client) GetIndexCnnvd(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -3991,7 +3991,7 @@ func (c *Client) GetIndexCnvdBulletins(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4028,7 +4028,7 @@ func (c *Client) GetIndexCnvdFlaws(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4065,7 +4065,7 @@ func (c *Client) GetIndexCocoapods(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4102,7 +4102,7 @@ func (c *Client) GetIndexCodesys(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4138,7 +4138,7 @@ func (c *Client) GetIndexCommvault(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4175,7 +4175,7 @@ func (c *Client) GetIndexCompassSecurity(queryParameters ...IndexQueryParameters
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4212,7 +4212,7 @@ func (c *Client) GetIndexComposer(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4249,7 +4249,7 @@ func (c *Client) GetIndexConan(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4285,7 +4285,7 @@ func (c *Client) GetIndexCoreimpact(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4322,7 +4322,7 @@ func (c *Client) GetIndexCrestron(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4359,7 +4359,7 @@ func (c *Client) GetIndexCurl(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4396,7 +4396,7 @@ func (c *Client) GetIndexCwe(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4433,7 +4433,7 @@ func (c *Client) GetIndexDahua(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4470,7 +4470,7 @@ func (c *Client) GetIndexDassault(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4507,7 +4507,7 @@ func (c *Client) GetIndexDebian(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4544,7 +4544,7 @@ func (c *Client) GetIndexDebianDsa(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4581,7 +4581,7 @@ func (c *Client) GetIndexDell(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4618,7 +4618,7 @@ func (c *Client) GetIndexDelta(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4655,7 +4655,7 @@ func (c *Client) GetIndexDjango(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4692,7 +4692,7 @@ func (c *Client) GetIndexDnn(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4729,7 +4729,7 @@ func (c *Client) GetIndexDotcms(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4766,7 +4766,7 @@ func (c *Client) GetIndexDragos(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4803,7 +4803,7 @@ func (c *Client) GetIndexDraytek(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4839,7 +4839,7 @@ func (c *Client) GetIndexDrupal(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4876,7 +4876,7 @@ func (c *Client) GetIndexEaton(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4913,7 +4913,7 @@ func (c *Client) GetIndexElastic(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4950,7 +4950,7 @@ func (c *Client) GetIndexElspec(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -4987,7 +4987,7 @@ func (c *Client) GetIndexEmergingThreatsSnort(queryParameters ...IndexQueryParam
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5024,7 +5024,7 @@ func (c *Client) GetIndexEmerson(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5060,7 +5060,7 @@ func (c *Client) GetIndexEndoflife(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5097,7 +5097,7 @@ func (c *Client) GetIndexEol(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5133,7 +5133,7 @@ func (c *Client) GetIndexEolMicrosoft(queryParameters ...IndexQueryParameters) (
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5170,7 +5170,7 @@ func (c *Client) GetIndexEpss(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5206,7 +5206,7 @@ func (c *Client) GetIndexEuvd(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5243,7 +5243,7 @@ func (c *Client) GetIndexExodusIntel(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5280,7 +5280,7 @@ func (c *Client) GetIndexExploitChains(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5317,7 +5317,7 @@ func (c *Client) GetIndexExploitdb(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5354,7 +5354,7 @@ func (c *Client) GetIndexExploits(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5390,7 +5390,7 @@ func (c *Client) GetIndexExploitsChangelog(queryParameters ...IndexQueryParamete
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5427,7 +5427,7 @@ func (c *Client) GetIndexFSecure(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5463,7 +5463,7 @@ func (c *Client) GetIndexF5(queryParameters ...IndexQueryParameters) (responseJS
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5500,7 +5500,7 @@ func (c *Client) GetIndexFanuc(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5537,7 +5537,7 @@ func (c *Client) GetIndexFastly(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5574,7 +5574,7 @@ func (c *Client) GetIndexFedora(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5611,7 +5611,7 @@ func (c *Client) GetIndexFilecloud(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5647,7 +5647,7 @@ func (c *Client) GetIndexFilezilla(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5684,7 +5684,7 @@ func (c *Client) GetIndexFlattSecurity(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5721,7 +5721,7 @@ func (c *Client) GetIndexForgerock(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5758,7 +5758,7 @@ func (c *Client) GetIndexFortinet(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5794,7 +5794,7 @@ func (c *Client) GetIndexFortinetIps(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5831,7 +5831,7 @@ func (c *Client) GetIndexFoxit(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5868,7 +5868,7 @@ func (c *Client) GetIndexFreebsd(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5905,7 +5905,7 @@ func (c *Client) GetIndexGallagher(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5942,7 +5942,7 @@ func (c *Client) GetIndexGcp(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -5979,7 +5979,7 @@ func (c *Client) GetIndexGeGas(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6016,7 +6016,7 @@ func (c *Client) GetIndexGeHealthcare(queryParameters ...IndexQueryParameters) (
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6053,7 +6053,7 @@ func (c *Client) GetIndexGem(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6090,7 +6090,7 @@ func (c *Client) GetIndexGenetec(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6127,7 +6127,7 @@ func (c *Client) GetIndexGigabyte(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6164,7 +6164,7 @@ func (c *Client) GetIndexGiteeExploits(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6201,7 +6201,7 @@ func (c *Client) GetIndexGithubExploits(queryParameters ...IndexQueryParameters)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6238,7 +6238,7 @@ func (c *Client) GetIndexGithubSecurityAdvisories(queryParameters ...IndexQueryP
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6275,7 +6275,7 @@ func (c *Client) GetIndexGitlabAdvisoriesCommunity(queryParameters ...IndexQuery
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6312,7 +6312,7 @@ func (c *Client) GetIndexGitlabExploits(queryParameters ...IndexQueryParameters)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6349,7 +6349,7 @@ func (c *Client) GetIndexGnutls(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6385,7 +6385,7 @@ func (c *Client) GetIndexGoVulndb(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6422,7 +6422,7 @@ func (c *Client) GetIndexGolang(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6459,7 +6459,7 @@ func (c *Client) GetIndexGoogle0dayItw(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6496,7 +6496,7 @@ func (c *Client) GetIndexGoogleContainerOptimizedOs(queryParameters ...IndexQuer
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6533,7 +6533,7 @@ func (c *Client) GetIndexGrafana(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6570,7 +6570,7 @@ func (c *Client) GetIndexGreynoiseMetadata(queryParameters ...IndexQueryParamete
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6607,7 +6607,7 @@ func (c *Client) GetIndexHackage(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6644,7 +6644,7 @@ func (c *Client) GetIndexHarmonyos(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6681,7 +6681,7 @@ func (c *Client) GetIndexHashicorp(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6718,7 +6718,7 @@ func (c *Client) GetIndexHaskellSadb(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6755,7 +6755,7 @@ func (c *Client) GetIndexHcl(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6792,7 +6792,7 @@ func (c *Client) GetIndexHex(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6829,7 +6829,7 @@ func (c *Client) GetIndexHikvision(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6866,7 +6866,7 @@ func (c *Client) GetIndexHillrom(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6903,7 +6903,7 @@ func (c *Client) GetIndexHitachi(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6940,7 +6940,7 @@ func (c *Client) GetIndexHitachiEnergy(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -6977,7 +6977,7 @@ func (c *Client) GetIndexHkcert(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7014,7 +7014,7 @@ func (c *Client) GetIndexHoneywell(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7051,7 +7051,7 @@ func (c *Client) GetIndexHp(queryParameters ...IndexQueryParameters) (responseJS
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7087,7 +7087,7 @@ func (c *Client) GetIndexHpe(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7124,7 +7124,7 @@ func (c *Client) GetIndexHuaweiEuleros(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7161,7 +7161,7 @@ func (c *Client) GetIndexHuaweiIps(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7198,7 +7198,7 @@ func (c *Client) GetIndexHuaweiPsirt(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7235,7 +7235,7 @@ func (c *Client) GetIndexIava(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7272,7 +7272,7 @@ func (c *Client) GetIndexIbm(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7309,7 +7309,7 @@ func (c *Client) GetIndexIdemia(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7346,7 +7346,7 @@ func (c *Client) GetIndexIlAlerts(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7383,7 +7383,7 @@ func (c *Client) GetIndexIlVulnerabilities(queryParameters ...IndexQueryParamete
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7420,7 +7420,7 @@ func (c *Client) GetIndexIncibe(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7457,7 +7457,7 @@ func (c *Client) GetIndexInitialAccess(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7494,7 +7494,7 @@ func (c *Client) GetIndexInitialAccessGit(queryParameters ...IndexQueryParameter
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7531,7 +7531,7 @@ func (c *Client) GetIndexIntel(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7568,7 +7568,7 @@ func (c *Client) GetIndexIpintel10d(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7605,7 +7605,7 @@ func (c *Client) GetIndexIpintel30d(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7642,7 +7642,7 @@ func (c *Client) GetIndexIpintel3d(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7679,7 +7679,7 @@ func (c *Client) GetIndexIpintel90d(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7716,7 +7716,7 @@ func (c *Client) GetIndexIstio(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7753,7 +7753,7 @@ func (c *Client) GetIndexIvanti(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7790,7 +7790,7 @@ func (c *Client) GetIndexIvantiRss(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7827,7 +7827,7 @@ func (c *Client) GetIndexJenkins(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7864,7 +7864,7 @@ func (c *Client) GetIndexJetbrains(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7901,7 +7901,7 @@ func (c *Client) GetIndexJfrog(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7938,7 +7938,7 @@ func (c *Client) GetIndexJnj(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -7974,7 +7974,7 @@ func (c *Client) GetIndexJvn(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8011,7 +8011,7 @@ func (c *Client) GetIndexJvndb(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8048,7 +8048,7 @@ func (c *Client) GetIndexKasperskyIcsCert(queryParameters ...IndexQueryParameter
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8085,7 +8085,7 @@ func (c *Client) GetIndexKorelogic(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8122,7 +8122,7 @@ func (c *Client) GetIndexKrcertSecurityNotices(queryParameters ...IndexQueryPara
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8159,7 +8159,7 @@ func (c *Client) GetIndexKrcertVulnerabilities(queryParameters ...IndexQueryPara
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8196,7 +8196,7 @@ func (c *Client) GetIndexKubernetes(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8233,7 +8233,7 @@ func (c *Client) GetIndexLenovo(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8270,7 +8270,7 @@ func (c *Client) GetIndexLexmark(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8307,7 +8307,7 @@ func (c *Client) GetIndexLg(queryParameters ...IndexQueryParameters) (responseJS
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8344,7 +8344,7 @@ func (c *Client) GetIndexLibreOffice(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8381,7 +8381,7 @@ func (c *Client) GetIndexLinux(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8418,7 +8418,7 @@ func (c *Client) GetIndexMFiles(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8455,7 +8455,7 @@ func (c *Client) GetIndexMacert(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8492,7 +8492,7 @@ func (c *Client) GetIndexManageengine(queryParameters ...IndexQueryParameters) (
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8529,7 +8529,7 @@ func (c *Client) GetIndexMaven(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8566,7 +8566,7 @@ func (c *Client) GetIndexMbedTls(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8602,7 +8602,7 @@ func (c *Client) GetIndexMcafee(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8639,7 +8639,7 @@ func (c *Client) GetIndexMediatek(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8676,7 +8676,7 @@ func (c *Client) GetIndexMedtronic(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8713,7 +8713,7 @@ func (c *Client) GetIndexMendix(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8750,7 +8750,7 @@ func (c *Client) GetIndexMetasploit(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8787,7 +8787,7 @@ func (c *Client) GetIndexMicrosoftCvrf(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8824,7 +8824,7 @@ func (c *Client) GetIndexMicrosoftKb(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8861,7 +8861,7 @@ func (c *Client) GetIndexMikrotik(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8898,7 +8898,7 @@ func (c *Client) GetIndexMindray(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8935,7 +8935,7 @@ func (c *Client) GetIndexMispThreatActors(queryParameters ...IndexQueryParameter
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -8972,7 +8972,7 @@ func (c *Client) GetIndexMitel(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9009,7 +9009,7 @@ func (c *Client) GetIndexMitreAttackCve(queryParameters ...IndexQueryParameters)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9046,7 +9046,7 @@ func (c *Client) GetIndexMitreCvelistV5(queryParameters ...IndexQueryParameters)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9083,7 +9083,7 @@ func (c *Client) GetIndexMitsubishiElectric(queryParameters ...IndexQueryParamet
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9120,7 +9120,7 @@ func (c *Client) GetIndexMongodb(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9157,7 +9157,7 @@ func (c *Client) GetIndexMoxa(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9194,7 +9194,7 @@ func (c *Client) GetIndexMozilla(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9231,7 +9231,7 @@ func (c *Client) GetIndexNaver(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9267,7 +9267,7 @@ func (c *Client) GetIndexNcsc(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9303,7 +9303,7 @@ func (c *Client) GetIndexNcscCves(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9340,7 +9340,7 @@ func (c *Client) GetIndexNec(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9377,7 +9377,7 @@ func (c *Client) GetIndexNetapp(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9413,7 +9413,7 @@ func (c *Client) GetIndexNetatalk(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9450,7 +9450,7 @@ func (c *Client) GetIndexNetgate(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9487,7 +9487,7 @@ func (c *Client) GetIndexNetgear(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9524,7 +9524,7 @@ func (c *Client) GetIndexNetskope(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9561,7 +9561,7 @@ func (c *Client) GetIndexNginx(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9598,7 +9598,7 @@ func (c *Client) GetIndexNhs(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9635,7 +9635,7 @@ func (c *Client) GetIndexNi(queryParameters ...IndexQueryParameters) (responseJS
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9672,7 +9672,7 @@ func (c *Client) GetIndexNistNvd(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9709,7 +9709,7 @@ func (c *Client) GetIndexNistNvd2(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9746,7 +9746,7 @@ func (c *Client) GetIndexNistNvd2Cpematch(queryParameters ...IndexQueryParameter
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9782,7 +9782,7 @@ func (c *Client) GetIndexNistNvd2Sources(queryParameters ...IndexQueryParameters
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9819,7 +9819,7 @@ func (c *Client) GetIndexNodeSecurity(queryParameters ...IndexQueryParameters) (
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9856,7 +9856,7 @@ func (c *Client) GetIndexNodejs(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9893,7 +9893,7 @@ func (c *Client) GetIndexNokia(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9929,7 +9929,7 @@ func (c *Client) GetIndexNotepadplusplus(queryParameters ...IndexQueryParameters
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -9966,7 +9966,7 @@ func (c *Client) GetIndexNozomi(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10003,7 +10003,7 @@ func (c *Client) GetIndexNpm(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10040,7 +10040,7 @@ func (c *Client) GetIndexNtp(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10077,7 +10077,7 @@ func (c *Client) GetIndexNuget(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10114,7 +10114,7 @@ func (c *Client) GetIndexNvidia(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10151,7 +10151,7 @@ func (c *Client) GetIndexNzAdvisories(queryParameters ...IndexQueryParameters) (
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10188,7 +10188,7 @@ func (c *Client) GetIndexOctopusDeploy(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10225,7 +10225,7 @@ func (c *Client) GetIndexOkta(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10262,7 +10262,7 @@ func (c *Client) GetIndexOmron(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10299,7 +10299,7 @@ func (c *Client) GetIndexOneE(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10336,7 +10336,7 @@ func (c *Client) GetIndexOpam(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10373,7 +10373,7 @@ func (c *Client) GetIndexOpenCvdb(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10410,7 +10410,7 @@ func (c *Client) GetIndexOpenbsd(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10447,7 +10447,7 @@ func (c *Client) GetIndexOpenjdk(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10484,7 +10484,7 @@ func (c *Client) GetIndexOpenssh(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10521,7 +10521,7 @@ func (c *Client) GetIndexOpensslSecadv(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10558,7 +10558,7 @@ func (c *Client) GetIndexOpenstack(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10595,7 +10595,7 @@ func (c *Client) GetIndexOpenwrt(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10632,7 +10632,7 @@ func (c *Client) GetIndexOracle(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10669,7 +10669,7 @@ func (c *Client) GetIndexOracleCpu(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10706,7 +10706,7 @@ func (c *Client) GetIndexOracleCpuCsaf(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10743,7 +10743,7 @@ func (c *Client) GetIndexOsv(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10780,7 +10780,7 @@ func (c *Client) GetIndexOtrs(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10817,7 +10817,7 @@ func (c *Client) GetIndexOwncloud(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10853,7 +10853,7 @@ func (c *Client) GetIndexPacketstorm(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10890,7 +10890,7 @@ func (c *Client) GetIndexPalantir(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10927,7 +10927,7 @@ func (c *Client) GetIndexPaloAlto(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -10964,7 +10964,7 @@ func (c *Client) GetIndexPanasonic(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11001,7 +11001,7 @@ func (c *Client) GetIndexPapercut(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11038,7 +11038,7 @@ func (c *Client) GetIndexPega(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11075,7 +11075,7 @@ func (c *Client) GetIndexPhilips(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11112,7 +11112,7 @@ func (c *Client) GetIndexPhoenixContact(queryParameters ...IndexQueryParameters)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11149,7 +11149,7 @@ func (c *Client) GetIndexPhpMyAdmin(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11186,7 +11186,7 @@ func (c *Client) GetIndexPostgressql(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11223,7 +11223,7 @@ func (c *Client) GetIndexPowerdns(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11260,7 +11260,7 @@ func (c *Client) GetIndexProgress(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11297,7 +11297,7 @@ func (c *Client) GetIndexProofpoint(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11333,7 +11333,7 @@ func (c *Client) GetIndexPtc(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11370,7 +11370,7 @@ func (c *Client) GetIndexPub(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11407,7 +11407,7 @@ func (c *Client) GetIndexPureStorage(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11444,7 +11444,7 @@ func (c *Client) GetIndexPypaAdvisories(queryParameters ...IndexQueryParameters)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11481,7 +11481,7 @@ func (c *Client) GetIndexPypi(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11518,7 +11518,7 @@ func (c *Client) GetIndexQnap(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11555,7 +11555,7 @@ func (c *Client) GetIndexQualcomm(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11592,7 +11592,7 @@ func (c *Client) GetIndexQualys(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11628,7 +11628,7 @@ func (c *Client) GetIndexQubesQsb(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11665,7 +11665,7 @@ func (c *Client) GetIndexRansomware(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11702,7 +11702,7 @@ func (c *Client) GetIndexRedhat(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11739,7 +11739,7 @@ func (c *Client) GetIndexRenesas(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11776,7 +11776,7 @@ func (c *Client) GetIndexRevive(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11813,7 +11813,7 @@ func (c *Client) GetIndexRoche(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11850,7 +11850,7 @@ func (c *Client) GetIndexRockwell(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11887,7 +11887,7 @@ func (c *Client) GetIndexRocky(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11924,7 +11924,7 @@ func (c *Client) GetIndexRockyErrata(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11961,7 +11961,7 @@ func (c *Client) GetIndexRockyPurls(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -11997,7 +11997,7 @@ func (c *Client) GetIndexRsync(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12034,7 +12034,7 @@ func (c *Client) GetIndexRuckus(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12071,7 +12071,7 @@ func (c *Client) GetIndexRustsecAdvisories(queryParameters ...IndexQueryParamete
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12108,7 +12108,7 @@ func (c *Client) GetIndexSacert(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12145,7 +12145,7 @@ func (c *Client) GetIndexSaint(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12182,7 +12182,7 @@ func (c *Client) GetIndexSalesforce(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12219,7 +12219,7 @@ func (c *Client) GetIndexSamba(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12256,7 +12256,7 @@ func (c *Client) GetIndexSap(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12293,7 +12293,7 @@ func (c *Client) GetIndexSchneiderElectric(queryParameters ...IndexQueryParamete
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12330,7 +12330,7 @@ func (c *Client) GetIndexSecConsult(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12366,7 +12366,7 @@ func (c *Client) GetIndexSecuritylab(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12402,7 +12402,7 @@ func (c *Client) GetIndexSeebug(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12439,7 +12439,7 @@ func (c *Client) GetIndexSel(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12476,7 +12476,7 @@ func (c *Client) GetIndexSentinelone(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12513,7 +12513,7 @@ func (c *Client) GetIndexServicenow(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12550,7 +12550,7 @@ func (c *Client) GetIndexShadowserverExploited(queryParameters ...IndexQueryPara
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12586,7 +12586,7 @@ func (c *Client) GetIndexShielder(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12623,7 +12623,7 @@ func (c *Client) GetIndexSick(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12660,7 +12660,7 @@ func (c *Client) GetIndexSiemens(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12697,7 +12697,7 @@ func (c *Client) GetIndexSierraWireless(queryParameters ...IndexQueryParameters)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12734,7 +12734,7 @@ func (c *Client) GetIndexSigmahqSigmaRules(queryParameters ...IndexQueryParamete
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12771,7 +12771,7 @@ func (c *Client) GetIndexSingcert(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12808,7 +12808,7 @@ func (c *Client) GetIndexSlackware(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12845,7 +12845,7 @@ func (c *Client) GetIndexSolarwinds(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12882,7 +12882,7 @@ func (c *Client) GetIndexSolr(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12918,7 +12918,7 @@ func (c *Client) GetIndexSonatype(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12955,7 +12955,7 @@ func (c *Client) GetIndexSonicwall(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -12992,7 +12992,7 @@ func (c *Client) GetIndexSpacelabsHealthcare(queryParameters ...IndexQueryParame
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13029,7 +13029,7 @@ func (c *Client) GetIndexSplunk(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13066,7 +13066,7 @@ func (c *Client) GetIndexSpring(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13103,7 +13103,7 @@ func (c *Client) GetIndexSsd(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13140,7 +13140,7 @@ func (c *Client) GetIndexStormshield(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13177,7 +13177,7 @@ func (c *Client) GetIndexStryker(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13214,7 +13214,7 @@ func (c *Client) GetIndexSudo(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13251,7 +13251,7 @@ func (c *Client) GetIndexSuse(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13287,7 +13287,7 @@ func (c *Client) GetIndexSuseSecurity(queryParameters ...IndexQueryParameters) (
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13324,7 +13324,7 @@ func (c *Client) GetIndexSwift(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13361,7 +13361,7 @@ func (c *Client) GetIndexSwisslogHealthcare(queryParameters ...IndexQueryParamet
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13398,7 +13398,7 @@ func (c *Client) GetIndexSymfony(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13435,7 +13435,7 @@ func (c *Client) GetIndexSynacktiv(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13472,7 +13472,7 @@ func (c *Client) GetIndexSyncrosoft(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13509,7 +13509,7 @@ func (c *Client) GetIndexSynology(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13545,7 +13545,7 @@ func (c *Client) GetIndexTailscale(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13582,7 +13582,7 @@ func (c *Client) GetIndexTeamviewer(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13618,7 +13618,7 @@ func (c *Client) GetIndexTenableResearchAdvisories(queryParameters ...IndexQuery
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13655,7 +13655,7 @@ func (c *Client) GetIndexTencent(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13692,7 +13692,7 @@ func (c *Client) GetIndexThales(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13729,7 +13729,7 @@ func (c *Client) GetIndexThemissinglink(queryParameters ...IndexQueryParameters)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13766,7 +13766,7 @@ func (c *Client) GetIndexThreatActors(queryParameters ...IndexQueryParameters) (
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13803,7 +13803,7 @@ func (c *Client) GetIndexTi(queryParameters ...IndexQueryParameters) (responseJS
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13840,7 +13840,7 @@ func (c *Client) GetIndexTibco(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13877,7 +13877,7 @@ func (c *Client) GetIndexTpLink(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13914,7 +13914,7 @@ func (c *Client) GetIndexTraneTechnology(queryParameters ...IndexQueryParameters
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13951,7 +13951,7 @@ func (c *Client) GetIndexTrendmicro(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -13988,7 +13988,7 @@ func (c *Client) GetIndexTrustwave(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14025,7 +14025,7 @@ func (c *Client) GetIndexTwcert(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14062,7 +14062,7 @@ func (c *Client) GetIndexUbiquiti(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14099,7 +14099,7 @@ func (c *Client) GetIndexUbuntu(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14136,7 +14136,7 @@ func (c *Client) GetIndexUnify(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14173,7 +14173,7 @@ func (c *Client) GetIndexUnisoc(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14210,7 +14210,7 @@ func (c *Client) GetIndexUsd(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14247,7 +14247,7 @@ func (c *Client) GetIndexUsom(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14284,7 +14284,7 @@ func (c *Client) GetIndexVandyke(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14321,7 +14321,7 @@ func (c *Client) GetIndexVapidlabs(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14357,7 +14357,7 @@ func (c *Client) GetIndexVcCpeDictionary(queryParameters ...IndexQueryParameters
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14394,7 +14394,7 @@ func (c *Client) GetIndexVde(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14431,7 +14431,7 @@ func (c *Client) GetIndexVeeam(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14468,7 +14468,7 @@ func (c *Client) GetIndexVeritas(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14504,7 +14504,7 @@ func (c *Client) GetIndexVirtuozzo(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14540,7 +14540,7 @@ func (c *Client) GetIndexVlc(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14577,7 +14577,7 @@ func (c *Client) GetIndexVmware(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14614,7 +14614,7 @@ func (c *Client) GetIndexVoidsec(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14650,7 +14650,7 @@ func (c *Client) GetIndexVulncheck(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14687,7 +14687,7 @@ func (c *Client) GetIndexVulncheckConfig(queryParameters ...IndexQueryParameters
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14724,7 +14724,7 @@ func (c *Client) GetIndexVulncheckCvelistV5(queryParameters ...IndexQueryParamet
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14761,7 +14761,7 @@ func (c *Client) GetIndexVulncheckKev(queryParameters ...IndexQueryParameters) (
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14798,7 +14798,7 @@ func (c *Client) GetIndexVulncheckNvd(queryParameters ...IndexQueryParameters) (
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14835,7 +14835,7 @@ func (c *Client) GetIndexVulncheckNvd2(queryParameters ...IndexQueryParameters) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14872,7 +14872,7 @@ func (c *Client) GetIndexVulnerabilityAliases(queryParameters ...IndexQueryParam
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14909,7 +14909,7 @@ func (c *Client) GetIndexVulnrichment(queryParameters ...IndexQueryParameters) (
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14946,7 +14946,7 @@ func (c *Client) GetIndexVyaire(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -14983,7 +14983,7 @@ func (c *Client) GetIndexWatchguard(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15020,7 +15020,7 @@ func (c *Client) GetIndexWhatsapp(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15057,7 +15057,7 @@ func (c *Client) GetIndexWibu(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15094,7 +15094,7 @@ func (c *Client) GetIndexWireshark(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15131,7 +15131,7 @@ func (c *Client) GetIndexWithSecure(queryParameters ...IndexQueryParameters) (re
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15168,7 +15168,7 @@ func (c *Client) GetIndexWolfi(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15205,7 +15205,7 @@ func (c *Client) GetIndexWolfssl(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15242,7 +15242,7 @@ func (c *Client) GetIndexWordfence(queryParameters ...IndexQueryParameters) (res
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15279,7 +15279,7 @@ func (c *Client) GetIndexXen(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15316,7 +15316,7 @@ func (c *Client) GetIndexXerox(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15353,7 +15353,7 @@ func (c *Client) GetIndexXiaomi(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15390,7 +15390,7 @@ func (c *Client) GetIndexXylem(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15426,7 +15426,7 @@ func (c *Client) GetIndexYamaha(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15463,7 +15463,7 @@ func (c *Client) GetIndexYokogawa(queryParameters ...IndexQueryParameters) (resp
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15500,7 +15500,7 @@ func (c *Client) GetIndexYubico(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15537,7 +15537,7 @@ func (c *Client) GetIndexZdi(queryParameters ...IndexQueryParameters) (responseJ
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15574,7 +15574,7 @@ func (c *Client) GetIndexZebra(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15611,7 +15611,7 @@ func (c *Client) GetIndexZeroscience(queryParameters ...IndexQueryParameters) (r
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15648,7 +15648,7 @@ func (c *Client) GetIndexZimbra(queryParameters ...IndexQueryParameters) (respon
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15685,7 +15685,7 @@ func (c *Client) GetIndexZoom(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15722,7 +15722,7 @@ func (c *Client) GetIndexZscaler(queryParameters ...IndexQueryParameters) (respo
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15759,7 +15759,7 @@ func (c *Client) GetIndexZuso(queryParameters ...IndexQueryParameters) (response
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)
@@ -15796,7 +15796,7 @@ func (c *Client) GetIndexZyxel(queryParameters ...IndexQueryParameters) (respons
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		return nil, handleErrorResponse(resp)

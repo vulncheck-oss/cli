@@ -18,7 +18,7 @@ func TestGetMe(t *testing.T) {
 	mockJson := `{"_benchmark":0.127513,"data":{"ID":1,"Email":"stevejobs@apple.com","Name":"Steve Jobs","Avatar":"","Payload":{},"Stripe":"","Terms":true,"Roles":[],"Settings":{},"Providers":null,"Teams":null,"URL":"/user/1","Initials":"SJ","TrialDays":0,"Pivot":null,"OrgRoles":null,"CurrentToken":null,"ActivatedAt":null,"OrgUsers":[],"Orgs":[],"CurrentOrg":null,"OrgID":null,"Org":null,"IsServiceUser":false,"HasEmployeeRole":false,"HasEmployeeAdminRole":false,"HasOrgManagerRole":false,"HasTrial":false,"HasInitial":false,"HasVuln":false,"HasAgent":false,"HasSbom":false,"OnlyCommunity":true,"created_at":"2024-03-11T13:05:48.049Z","updated_at":"2024-03-11T13:05:48.049Z"}}`
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, mockJson)
+		_, _ = fmt.Fprintln(w, mockJson)
 	})
 
 	handler.ServeHTTP(w, req)

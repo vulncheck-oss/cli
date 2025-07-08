@@ -34,7 +34,7 @@ func (c *Client) GetIndexBackup(index string) (responseJSON *BackupResponse, err
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
 	return responseJSON, nil
 }

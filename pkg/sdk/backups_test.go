@@ -18,7 +18,7 @@ func TestGetBackups(t *testing.T) {
 	mockJson := `{"_benchmark":0.02508,"data":[{"name":"a10","description":"A10 Networks Security Advisories","href":"https://api.vulncheck.com/v3/index/a10"}]}`
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, mockJson)
+		_, _ = fmt.Fprintln(w, mockJson)
 	})
 
 	handler.ServeHTTP(w, req)

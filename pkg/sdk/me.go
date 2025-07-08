@@ -54,7 +54,7 @@ func (c *Client) GetMe() (responseJSON *UserResponse, err error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
 	return responseJSON, nil
 }
