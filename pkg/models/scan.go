@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/vulncheck-oss/sdk-go/pkg/client"
+	"github.com/vulncheck-oss/cli/pkg/client"
 )
 
 type ScanResult struct {
