@@ -9,7 +9,7 @@ import (
 	"github.com/vulncheck-oss/cli/internal/build"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/environment"
-	"github.com/vulncheck-oss/sdk-go"
+	"github.com/vulncheck-oss/cli/pkg/sdk"
 )
 
 type MeResponse struct {

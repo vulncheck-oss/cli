@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/package-url/packageurl-go"
-	"github.com/vulncheck-oss/sdk-go"
+	"github.com/vulncheck-oss/cli/pkg/sdk"
 	_ "modernc.org/sqlite"
 )
 
