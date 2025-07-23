@@ -14,7 +14,7 @@ var Environments = []Environment{
 		Name:   "production",
 		Values: []string{"production", "prod"},
 		API:    "https://api.vulncheck.com",
-		WEB:    "https://vulncheck.com",
+		WEB:    "https://console.vulncheck.com",
 	},
 	{
 		Name:   "development",

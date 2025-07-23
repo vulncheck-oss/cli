@@ -22,6 +22,6 @@ func authHelp() string {
 
 	return heredoc.Doc(`
 		To get started with VulnCheck CLI, please run: vulncheck auth login
-		Alternatively, populate the VC_TOKEN environment variable with a VulnCheck token acquired from the portal at https://vulncheck.com/token.
+		Alternatively, populate the VC_TOKEN environment variable with a VulnCheck token acquired from the portal at https://console.vulncheck.com/token.
 	`)
 }
