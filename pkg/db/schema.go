@@ -78,7 +78,7 @@ var Schemas = []Schema{
 	{
 		Name: "purl OS",
 		Indices: []string{
-			"alpine-purls", "rocky-purls",
+			"alpine-purls", "rocky-purls", "debian-purls",
 		},
 		Columns: []Column{
 			{Name: "name", Type: "TEXT", Index: false, NotNull: true},
