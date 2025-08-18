@@ -25,12 +25,12 @@ func CPESearch(indexName string, cpe cpeutils.CPE) ([]cpeutils.CPEVulnerabilitie
 	var conditions []string
 	var args []interface{}
 
-	if cpe.Vendor != "" {
+	if cpe.Vendor != "" && cpe.Vendor != "*" {
 		conditions = append(conditions, "vendor LIKE ?")
 		args = append(args, "%"+strings.ToLower(cpe.Vendor)+"%")
 	}
 
-	if cpe.Product != "" {
+	if cpe.Product != "" && cpe.Product != "*" {
 		conditions = append(conditions, "product LIKE ?")
 		args = append(args, "%"+strings.ToLower(cpe.Product)+"%")
 	}
