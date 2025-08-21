@@ -32,7 +32,7 @@ func CmdWeb(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("this method is not available, try vc auth login token")
 	}
 
-	ui.Info("Attempting to launch vulncheck.com in your browser...")
+	ui.Info("Attempting to launch console.vulncheck.com in your browser...")
 
 	var errorResponse error
 	var token string
