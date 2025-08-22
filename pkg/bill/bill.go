@@ -407,11 +407,7 @@ func temporalScore(item client.ApiNVD20CVEExtended) string {
 	}
 	var score *float32
 
-	if item.Metrics.CvssMetricV31 != nil && len(*item.Metrics.CvssMetricV31) > 0 {
-		score = (*item.Metrics.CvssMetricV31)[0].CvssData.TemporalScore
-	}
-
-	if score == nil && item.Metrics.TemporalCVSSV31 != nil {
+	if item.Metrics.TemporalCVSSV31 != nil {
 		score = item.Metrics.TemporalCVSSV31.TemporalScore
 	}
 
