@@ -11,9 +11,9 @@ func TestInit(t *testing.T) {
 	originalVcWeb := os.Getenv("VC_WEB")
 	
 	defer func() {
-		os.Setenv("VC_ENV", originalVcEnv)
-		os.Setenv("VC_API", originalVcApi)
-		os.Setenv("VC_WEB", originalVcWeb)
+		_ = os.Setenv("VC_ENV", originalVcEnv)
+		_ = os.Setenv("VC_API", originalVcApi)
+		_ = os.Setenv("VC_WEB", originalVcWeb)
 		Env = Environments[0]
 	}()
 
@@ -77,11 +77,11 @@ func TestInit(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			os.Unsetenv("VC_API")
-			os.Unsetenv("VC_WEB")
+			_ = os.Unsetenv("VC_API")
+			_ = os.Unsetenv("VC_WEB")
 			Env = Environments[0]
 
-			os.Setenv("VC_ENV", tt.vcEnv)
+			_ = os.Setenv("VC_ENV", tt.vcEnv)
 			Init()
 
 			if Env.Name != tt.expectedEnv {
@@ -103,9 +103,9 @@ func TestInitWithOverrides(t *testing.T) {
 	originalVcWeb := os.Getenv("VC_WEB")
 	
 	defer func() {
-		os.Setenv("VC_ENV", originalVcEnv)
-		os.Setenv("VC_API", originalVcApi)
-		os.Setenv("VC_WEB", originalVcWeb)
+		_ = os.Setenv("VC_ENV", originalVcEnv)
+		_ = os.Setenv("VC_API", originalVcApi)
+		_ = os.Setenv("VC_WEB", originalVcWeb)
 		Env = Environments[0]
 	}()
 
@@ -155,16 +155,16 @@ func TestInitWithOverrides(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			Env = Environments[0]
 
-			os.Setenv("VC_ENV", tt.vcEnv)
+			_ = os.Setenv("VC_ENV", tt.vcEnv)
 			if tt.vcApi != "" {
-				os.Setenv("VC_API", tt.vcApi)
+				_ = os.Setenv("VC_API", tt.vcApi)
 			} else {
-				os.Unsetenv("VC_API")
+				_ = os.Unsetenv("VC_API")
 			}
 			if tt.vcWeb != "" {
-				os.Setenv("VC_WEB", tt.vcWeb)
+				_ = os.Setenv("VC_WEB", tt.vcWeb)
 			} else {
-				os.Unsetenv("VC_WEB")
+				_ = os.Unsetenv("VC_WEB")
 			}
 
 			Init()
