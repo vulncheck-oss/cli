@@ -14,6 +14,7 @@ import (
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/package-url/packageurl-go"
 	"github.com/vulncheck-oss/cli/pkg/cache"
+	"github.com/vulncheck-oss/cli/pkg/client"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
 	"github.com/vulncheck-oss/cli/pkg/config"
@@ -21,9 +22,8 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
 	"github.com/vulncheck-oss/cli/pkg/db"
 	"github.com/vulncheck-oss/cli/pkg/models"
+	"github.com/vulncheck-oss/cli/pkg/sdk"
 	"github.com/vulncheck-oss/cli/pkg/session"
-	"github.com/vulncheck-oss/sdk-go"
-	"github.com/vulncheck-oss/sdk-go/pkg/client"
 )
 
 type InputSbomRef struct {

@@ -16,8 +16,8 @@ import (
 	"github.com/tidwall/gjson"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
+	"github.com/vulncheck-oss/cli/pkg/sdk"
 	"github.com/vulncheck-oss/cli/pkg/ui"
-	"github.com/vulncheck-oss/sdk-go"
 )
 
 type PurlEntry struct {

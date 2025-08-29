@@ -14,7 +14,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	ltable "github.com/charmbracelet/lipgloss/table"
 	"github.com/vulncheck-oss/cli/pkg/models"
-	"github.com/vulncheck-oss/sdk-go"
+	"github.com/vulncheck-oss/cli/pkg/sdk"
 	"golang.org/x/term"
 )
 
