@@ -9,6 +9,7 @@ type Environment struct {
 	WEB    string
 }
 
+// Example usage: VC_ENV=custom VC_API=https://custom-api.com VC_WEB=https://custom-web.com vulncheck ...
 var Environments = []Environment{
 	{
 		Name:   "production",
@@ -22,6 +23,12 @@ var Environments = []Environment{
 		API:    "http://localhost:8000",
 		WEB:    "http://localhost:3000",
 	},
+	{
+		Name:   "custom",
+		Values: []string{"custom"},
+		API:    "",
+		WEB:    "",
+	},
 }
 
 var Env = Environments[0]
@@ -32,8 +39,16 @@ func Init() {
 		for _, value := range env.Values {
 			if value == envVar {
 				Env = env
-				return
+				break
 			}
 		}
+	}
+	
+	if apiOverride := os.Getenv("VC_API"); apiOverride != "" {
+		Env.API = apiOverride
+	}
+	
+	if webOverride := os.Getenv("VC_WEB"); webOverride != "" {
+		Env.WEB = webOverride
 	}
 }
