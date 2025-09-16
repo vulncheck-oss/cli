@@ -10,6 +10,23 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+// processWildcard converts asterisks at the beginning or end of a string to SQL wildcards
+func processWildcard(value string) (string, bool) {
+	value = strings.ToLower(value)
+	hasWildcard := false
+	
+	if strings.HasPrefix(value, "*") {
+		value = "%" + value[1:]
+		hasWildcard = true
+	}
+	if strings.HasSuffix(value, "*") {
+		value = value[:len(value)-1] + "%"
+		hasWildcard = true
+	}
+	
+	return value, hasWildcard
+}
+
 func CPESearch(indexName string, cpe cpeutils.CPE) ([]cpeutils.CPEVulnerabilities, *Stats, error) {
 	startTime := time.Now()
 
@@ -18,32 +35,28 @@ func CPESearch(indexName string, cpe cpeutils.CPE) ([]cpeutils.CPEVulnerabilitie
 		return nil, nil, err
 	}
 
-	// Convert table name to use underscores instead of hyphens
 	tableName := strings.ReplaceAll(indexName, "-", "_")
-
-	// Build query with strict matching or wildcard only when asterisk is present
+	
 	var conditions []string
 	var args []interface{}
 
 	if cpe.Vendor != "" && cpe.Vendor != "*" {
-		vendor := strings.ToLower(cpe.Vendor)
-		if strings.HasPrefix(vendor, "*") || strings.HasSuffix(vendor, "*") {
-			vendor = strings.ReplaceAll(vendor, "*", "%")
-			conditions = append(conditions, "vendor LIKE ?")
-		} else {
-			conditions = append(conditions, "vendor = ?")
+		vendor, hasWildcard := processWildcard(cpe.Vendor)
+		operator := "="
+		if hasWildcard {
+			operator = "LIKE"
 		}
+		conditions = append(conditions, fmt.Sprintf("vendor %s ?", operator))
 		args = append(args, vendor)
 	}
 
 	if cpe.Product != "" && cpe.Product != "*" {
-		product := strings.ToLower(cpe.Product)
-		if strings.HasPrefix(product, "*") || strings.HasSuffix(product, "*") {
-			product = strings.ReplaceAll(product, "*", "%")
-			conditions = append(conditions, "product LIKE ?")
-		} else {
-			conditions = append(conditions, "product = ?")
+		product, hasWildcard := processWildcard(cpe.Product)
+		operator := "="
+		if hasWildcard {
+			operator = "LIKE"
 		}
+		conditions = append(conditions, fmt.Sprintf("product %s ?", operator))
 		args = append(args, product)
 	}
 
