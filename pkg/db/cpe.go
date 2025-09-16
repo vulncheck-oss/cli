@@ -10,23 +10,6 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// processWildcard converts asterisks at the beginning or end of a string to SQL wildcards
-func processWildcard(value string) (string, bool) {
-	value = strings.ToLower(value)
-	hasWildcard := false
-	
-	if strings.HasPrefix(value, "*") {
-		value = "%" + value[1:]
-		hasWildcard = true
-	}
-	if strings.HasSuffix(value, "*") {
-		value = value[:len(value)-1] + "%"
-		hasWildcard = true
-	}
-	
-	return value, hasWildcard
-}
-
 func CPESearch(indexName string, cpe cpeutils.CPE) ([]cpeutils.CPEVulnerabilities, *Stats, error) {
 	startTime := time.Now()
 
@@ -40,22 +23,38 @@ func CPESearch(indexName string, cpe cpeutils.CPE) ([]cpeutils.CPEVulnerabilitie
 	var conditions []string
 	var args []interface{}
 
+	// Add vendor condition with strict matching or wildcard support
 	if cpe.Vendor != "" && cpe.Vendor != "*" {
-		vendor, hasWildcard := processWildcard(cpe.Vendor)
+		vendor := strings.ToLower(cpe.Vendor)
 		operator := "="
-		if hasWildcard {
+		
+		if strings.HasPrefix(vendor, "*") {
+			vendor = "%" + vendor[1:]
 			operator = "LIKE"
 		}
+		if strings.HasSuffix(vendor, "*") && len(vendor) > 1 {
+			vendor = vendor[:len(vendor)-1] + "%"
+			operator = "LIKE"
+		}
+		
 		conditions = append(conditions, fmt.Sprintf("vendor %s ?", operator))
 		args = append(args, vendor)
 	}
 
+	// Add product condition with strict matching or wildcard support
 	if cpe.Product != "" && cpe.Product != "*" {
-		product, hasWildcard := processWildcard(cpe.Product)
+		product := strings.ToLower(cpe.Product)
 		operator := "="
-		if hasWildcard {
+		
+		if strings.HasPrefix(product, "*") {
+			product = "%" + product[1:]
 			operator = "LIKE"
 		}
+		if strings.HasSuffix(product, "*") && len(product) > 1 {
+			product = product[:len(product)-1] + "%"
+			operator = "LIKE"
+		}
+		
 		conditions = append(conditions, fmt.Sprintf("product %s ?", operator))
 		args = append(args, product)
 	}
