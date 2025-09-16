@@ -21,18 +21,30 @@ func CPESearch(indexName string, cpe cpeutils.CPE) ([]cpeutils.CPEVulnerabilitie
 	// Convert table name to use underscores instead of hyphens
 	tableName := strings.ReplaceAll(indexName, "-", "_")
 
-	// Build query based on vendor and product like search.matchesCPE
+	// Build query with strict matching or wildcard only when asterisk is present
 	var conditions []string
 	var args []interface{}
 
 	if cpe.Vendor != "" && cpe.Vendor != "*" {
-		conditions = append(conditions, "vendor LIKE ?")
-		args = append(args, "%"+strings.ToLower(cpe.Vendor)+"%")
+		vendor := strings.ToLower(cpe.Vendor)
+		if strings.HasPrefix(vendor, "*") || strings.HasSuffix(vendor, "*") {
+			vendor = strings.ReplaceAll(vendor, "*", "%")
+			conditions = append(conditions, "vendor LIKE ?")
+		} else {
+			conditions = append(conditions, "vendor = ?")
+		}
+		args = append(args, vendor)
 	}
 
 	if cpe.Product != "" && cpe.Product != "*" {
-		conditions = append(conditions, "product LIKE ?")
-		args = append(args, "%"+strings.ToLower(cpe.Product)+"%")
+		product := strings.ToLower(cpe.Product)
+		if strings.HasPrefix(product, "*") || strings.HasSuffix(product, "*") {
+			product = strings.ReplaceAll(product, "*", "%")
+			conditions = append(conditions, "product LIKE ?")
+		} else {
+			conditions = append(conditions, "product = ?")
+		}
+		args = append(args, product)
 	}
 
 	whereClause := ""
