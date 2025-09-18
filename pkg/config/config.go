@@ -148,12 +148,17 @@ func RemoveToken() error {
 }
 
 func ValidToken(token string) bool {
+	if strings.TrimSpace(token) == "" {
+		return false
+	}
+	/* TODO: update this to work with JWT as well
 	if !strings.HasPrefix(token, "vulncheck_") {
 		return false
 	}
 	if len(token) != 74 {
 		return false
 	}
+	*/
 	return true
 }
 
