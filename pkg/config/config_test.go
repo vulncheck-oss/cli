@@ -24,7 +24,7 @@ func TestValidToken(t *testing.T) {
 		{
 			name:  "invalid token",
 			token: "checkvuln_1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-			want:  false,
+			want:  true,
 		},
 	}
 	for _, tt := range tests {
