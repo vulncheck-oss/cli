@@ -21,6 +21,10 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/session"
 )
 
+var httpClient = &http.Client{
+	Timeout: 30 * time.Second,
+}
+
 type Release struct {
 	TagName string `json:"tag_name"`
 	Assets  []struct {
@@ -52,18 +56,25 @@ func Command() *cobra.Command {
 func runSelfUpgrade(force bool, targetVersion string) error {
 	currentVersion := strings.TrimPrefix(build.Version, "v")
 
-	release, err := getLatestRelease()
-	if err != nil {
-		return fmt.Errorf("failed to fetch latest release: %v", err)
-	}
+	var release *Release
+	var latestVersion string
+	var err error
 
-	latestVersion := strings.TrimPrefix(release.TagName, "v")
-
-	// If cli arg passes a specific version validate and use it
+	// If cli arg passes a specific version, fetch that specific release
 	if targetVersion != "" {
 		targetVersion = strings.TrimPrefix(targetVersion, "v")
+		release, err = getSpecificRelease(targetVersion)
+		if err != nil {
+			return fmt.Errorf("failed to fetch release for version %s: %v", targetVersion, err)
+		}
 		latestVersion = targetVersion
-		release.TagName = "v" + targetVersion
+	} else {
+		// Otherwise fetch the latest release
+		release, err = getLatestRelease()
+		if err != nil {
+			return fmt.Errorf("failed to fetch latest release: %v", err)
+		}
+		latestVersion = strings.TrimPrefix(release.TagName, "v")
 	}
 
 	// Check if we need to upgrade
@@ -115,11 +126,47 @@ func runSelfUpgrade(force bool, targetVersion string) error {
 }
 
 func getLatestRelease() (*Release, error) {
-	resp, err := http.Get("https://api.github.com/repos/vulncheck-oss/cli/releases/latest")
+	resp, err := httpClient.Get("https://api.github.com/repos/vulncheck-oss/cli/releases/latest")
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to close response body: %v\n", closeErr)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("GitHub API returned status %d", resp.StatusCode)
+	}
+
+	var release Release
+	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+		return nil, err
+	}
+
+	return &release, nil
+}
+
+func getSpecificRelease(version string) (*Release, error) {
+	if !strings.HasPrefix(version, "v") {
+		version = "v" + version
+	}
+
+	url := fmt.Sprintf("https://api.github.com/repos/vulncheck-oss/cli/releases/tags/%s", version)
+	resp, err := httpClient.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to close response body: %v\n", closeErr)
+		}
+	}()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, fmt.Errorf("release %s not found", version)
+	}
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("GitHub API returned status %d", resp.StatusCode)
@@ -168,15 +215,23 @@ func downloadAndInstall(downloadURL, filename string) error {
 	if err != nil {
 		return err
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		if removeErr := os.RemoveAll(tempDir); removeErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to remove temp directory: %v\n", removeErr)
+		}
+	}()
 
 	// Download file
 	fmt.Printf("📥 Downloading %s...\n", filename)
-	resp, err := http.Get(downloadURL)
+	resp, err := httpClient.Get(downloadURL)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to close response body: %v\n", closeErr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("download failed with status %d", resp.StatusCode)
@@ -187,7 +242,11 @@ func downloadAndInstall(downloadURL, filename string) error {
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+	defer func() {
+		if closeErr := out.Close(); closeErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to close temp file: %v\n", closeErr)
+		}
+	}()
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
@@ -224,7 +283,9 @@ func downloadAndInstall(downloadURL, filename string) error {
 	fmt.Printf("🔧 Installing new binary...\n")
 	if err := copyFile(binaryPath, currentExe); err != nil {
 		// Restore backup on failure
-		copyFile(backupPath, currentExe)
+		if restoreErr := copyFile(backupPath, currentExe); restoreErr != nil {
+			fmt.Fprintf(os.Stderr, "Critical: failed to restore backup: %v\n", restoreErr)
+		}
 		return fmt.Errorf("failed to install new binary: %v", err)
 	}
 
@@ -236,7 +297,9 @@ func downloadAndInstall(downloadURL, filename string) error {
 	}
 
 	// Remove backup file after successful installation
-	os.Remove(backupPath)
+	if removeErr := os.Remove(backupPath); removeErr != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to remove backup file: %v\n", removeErr)
+	}
 
 	return nil
 }
@@ -263,7 +326,11 @@ func extractZip(zipPath, destDir, binaryName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer r.Close()
+	defer func() {
+		if closeErr := r.Close(); closeErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to close zip reader: %v\n", closeErr)
+		}
+	}()
 
 	for _, f := range r.File {
 		if filepath.Base(f.Name) == binaryName {
@@ -271,14 +338,22 @@ func extractZip(zipPath, destDir, binaryName string) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			defer rc.Close()
+			defer func() {
+				if closeErr := rc.Close(); closeErr != nil {
+					fmt.Fprintf(os.Stderr, "Warning: failed to close zip entry: %v\n", closeErr)
+				}
+			}()
 
 			binaryPath := filepath.Join(destDir, binaryName)
 			outFile, err := os.OpenFile(binaryPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 			if err != nil {
 				return "", err
 			}
-			defer outFile.Close()
+			defer func() {
+				if closeErr := outFile.Close(); closeErr != nil {
+					fmt.Fprintf(os.Stderr, "Warning: failed to close output file: %v\n", closeErr)
+				}
+			}()
 
 			_, err = io.Copy(outFile, rc)
 			if err != nil {
@@ -297,13 +372,21 @@ func extractTarGz(tarPath, destDir, binaryName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	defer func() {
+		if closeErr := file.Close(); closeErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to close tar file: %v\n", closeErr)
+		}
+	}()
 
 	gzr, err := gzip.NewReader(file)
 	if err != nil {
 		return "", err
 	}
-	defer gzr.Close()
+	defer func() {
+		if closeErr := gzr.Close(); closeErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to close gzip reader: %v\n", closeErr)
+		}
+	}()
 
 	tr := tar.NewReader(gzr)
 
@@ -322,7 +405,11 @@ func extractTarGz(tarPath, destDir, binaryName string) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			defer outFile.Close()
+			defer func() {
+				if closeErr := outFile.Close(); closeErr != nil {
+					fmt.Fprintf(os.Stderr, "Warning: failed to close output file: %v\n", closeErr)
+				}
+			}()
 
 			_, err = io.Copy(outFile, tr)
 			if err != nil {
@@ -341,13 +428,21 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer in.Close()
+	defer func() {
+		if closeErr := in.Close(); closeErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to close source file: %v\n", closeErr)
+		}
+	}()
 
 	out, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+	defer func() {
+		if closeErr := out.Close(); closeErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to close destination file: %v\n", closeErr)
+		}
+	}()
 
 	_, err = io.Copy(out, in)
 	if err != nil {
