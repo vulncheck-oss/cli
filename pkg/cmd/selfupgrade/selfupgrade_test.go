@@ -1,6 +1,7 @@
 package selfupgrade
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -78,5 +79,29 @@ func TestHTTPClientTimeout(t *testing.T) {
 	expectedTimeout := 30 * time.Second
 	if httpClient.Timeout != expectedTimeout {
 		t.Errorf("httpClient timeout = %v, expected %v", httpClient.Timeout, expectedTimeout)
+	}
+}
+
+func TestBackupFilenameFormat(t *testing.T) {
+	// Test that backup filename follows expected format
+	currentVersion := "1.0.0"
+	now := time.Date(2024, 9, 15, 14, 30, 45, 0, time.UTC)
+
+	expected := "vulncheck.backup.v1.0.0.20240915.143045"
+	actual := fmt.Sprintf("vulncheck.backup.v%s.%s",
+		currentVersion,
+		now.Format("20060102.150405"))
+
+	if actual != expected {
+		t.Errorf("Backup filename format = %s, expected %s", actual, expected)
+	}
+
+	// Verify it's human readable and contains version
+	if !strings.Contains(actual, "v1.0.0") {
+		t.Errorf("Backup filename should contain version: %s", actual)
+	}
+
+	if !strings.Contains(actual, "20240915") {
+		t.Errorf("Backup filename should contain date: %s", actual)
 	}
 }

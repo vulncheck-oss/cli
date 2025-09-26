@@ -115,7 +115,7 @@ func runSelfUpgrade(force bool, targetVersion string) error {
 		return fmt.Errorf("asset %s not found in release %s", assetName, release.TagName)
 	}
 
-	if err := downloadAndInstall(downloadURL, assetName); err != nil {
+	if err := downloadAndInstall(downloadURL, assetName, currentVersion); err != nil {
 		return fmt.Errorf("failed to download and install: %v", err)
 	}
 
@@ -209,7 +209,7 @@ func getPlatformAssetName(version string) (string, error) {
 	return fmt.Sprintf("vulncheck_%s_%s_%s.%s", version, os, arch, ext), nil
 }
 
-func downloadAndInstall(downloadURL, filename string) error {
+func downloadAndInstall(downloadURL, filename, currentVersion string) error {
 	// Create temporary directory
 	tempDir, err := os.MkdirTemp("", "vulncheck-upgrade-*")
 	if err != nil {
@@ -272,7 +272,10 @@ func downloadAndInstall(downloadURL, filename string) error {
 	}
 
 	// Create backup of current binary
-	backupPath := currentExe + ".backup." + fmt.Sprintf("%d", time.Now().Unix())
+	backupFilename := fmt.Sprintf("vulncheck.backup.v%s.%s",
+		currentVersion,
+		time.Now().Format("20060102.150405"))
+	backupPath := filepath.Join(filepath.Dir(currentExe), backupFilename)
 	if err := copyFile(currentExe, backupPath); err != nil {
 		return fmt.Errorf("failed to create backup: %v", err)
 	}
