@@ -26,6 +26,7 @@ type Options struct {
 	Cpes        bool
 	Offline     bool
 	OfflineMeta bool
+	DisableUI   bool
 }
 
 func Command() *cobra.Command {
@@ -37,6 +38,7 @@ func Command() *cobra.Command {
 		SbomInput: "",
 		SbomOnly:  false,
 		Cpes:      false,
+		DisableUI: false,
 	}
 
 	cmd := &cobra.Command{
@@ -268,6 +270,7 @@ func Command() *cobra.Command {
 			}
 
 			runners := taskin.New(tasks, taskin.Config{
+				DisableUI: opts.DisableUI,
 				ProgressOptions: []progress.Option{
 					progress.WithScaledGradient("#6667AB", "#34D399"),
 					progress.WithWidth(20),
@@ -318,6 +321,7 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVarP(&opts.Cpes, "include-cpes", "c", false, i18n.C.FlagIncludeCpes)
 	cmd.Flags().BoolVar(&opts.Offline, "offline", false, "Use offline mode to find CVEs - requires indices to be cached")
 	cmd.Flags().BoolVar(&opts.OfflineMeta, "offline-meta", false, "Use with offline mode to populate CVE metadata - requires the vulncheck-nvd2 index to be cached")
+	cmd.Flags().BoolVar(&opts.DisableUI, "disable-ui", false, "Disable interactive UI elements")
 
 	return cmd
 }
