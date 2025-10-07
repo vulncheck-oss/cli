@@ -119,7 +119,7 @@ func TestGetOfflineMeta(t *testing.T) {
 			},
 		}
 
-		result, err := GetOfflineMeta(indices, vulns)
+		result, err := GetOfflineMeta(indices, vulns, false)
 		if err == nil {
 			t.Skip("Cannot test without mocking dependencies")
 		}
@@ -138,7 +138,7 @@ func TestGetOfflineMeta(t *testing.T) {
 			Indices: []cache.IndexInfo{},
 		}
 
-		_, err := GetOfflineMeta(indices, vulns)
+		_, err := GetOfflineMeta(indices, vulns, false)
 		if err == nil {
 			t.Skip("Cannot test without mocking dependencies")
 		}

@@ -379,7 +379,7 @@ func GetOfflineMeta(indices cache.InfoFile, vulns []models.ScanResultVulnerabili
 
 	if err != nil {
 		if warnOnly {
-			fmt.Printf("[WARNING]: %s", err.Error())
+			fmt.Printf("[WARNING]: %s\n", err.Error())
 			return nil, nil
 		} else {
 			return nil, err
