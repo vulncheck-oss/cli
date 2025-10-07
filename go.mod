@@ -1,8 +1,6 @@
 module github.com/vulncheck-oss/cli
 
-go 1.24.1
-
-toolchain go1.24.2
+go 1.24.6
 
 require (
 	github.com/MakeNowJust/heredoc/v2 v2.0.1
