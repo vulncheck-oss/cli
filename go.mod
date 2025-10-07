@@ -12,7 +12,7 @@ require (
 	github.com/charmbracelet/huh/spinner v0.0.0-20250603124601-31a1db2cbc39
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/dustin/go-humanize v1.0.1
-	github.com/fumeapp/taskin v0.2.0
+	github.com/fumeapp/taskin v0.3.0
 	github.com/hashicorp/go-version v1.7.0
 	github.com/itchyny/gojq v0.12.17
 	github.com/package-url/packageurl-go v0.1.3
