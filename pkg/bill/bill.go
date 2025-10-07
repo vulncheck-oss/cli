@@ -141,6 +141,17 @@ func GetCPEDetail(sbm *sbom.SBOM) []string {
 	var cpes []string
 	seen := make(map[string]struct{})
 
+	if sbm.Artifacts.LinuxDistribution != nil && sbm.Artifacts.LinuxDistribution.CPEName != "" {
+		cpeStr := strings.TrimSpace(sbm.Artifacts.LinuxDistribution.CPEName)
+		norm := cpeutils.NormalizeCPEString(cpeStr)
+		if !strings.Contains(cpeStr, ".github/workflows") {
+			if _, exists := seen[norm]; !exists {
+				cpes = append(cpes, cpeStr)
+				seen[norm] = struct{}{}
+			}
+		}
+	}
+
 	for p := range sbm.Artifacts.Packages.Enumerate() {
 		if len(p.CPEs) > 0 {
 			for _, cpe := range p.CPEs {
