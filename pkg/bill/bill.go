@@ -315,12 +315,17 @@ func GetOfflineVulns(indices cache.InfoFile, purls []models.PurlDetail, iterator
 
 		indexAvailable, err := sync.EnsureIndexSync(indices, indexName, true)
 		if err != nil {
-			return nil, err
+			if warnOnly {
+				fmt.Printf("[WARNING]: %s\n", err.Error())
+				continue
+			} else {
+				return nil, err
+			}
 		}
 
 		if !indexAvailable {
 			if warnOnly {
-				fmt.Printf("warning: index %s is required to PURL %s \n", indexName, purl.Purl)
+				fmt.Printf("[WARNING]: index %s is required to PURL %s \n", indexName, purl.Purl)
 				continue
 			} else {
 				return nil, fmt.Errorf("index %s is required to proceed", instance.Type)
