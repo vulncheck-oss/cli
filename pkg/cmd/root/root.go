@@ -4,8 +4,9 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
-	"github.com/vulncheck-oss/cli/pkg/cmd/offline"
 	"os"
+
+	"github.com/vulncheck-oss/cli/pkg/cmd/offline"
 
 	"github.com/vulncheck-oss/cli/pkg/cmd/token"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cmd/purl"
 	"github.com/vulncheck-oss/cli/pkg/cmd/rule"
 	"github.com/vulncheck-oss/cli/pkg/cmd/scan"
+	"github.com/vulncheck-oss/cli/pkg/cmd/selfupgrade"
 	"github.com/vulncheck-oss/cli/pkg/cmd/tag"
 	"github.com/vulncheck-oss/cli/pkg/cmd/version"
 	"github.com/vulncheck-oss/cli/pkg/config"
@@ -79,6 +81,7 @@ func NewCmdRoot() *cobra.Command {
 	cmd.AddCommand(about.Command())
 	cmd.AddCommand(auth.Command())
 	cmd.AddCommand(token.Command())
+	cmd.AddCommand(selfupgrade.Command())
 	cmd.AddCommand(indices.Command())
 	cmd.AddCommand(index.Command())
 	cmd.AddCommand(backup.Command())
