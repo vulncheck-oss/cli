@@ -34,6 +34,8 @@ type IndexQueryParameters struct {
 	Cidr               string `json:"cidr"`
 	Ilvn               string `json:"ilvn"`
 	Jvndb              string `json:"jvndb"`
+	SrcCountry         string `json:"src_country"`
+	DstCountry         string `json:"dst_country"`
 
 	// PAGINATION RELATED
 	Limit       int    `json:"limit"`
@@ -143,6 +145,12 @@ func setIndexQueryParameters(query url.Values, queryParameters ...IndexQueryPara
 		}
 		if queryParameter.Jvndb != "" {
 			query.Add("jvndb", queryParameter.Jvndb)
+		}
+		if queryParameter.SrcCountry != "" {
+			query.Add("src_country", queryParameter.SrcCountry)
+		}
+		if queryParameter.DstCountry != "" {
+			query.Add("dst_country", queryParameter.DstCountry)
 		}
 		// PAGINATION RELATED
 		if queryParameter.Limit != 0 {

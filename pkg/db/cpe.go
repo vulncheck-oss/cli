@@ -18,21 +18,45 @@ func CPESearch(indexName string, cpe cpeutils.CPE) ([]cpeutils.CPEVulnerabilitie
 		return nil, nil, err
 	}
 
-	// Convert table name to use underscores instead of hyphens
 	tableName := strings.ReplaceAll(indexName, "-", "_")
-
-	// Build query based on vendor and product like search.matchesCPE
+	
 	var conditions []string
 	var args []interface{}
 
+	// Add vendor condition with strict matching or wildcard support
 	if cpe.Vendor != "" && cpe.Vendor != "*" {
-		conditions = append(conditions, "vendor LIKE ?")
-		args = append(args, "%"+strings.ToLower(cpe.Vendor)+"%")
+		vendor := strings.ToLower(cpe.Vendor)
+		operator := "="
+		
+		if strings.HasPrefix(vendor, "*") {
+			vendor = "%" + vendor[1:]
+			operator = "LIKE"
+		}
+		if strings.HasSuffix(vendor, "*") && len(vendor) > 1 {
+			vendor = vendor[:len(vendor)-1] + "%"
+			operator = "LIKE"
+		}
+		
+		conditions = append(conditions, fmt.Sprintf("vendor %s ?", operator))
+		args = append(args, vendor)
 	}
 
+	// Add product condition with strict matching or wildcard support
 	if cpe.Product != "" && cpe.Product != "*" {
-		conditions = append(conditions, "product LIKE ?")
-		args = append(args, "%"+strings.ToLower(cpe.Product)+"%")
+		product := strings.ToLower(cpe.Product)
+		operator := "="
+		
+		if strings.HasPrefix(product, "*") {
+			product = "%" + product[1:]
+			operator = "LIKE"
+		}
+		if strings.HasSuffix(product, "*") && len(product) > 1 {
+			product = product[:len(product)-1] + "%"
+			operator = "LIKE"
+		}
+		
+		conditions = append(conditions, fmt.Sprintf("product %s ?", operator))
+		args = append(args, product)
 	}
 
 	whereClause := ""
