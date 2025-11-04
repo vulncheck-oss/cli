@@ -133,6 +133,8 @@ vulncheck index browse|list <index> [flags]
 | --threat_actor         | string | ThreatActor           |
 | --updatedAtEndDate     | string | UpdatedAtEndDate      |
 | --updatedAtStartDate   | string | UpdatedAtStartDate    |
+| --src_country          | string | SrcCountry            |
+| --dst_country          | string | DstCountry            |
 | --help                 |        | Show help for command |
 
 

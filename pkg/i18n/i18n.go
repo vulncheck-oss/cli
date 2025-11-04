@@ -129,6 +129,9 @@ type Copy struct {
 	ScanNoCvesFound string
 	ScanBenchmark   string
 
+	UpgradeShort string
+	UpgradeLong  string
+
 	ErrorNoToken      string
 	ErrorUnauthorized string
 }
@@ -282,6 +285,12 @@ var En = Copy{
 	ScanNoCvesFound:            "No vulnerabilities found in %d packages",
 	ScanBenchmark:              "Scan completed in %s",
 	ScanErrorDirectoryRequired: "Error: Directory is required",
+
+	UpgradeShort: "Upgrade the vulncheck CLI to the latest version",
+	UpgradeLong: heredoc.Doc(`
+			Upgrade the vulncheck CLI to the latest version by downloading
+			and installing the appropriate binary for your platform from GitHub releases.
+		`),
 
 	ErrorUnauthorized: "Error: Unauthorized, Try authenticating with: vulncheck auth login",
 	ErrorNoToken:      "No token found. Please run `vulncheck auth login` to authenticate or populate the environment variable `VC_TOKEN`.",
