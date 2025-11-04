@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/vulncheck-oss/sdk-go"
-	"github.com/vulncheck-oss/sdk-go/pkg/client"
+	"github.com/vulncheck-oss/cli/pkg/client"
+	"github.com/vulncheck-oss/cli/pkg/sdk"
 	_ "modernc.org/sqlite"
 )
 

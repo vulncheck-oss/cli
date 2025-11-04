@@ -26,17 +26,21 @@ type Options struct {
 	Cpes        bool
 	Offline     bool
 	OfflineMeta bool
+	DisableUI   bool
+	WarnOnIndex bool
 }
 
 func Command() *cobra.Command {
 	opts := &Options{
-		Json:      false,
-		File:      false,
-		FileName:  "output.json",
-		SbomFile:  "",
-		SbomInput: "",
-		SbomOnly:  false,
-		Cpes:      false,
+		Json:        false,
+		File:        false,
+		FileName:    "output.json",
+		SbomFile:    "",
+		SbomInput:   "",
+		SbomOnly:    false,
+		Cpes:        false,
+		DisableUI:   false,
+		WarnOnIndex: false,
 	}
 
 	cmd := &cobra.Command{
@@ -136,7 +140,7 @@ func Command() *cobra.Command {
 									results, err := bill.GetOfflineCpeVulns(indices, cpes, func(cur int, total int) {
 										t.Title = fmt.Sprintf(i18n.C.ScanScanCpeProgressOffline, cur, total)
 										t.Progress(cur, total)
-									})
+									}, opts.WarnOnIndex)
 									if err != nil {
 										return err
 									}
@@ -161,7 +165,7 @@ func Command() *cobra.Command {
 								results, err := bill.GetOfflineVulns(indices, purls, func(cur int, total int) {
 									t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgressOffline, cur, total)
 									t.Progress(cur, total)
-								})
+								}, opts.WarnOnIndex)
 								if err != nil {
 									return err
 								}
@@ -187,7 +191,7 @@ func Command() *cobra.Command {
 								Title: i18n.C.ScanVulnOfflineMetaStart,
 								Task: func(t *taskin.Task) error {
 									indices, _ := cache.Indices()
-									results, err := bill.GetOfflineMeta(indices, vulns)
+									results, err := bill.GetOfflineMeta(indices, vulns, opts.WarnOnIndex)
 									if err != nil {
 										return err
 									}
@@ -268,6 +272,7 @@ func Command() *cobra.Command {
 			}
 
 			runners := taskin.New(tasks, taskin.Config{
+				DisableUI: opts.DisableUI,
 				ProgressOptions: []progress.Option{
 					progress.WithScaledGradient("#6667AB", "#34D399"),
 					progress.WithWidth(20),
@@ -318,6 +323,8 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVarP(&opts.Cpes, "include-cpes", "c", false, i18n.C.FlagIncludeCpes)
 	cmd.Flags().BoolVar(&opts.Offline, "offline", false, "Use offline mode to find CVEs - requires indices to be cached")
 	cmd.Flags().BoolVar(&opts.OfflineMeta, "offline-meta", false, "Use with offline mode to populate CVE metadata - requires the vulncheck-nvd2 index to be cached")
+	cmd.Flags().BoolVar(&opts.WarnOnIndex, "warn-on-index", false, "When an index is not present locally, show a warning instead of shutting down")
+	cmd.Flags().BoolVar(&opts.DisableUI, "disable-ui", false, "Disable interactive UI elements")
 
 	return cmd
 }

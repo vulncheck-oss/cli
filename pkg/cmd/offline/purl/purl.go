@@ -2,6 +2,7 @@ package purl
 
 import (
 	"fmt"
+
 	"github.com/package-url/packageurl-go"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cache"
@@ -9,9 +10,9 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/db"
+	"github.com/vulncheck-oss/cli/pkg/sdk"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/cli/pkg/utils"
-	"github.com/vulncheck-oss/sdk-go"
 )
 
 func Command() *cobra.Command {

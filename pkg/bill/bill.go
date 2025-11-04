@@ -14,6 +14,7 @@ import (
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/package-url/packageurl-go"
 	"github.com/vulncheck-oss/cli/pkg/cache"
+	"github.com/vulncheck-oss/cli/pkg/client"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
 	"github.com/vulncheck-oss/cli/pkg/config"
@@ -21,9 +22,8 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
 	"github.com/vulncheck-oss/cli/pkg/db"
 	"github.com/vulncheck-oss/cli/pkg/models"
+	"github.com/vulncheck-oss/cli/pkg/sdk"
 	"github.com/vulncheck-oss/cli/pkg/session"
-	"github.com/vulncheck-oss/sdk-go"
-	"github.com/vulncheck-oss/sdk-go/pkg/client"
 )
 
 type InputSbomRef struct {
@@ -141,6 +141,17 @@ func GetCPEDetail(sbm *sbom.SBOM) []string {
 	var cpes []string
 	seen := make(map[string]struct{})
 
+	if sbm.Artifacts.LinuxDistribution != nil && sbm.Artifacts.LinuxDistribution.CPEName != "" {
+		cpeStr := strings.TrimSpace(sbm.Artifacts.LinuxDistribution.CPEName)
+		norm := cpeutils.NormalizeCPEString(cpeStr)
+		if !strings.Contains(cpeStr, ".github/workflows") {
+			if _, exists := seen[norm]; !exists {
+				cpes = append(cpes, cpeStr)
+				seen[norm] = struct{}{}
+			}
+		}
+	}
+
 	for p := range sbm.Artifacts.Packages.Enumerate() {
 		if len(p.CPEs) > 0 {
 			for _, cpe := range p.CPEs {
@@ -222,18 +233,28 @@ func GetVulns(purls []models.PurlDetail, iterator func(cur int, total int)) ([]m
 	return vulns, nil
 }
 
-func GetOfflineCpeVulns(indices cache.InfoFile, cpes []string, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
+func GetOfflineCpeVulns(indices cache.InfoFile, cpes []string, iterator func(cur int, total int), warnOnly bool) ([]models.ScanResultVulnerabilities, error) {
 	var vulns []models.ScanResultVulnerabilities
 	i := 0
 	seen := make(map[string]struct{})
 
 	indexAvailable, err := sync.EnsureIndexSync(indices, "cpecve", true)
 	if err != nil {
-		return nil, err
+		if warnOnly {
+			fmt.Printf("[WARNING]: %s\n", err.Error())
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	if !indexAvailable {
-		return nil, fmt.Errorf("index cpecve is required to proceed")
+		if warnOnly {
+			fmt.Printf("[WARNING]: index cpecve is required to proceed\n")
+			return nil, nil
+		} else {
+			return nil, fmt.Errorf("index cpecve is required to proceed")
+		}
 	}
 
 	for _, cpestring := range cpes {
@@ -271,7 +292,7 @@ func GetOfflineCpeVulns(indices cache.InfoFile, cpes []string, iterator func(cur
 	return vulns, nil
 }
 
-func GetOfflineVulns(indices cache.InfoFile, purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
+func GetOfflineVulns(indices cache.InfoFile, purls []models.PurlDetail, iterator func(cur int, total int), warnOnly bool) ([]models.ScanResultVulnerabilities, error) {
 
 	var vulns []models.ScanResultVulnerabilities
 
@@ -294,11 +315,21 @@ func GetOfflineVulns(indices cache.InfoFile, purls []models.PurlDetail, iterator
 
 		indexAvailable, err := sync.EnsureIndexSync(indices, indexName, true)
 		if err != nil {
-			return nil, err
+			if warnOnly {
+				fmt.Printf("[WARNING]: %s\n", err.Error())
+				continue
+			} else {
+				return nil, err
+			}
 		}
 
 		if !indexAvailable {
-			return nil, fmt.Errorf("index %s is required to proceed", instance.Type)
+			if warnOnly {
+				fmt.Printf("[WARNING]: index %s is required to PURL %s \n", indexName, purl.Purl)
+				continue
+			} else {
+				return nil, fmt.Errorf("index %s is required to proceed", instance.Type)
+			}
 		}
 
 		index := indices.GetIndex(indexName)
@@ -347,16 +378,26 @@ func GetMeta(vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulne
 	}
 	return vulns, nil
 }
-func GetOfflineMeta(indices cache.InfoFile, vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulnerabilities, error) {
+func GetOfflineMeta(indices cache.InfoFile, vulns []models.ScanResultVulnerabilities, warnOnly bool) ([]models.ScanResultVulnerabilities, error) {
 
 	indexAvailable, err := sync.EnsureIndexSync(indices, "vulncheck-nvd2", true)
 
 	if err != nil {
-		return nil, err
+		if warnOnly {
+			fmt.Printf("[WARNING]: %s\n", err.Error())
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	if !indexAvailable {
-		return nil, fmt.Errorf("index vulncheck-nvd2 is required to proceed")
+		if warnOnly {
+			fmt.Printf("[WARNING]: index vulncheck-nvd2 is required to proceed\n")
+			return vulns, nil
+		} else {
+			return nil, fmt.Errorf("index vulncheck-nvd2 is required to proceed")
+		}
 	}
 
 	for i, vuln := range vulns {
