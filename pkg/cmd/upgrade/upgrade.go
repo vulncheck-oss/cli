@@ -1,4 +1,4 @@
-package selfupgrade
+package upgrade
 
 import (
 	"archive/tar"
@@ -38,11 +38,11 @@ func Command() *cobra.Command {
 	var version string
 
 	cmd := &cobra.Command{
-		Use:   "self-upgrade",
-		Short: i18n.C.SelfUpgradeShort,
-		Long:  i18n.C.SelfUpgradeLong,
+		Use:   "upgrade",
+		Short: i18n.C.UpgradeShort,
+		Long:  i18n.C.UpgradeLong,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runSelfUpgrade(force, version)
+			return runUpgrade(force, version)
 		},
 	}
 
@@ -53,7 +53,7 @@ func Command() *cobra.Command {
 	return cmd
 }
 
-func runSelfUpgrade(force bool, targetVersion string) error {
+func runUpgrade(force bool, targetVersion string) error {
 	currentVersion := strings.TrimPrefix(build.Version, "v")
 
 	var release *Release

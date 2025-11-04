@@ -1,4 +1,4 @@
-package selfupgrade
+package upgrade
 
 import (
 	"fmt"

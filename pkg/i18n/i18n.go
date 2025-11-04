@@ -129,8 +129,8 @@ type Copy struct {
 	ScanNoCvesFound string
 	ScanBenchmark   string
 
-	SelfUpgradeShort string
-	SelfUpgradeLong  string
+	UpgradeShort string
+	UpgradeLong  string
 
 	ErrorNoToken      string
 	ErrorUnauthorized string
@@ -286,8 +286,8 @@ var En = Copy{
 	ScanBenchmark:              "Scan completed in %s",
 	ScanErrorDirectoryRequired: "Error: Directory is required",
 
-	SelfUpgradeShort: "Upgrade the vulncheck CLI to the latest version",
-	SelfUpgradeLong: heredoc.Doc(`
+	UpgradeShort: "Upgrade the vulncheck CLI to the latest version",
+	UpgradeLong: heredoc.Doc(`
 			Upgrade the vulncheck CLI to the latest version by downloading
 			and installing the appropriate binary for your platform from GitHub releases.
 		`),
