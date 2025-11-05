@@ -43,11 +43,9 @@ func Init() {
 			}
 		}
 	}
-	
 	if apiOverride := os.Getenv("VC_API"); apiOverride != "" {
 		Env.API = apiOverride
 	}
-	
 	if webOverride := os.Getenv("VC_WEB"); webOverride != "" {
 		Env.WEB = webOverride
 	}

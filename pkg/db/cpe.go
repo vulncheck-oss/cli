@@ -19,7 +19,7 @@ func CPESearch(indexName string, cpe cpeutils.CPE) ([]cpeutils.CPEVulnerabilitie
 	}
 
 	tableName := strings.ReplaceAll(indexName, "-", "_")
-	
+
 	var conditions []string
 	var args []interface{}
 
@@ -27,7 +27,7 @@ func CPESearch(indexName string, cpe cpeutils.CPE) ([]cpeutils.CPEVulnerabilitie
 	if cpe.Vendor != "" && cpe.Vendor != "*" {
 		vendor := strings.ToLower(cpe.Vendor)
 		operator := "="
-		
+
 		if strings.HasPrefix(vendor, "*") {
 			vendor = "%" + vendor[1:]
 			operator = "LIKE"
@@ -36,7 +36,7 @@ func CPESearch(indexName string, cpe cpeutils.CPE) ([]cpeutils.CPEVulnerabilitie
 			vendor = vendor[:len(vendor)-1] + "%"
 			operator = "LIKE"
 		}
-		
+
 		conditions = append(conditions, fmt.Sprintf("vendor %s ?", operator))
 		args = append(args, vendor)
 	}
@@ -45,7 +45,7 @@ func CPESearch(indexName string, cpe cpeutils.CPE) ([]cpeutils.CPEVulnerabilitie
 	if cpe.Product != "" && cpe.Product != "*" {
 		product := strings.ToLower(cpe.Product)
 		operator := "="
-		
+
 		if strings.HasPrefix(product, "*") {
 			product = "%" + product[1:]
 			operator = "LIKE"
@@ -54,7 +54,7 @@ func CPESearch(indexName string, cpe cpeutils.CPE) ([]cpeutils.CPEVulnerabilitie
 			product = product[:len(product)-1] + "%"
 			operator = "LIKE"
 		}
-		
+
 		conditions = append(conditions, fmt.Sprintf("product %s ?", operator))
 		args = append(args, product)
 	}
