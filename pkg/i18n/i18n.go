@@ -132,6 +132,12 @@ type Copy struct {
 	UpgradeShort string
 	UpgradeLong  string
 
+	UpgradeLatestShort string
+	UpgradeLatestLong  string
+
+	UpgradeStatusShort string
+	UpgradeStatusLong  string
+
 	ErrorNoToken      string
 	ErrorUnauthorized string
 }
@@ -291,6 +297,12 @@ var En = Copy{
 			Upgrade the vulncheck CLI to the latest version by downloading
 			and installing the appropriate binary for your platform from GitHub releases.
 		`),
+
+	UpgradeLatestShort: "Upgrade to the latest version",
+	UpgradeLatestLong:  "Upgrade to the latest version of the CLI.",
+
+	UpgradeStatusShort: "Check upgrade status",
+	UpgradeStatusLong:  "Check if a new version of the CLI is available.",
 
 	ErrorUnauthorized: "Error: Unauthorized, Try authenticating with: vulncheck auth login",
 	ErrorNoToken:      "No token found. Please run `vulncheck auth login` to authenticate or populate the environment variable `VC_TOKEN`.",

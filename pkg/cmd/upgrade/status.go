@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/internal/build"
+	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/utils"
 )
@@ -16,8 +17,8 @@ func StatusCommand() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "Check upgrade status",
-		Long:  "Check if a new version of the CLI is available.",
+		Short: i18n.C.UpgradeStatusShort,
+		Long:  i18n.C.UpgradeStatusLong,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runStatus()
 		},

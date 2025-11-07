@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/utils"
 )
@@ -15,8 +16,8 @@ func LatestCommand() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "latest",
-		Short: "Upgrade to the latest version",
-		Long:  "Upgrade to the latest version of the CLI.",
+		Short: i18n.C.UpgradeLatestShort,
+		Long:  i18n.C.UpgradeLatestLong,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runUpgradeLatest(force)
 		},
