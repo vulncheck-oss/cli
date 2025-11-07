@@ -415,12 +415,6 @@ func GetOfflineMeta(indices cache.InfoFile, vulns []models.ScanResultVulnerabili
 			vulns[i].Weaknesses = nvd2Response.Data[0].Weaknesses
 			vulns[i].Description = nvd2Response.Description
 		}
-
-		/*
-			if nvd2Response.Data[0].Descriptions != nil && len(*nvd2Response.Data[0].Descriptions) > 0 {
-				vulns[i].Description = (*nvd2Response.Data[0].Descriptions)[0].Value
-			}
-		*/
 	}
 	return vulns, nil
 }
