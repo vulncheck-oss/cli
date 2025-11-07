@@ -28,6 +28,6 @@ type ScanResultVulnerabilities struct {
 	FixedVersions     string                             `json:"fixed_versions"`
 	PurlDetail        PurlDetail                         `json:"purl_detail,omitempty"`
 	Weaknesses        *[]client.ApiNVD20WeaknessExtended `json:"weaknesses,omitempty"`
-	Description       *[]client.ApiNVD20Description      `json:"description,omitempty"`
+	Description       string                             `json:"description,omitempty"`
 	CPE               string                             `json:"cpe"`
 }

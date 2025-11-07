@@ -18,7 +18,7 @@ func MetaByCVE(cve string) (*sdk.IndexVulncheckNvd2Response, error) {
 
 	tableName := strings.ReplaceAll("vulncheck-nvd2", "-", "_")
 
-	query := fmt.Sprintf(`SELECT "id", "published", "vulncheckKEVExploitAdd", "metrics", "weaknesses" FROM "%s" WHERE "id" = ? LIMIT 1`, tableName)
+	query := fmt.Sprintf(`SELECT "id", "published", "vulncheckKEVExploitAdd", "metrics", "weaknesses", "description" FROM "%s" WHERE "id" = ? LIMIT 1`, tableName)
 
 	row := db.QueryRow(query, cve)
 
@@ -26,6 +26,7 @@ func MetaByCVE(cve string) (*sdk.IndexVulncheckNvd2Response, error) {
 	var metricsJSON []byte
 	var weaknessesJSON []byte
 	var vulncheckKEVExploitAdd *string
+	var description *string
 
 	err = row.Scan(
 		&result.Id,
@@ -33,6 +34,7 @@ func MetaByCVE(cve string) (*sdk.IndexVulncheckNvd2Response, error) {
 		&vulncheckKEVExploitAdd,
 		&metricsJSON,
 		&weaknessesJSON,
+		&description,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan row: %w", err)
@@ -55,7 +57,8 @@ func MetaByCVE(cve string) (*sdk.IndexVulncheckNvd2Response, error) {
 	}
 
 	response := &sdk.IndexVulncheckNvd2Response{
-		Data: []client.ApiNVD20CVEExtended{result},
+		Data:        []client.ApiNVD20CVEExtended{result},
+		Description: *description,
 	}
 
 	return response, nil
