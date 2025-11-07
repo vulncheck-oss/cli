@@ -22,6 +22,7 @@ type ScanResultVulnerabilities struct {
 	CVE               string                             `json:"cve"`
 	InKEV             bool                               `json:"in_kev"`
 	Published         string                             `json:"published"`
+	Description       string                             `json:"desscription"`
 	CVSSBaseScore     string                             `json:"cvss_base_score"`
 	CVSSTemporalScore string                             `json:"cvss_temporal_score"`
 	Metrics           *client.ApiNVD20MetricExtended     `json:"metrics,omitempty"`

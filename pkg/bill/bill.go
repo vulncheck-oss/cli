@@ -413,6 +413,7 @@ func GetOfflineMeta(indices cache.InfoFile, vulns []models.ScanResultVulnerabili
 			vulns[i].CVSSTemporalScore = temporalScore(nvd2Response.Data[0])
 			vulns[i].Metrics = nvd2Response.Data[0].Metrics
 			vulns[i].Weaknesses = nvd2Response.Data[0].Weaknesses
+			vulns[i].Description = nvd2Response.Data[0].Descriptions[0].Value
 		}
 	}
 	return vulns, nil
