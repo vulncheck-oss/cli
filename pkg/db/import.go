@@ -267,8 +267,21 @@ func processEntry(entry map[string]interface{}, schema *Schema, jsonColumns map[
 	}
 
 	values := make([]interface{}, len(schema.Columns))
+
+	// for nvd indices, lets store description from descriptions, entry.descriptions[0].value
+	// it should be entry["descriptions"][0]["value"]
+	if schema.Name == "nvd" {
+		if descriptions, exists := entry["descriptions"].([]interface{}); exists && len(descriptions) > 0 {
+			if descObj, ok := descriptions[0].(map[string]interface{}); ok {
+				if value, ok := descObj["value"].(string); ok {
+					entry["description"] = value
+				}
+			}
+		}
+	}
 	for i, col := range schema.Columns {
 		val, exists := entry[col.Name]
+
 		if !exists {
 			if col.NotNull {
 				return nil, 0, fmt.Errorf("missing required field %s", col.Name)
@@ -285,7 +298,8 @@ func processEntry(entry map[string]interface{}, schema *Schema, jsonColumns map[
 				val = parts[0]
 			}
 		}
-		if jsonColumns[i] {
+
+		if jsonColumns[i] && schema.Columns[i].Name != "description" {
 			if arr, ok := val.([]interface{}); ok {
 				jsonStr, _ := json.Marshal(arr)
 				values[i] = string(jsonStr)

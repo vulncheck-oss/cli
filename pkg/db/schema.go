@@ -35,6 +35,7 @@ var Schemas = []Schema{
 			{Name: "vulncheckKEVExploitAdd", Type: "TEXT", Index: false, NotNull: false, IsJSON: false},
 			{Name: "metrics", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
 			{Name: "weaknesses", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
+			{Name: "description", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
 		},
 	},
 	{

@@ -64,7 +64,7 @@ func TestSchemaStructure(t *testing.T) {
 		{"purl PM", 6, "purl", true, false},
 		{"cpecve", 12, "cves", true, false},
 		{"fallback", 1, "data", true, false},
-		{"nvd", 5, "weaknesses", true, true},
+		{"nvd", 6, "weaknesses", true, true},
 	}
 
 	for _, tc := range testCases {

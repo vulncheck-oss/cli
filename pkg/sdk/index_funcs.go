@@ -14810,9 +14810,10 @@ func (c *Client) GetIndexVulncheckNvd(queryParameters ...IndexQueryParameters) (
 }
 
 type IndexVulncheckNvd2Response struct {
-	Benchmark float64                      `json:"_benchmark"`
-	Meta      IndexMeta                    `json:"_meta"`
-	Data      []client.ApiNVD20CVEExtended `json:"data"`
+	Benchmark   float64                      `json:"_benchmark"`
+	Meta        IndexMeta                    `json:"_meta"`
+	Data        []client.ApiNVD20CVEExtended `json:"data"`
+	Description string                       `json:"description"`
 }
 
 // GetIndexVulncheckNvd2 -  NIST NVD CVE 2.0 API data supplemented with VulnCheck Data
