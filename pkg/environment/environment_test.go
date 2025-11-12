@@ -9,7 +9,6 @@ func TestInit(t *testing.T) {
 	originalVcEnv := os.Getenv("VC_ENV")
 	originalVcApi := os.Getenv("VC_API")
 	originalVcWeb := os.Getenv("VC_WEB")
-	
 	defer func() {
 		_ = os.Setenv("VC_ENV", originalVcEnv)
 		_ = os.Setenv("VC_API", originalVcApi)
@@ -101,7 +100,6 @@ func TestInitWithOverrides(t *testing.T) {
 	originalVcEnv := os.Getenv("VC_ENV")
 	originalVcApi := os.Getenv("VC_API")
 	originalVcWeb := os.Getenv("VC_WEB")
-	
 	defer func() {
 		_ = os.Setenv("VC_ENV", originalVcEnv)
 		_ = os.Setenv("VC_API", originalVcApi)

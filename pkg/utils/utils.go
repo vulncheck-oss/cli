@@ -8,10 +8,12 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
+	"github.com/vulncheck-oss/cli/internal/build"
 )
 
 // NormalizeString normalizes a string by converting it to lowercase and replacing spaces and underscores with hyphens.
@@ -170,4 +172,40 @@ func FormatCVE(bareCve string) string {
 	}
 
 	return c
+}
+
+func TrimVersionString(version ...string) string {
+	if len(version) > 0 && version[0] != "" {
+		return strings.TrimPrefix(version[0], "v")
+	}
+	return strings.TrimPrefix(build.Version, "v")
+}
+
+func GetPlatformAssetName(version string) (string, error) {
+	var os, arch, ext string
+
+	switch runtime.GOOS {
+	case "darwin":
+		os = "macOS"
+		ext = "zip"
+	case "linux":
+		os = "linux"
+		ext = "tar.gz"
+	case "windows":
+		os = "windows"
+		ext = "zip"
+	default:
+		return "", fmt.Errorf("unsupported operating system: %s", runtime.GOOS)
+	}
+
+	switch runtime.GOARCH {
+	case "amd64":
+		arch = "amd64"
+	case "arm64":
+		arch = "arm64"
+	default:
+		return "", fmt.Errorf("unsupported architecture: %s", runtime.GOARCH)
+	}
+
+	return fmt.Sprintf("vulncheck_%s_%s_%s.%s", version, os, arch, ext), nil
 }

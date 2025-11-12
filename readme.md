@@ -70,6 +70,7 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercon
 - [Request vulnerabilities related to a CPE](#request-vulnerabilities-related-to-a-cpe)
 - [Request vulnerabilities related to a PURL](#request-vulnerabilities-related-to-a-purl)
 - [Scan a repository for vulnerabilities](#scan-a-repository-for-vulnerabilities)
+- [Upgrade the VulnCheck CLI](#upgrade-the-vulncheck-cli)
 
 
 ### Browse/list indices
@@ -187,6 +188,27 @@ vulncheck scan <path> [flags]
 | Flag | Description                        |
 |------|------------------------------------|
 | -f   | Save scan results to `output.json` |
+
+
+### Upgrade the VulnCheck CLI
+To check for updates and upgrade to the latest version of the VulnCheck CLI, use the following commands:
+```
+vulncheck upgrade status
+vulncheck upgrade latest
+vulncheck upgrade --version X.X.X
+```
+
+To see if a new version is available, run `vulncheck upgrade status`. If an update is available, you can upgrade to the latest version by running `vulncheck upgrade latest`. 
+
+You can use the `--force` flag with the `latest` command to reinstall the current version if needed.
+
+If you want to install a specific version, you can use the `--version` flag followed by the desired version number.
+
+* `vulncheck upgrade` - Shows help
+* `vulncheck upgrade --version X.X.X` - Upgrades to specific version
+* `vulncheck upgrade latest` - Upgrades to latest version
+* `vulncheck upgrade latest --force` - Force upgrade to latest version
+* `vulncheck upgrade status` - Check upgrade status
 
 
 > [!TIP]

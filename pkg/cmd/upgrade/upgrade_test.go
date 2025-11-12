@@ -7,38 +7,6 @@ import (
 	"time"
 )
 
-func TestGetPlatformAssetName(t *testing.T) {
-	tests := []struct {
-		name     string
-		version  string
-		expected string
-	}{
-		{
-			name:     "version 1.0.0",
-			version:  "1.0.0",
-			expected: "vulncheck_1.0.0_macOS_arm64.zip", // This will vary based on test platform
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := getPlatformAssetName(tt.version)
-			if err != nil {
-				t.Fatalf("getPlatformAssetName() error = %v", err)
-			}
-
-			// Just verify it contains the version and has proper format
-			if len(result) == 0 {
-				t.Errorf("getPlatformAssetName() returned empty string")
-			}
-			// Should contain version
-			if !strings.Contains(result, tt.version) {
-				t.Errorf("getPlatformAssetName() = %v, should contain version %v", result, tt.version)
-			}
-		})
-	}
-}
-
 func TestGetSpecificRelease_VersionFormatting(t *testing.T) {
 	tests := []struct {
 		name         string
