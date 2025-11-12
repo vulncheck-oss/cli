@@ -56,9 +56,14 @@ func MetaByCVE(cve string) (*sdk.IndexVulncheckNvd2Response, error) {
 		}
 	}
 
+	var descriptionValue string
+	if description != nil {
+		descriptionValue = *description
+	}
+
 	response := &sdk.IndexVulncheckNvd2Response{
 		Data:        []client.ApiNVD20CVEExtended{result},
-		Description: *description,
+		Description: descriptionValue,
 	}
 
 	return response, nil
