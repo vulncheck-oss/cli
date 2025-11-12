@@ -299,7 +299,7 @@ func processEntry(entry map[string]interface{}, schema *Schema, jsonColumns map[
 			}
 		}
 
-		if jsonColumns[i] {
+		if jsonColumns[i] && schema.Columns[i].Name != "description" {
 			if arr, ok := val.([]interface{}); ok {
 				jsonStr, _ := json.Marshal(arr)
 				values[i] = string(jsonStr)
