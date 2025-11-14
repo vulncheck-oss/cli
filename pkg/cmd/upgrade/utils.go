@@ -184,7 +184,9 @@ func downloadAndInstall(downloadURL, filename, currentVersion string) error {
 		}
 
 		if err := os.Rename(tempBinary, currentExe); err != nil {
-			os.Remove(tempBinary)
+			if removeErr := os.Remove(tempBinary); removeErr != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to remove temp binary: %v\n", removeErr)
+			}
 			if restoreErr := copyFile(backupPath, currentExe); restoreErr != nil {
 				fmt.Fprintf(os.Stderr, "Critical: failed to restore backup: %v\n", restoreErr)
 			}
@@ -376,7 +378,9 @@ echo "✅ Successfully upgraded to new version!"
 
 	// Execute the script in the background
 	if err := exec.Command("/bin/bash", scriptPath).Start(); err != nil {
-		os.Remove(scriptPath)
+		if removeErr := os.Remove(scriptPath); removeErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to remove script file: %v\n", removeErr)
+		}
 		return fmt.Errorf("failed to start replacement script: %v", err)
 	}
 
