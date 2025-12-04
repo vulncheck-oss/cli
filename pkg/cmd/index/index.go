@@ -13,7 +13,15 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/ui"
 )
 
+type Options struct {
+	Full bool
+}
+
 func Command() *cobra.Command {
+
+	opts := &Options{
+		Full: false,
+	}
 
 	cmd := &cobra.Command{
 		Use:   "index <command>",
@@ -62,7 +70,15 @@ func Command() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			ui.Json(response.GetData())
+
+			var terminalOutput interface{}
+			terminalOutput = response.GetData()
+			if opts.Full {
+				terminalOutput = response
+			}
+
+			ui.Json(terminalOutput)
+
 			return nil
 		},
 	}
@@ -99,10 +115,20 @@ func Command() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			ui.Viewport(args[0], response.GetData())
+
+			var viewportOutput interface{}
+			viewportOutput = response.GetData()
+			if opts.Full {
+				viewportOutput = response
+			}
+			ui.Viewport(args[0], viewportOutput)
+
 			return nil
 		},
 	}
+
+	cmdList.Flags().BoolVarP(&opts.Full, "full", "f", false, "Output full response")
+	cmdBrowse.Flags().BoolVarP(&opts.Full, "full", "f", false, "Output full response")
 
 	cmd.AddCommand(cmdList)
 	cmd.AddCommand(cmdBrowse)
