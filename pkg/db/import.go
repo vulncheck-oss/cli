@@ -12,7 +12,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
 )
 
-const maxInsertSize int64 = 1_000_000_000 // Default max length in bytes
+const maxInsertSize int64 = 25_000_000     // 25MB - Conservative but performant
 const maxSQLiteVariables = 900            // Slightly below limit of 999 to be safe
 
 func ImportIndex(filePath string, indexDir string, progressCallback func(int)) error {
@@ -188,7 +188,8 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 				batch = append(batch, values)
 				batchSize += size
 
-				if batchSize >= maxSize { // Use maxSize parameter instead of hardcoded value
+				// Conservative batching for large files - flush every 500 records
+				if batchSize >= maxSize || len(batch) >= 500 {
 					if err := executeBatch(db, baseInsertSQL, batch); err != nil {
 						return err
 					}
@@ -201,7 +202,7 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 	} else {
 		// Original line-by-line processing
 		scanner := bufio.NewScanner(file)
-		scanner.Buffer(make([]byte, 4*1024*1024), 4*1024*1024)
+		scanner.Buffer(make([]byte, 256*1024), 256*1024)
 
 		for scanner.Scan() {
 			line := scanner.Bytes()
@@ -225,7 +226,8 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 				batch = append(batch, values)
 				batchSize += size
 
-				if batchSize >= maxSize { // Use maxSize parameter instead of hardcoded value
+				// Conservative batching - flush every 500 records or size limit
+				if batchSize >= maxSize || len(batch) >= 500 {
 					if err := executeBatch(db, baseInsertSQL, batch); err != nil {
 						return err
 					}

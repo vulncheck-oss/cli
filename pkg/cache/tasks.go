@@ -190,6 +190,10 @@ func taskDB(index string, configDir string, filePath string, lastUpdated string,
 			if !found {
 				indexInfo.Indices = append(indexInfo.Indices, updatedInfo)
 			}
+			// remove the old index dir
+			if err := os.RemoveAll(indexDir); err != nil {
+				return fmt.Errorf("failed to remove temporary directory %s: %w", indexDir, err)
+			}
 
 			t.Title = fmt.Sprintf("Cataloged %s (Size: %s, Time: %s)", index, utils.GetSizeHuman(size), eta.TotalTimeFormatted())
 			return nil
