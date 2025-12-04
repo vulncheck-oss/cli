@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -174,24 +175,39 @@ func downloadAndInstall(downloadURL, filename, currentVersion string) error {
 
 	// Replace current binary
 	fmt.Printf("🔧 Installing new binary...\n")
-	if err := copyFile(binaryPath, currentExe); err != nil {
-		// Restore backup on failure
-		if restoreErr := copyFile(backupPath, currentExe); restoreErr != nil {
-			fmt.Fprintf(os.Stderr, "Critical: failed to restore backup: %v\n", restoreErr)
-		}
-		return fmt.Errorf("failed to install new binary: %v", err)
-	}
 
-	// Make executable (Unix systems)
-	if runtime.GOOS != "windows" {
-		if err := os.Chmod(currentExe, 0755); err != nil {
-			return fmt.Errorf("failed to set executable permissions: %v", err)
+	if runtime.GOOS == "windows" {
+		// On Windows, use the atomic rename approach since file locking is different
+		tempBinary := currentExe + ".tmp"
+		if err := copyFile(binaryPath, tempBinary); err != nil {
+			return fmt.Errorf("failed to copy new binary to temp location: %v", err)
 		}
-	}
 
-	// Remove backup file after successful installation
-	if removeErr := os.Remove(backupPath); removeErr != nil {
-		fmt.Fprintf(os.Stderr, "Warning: failed to remove backup file: %v\n", removeErr)
+		if err := os.Rename(tempBinary, currentExe); err != nil {
+			if removeErr := os.Remove(tempBinary); removeErr != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to remove temp binary: %v\n", removeErr)
+			}
+			if restoreErr := copyFile(backupPath, currentExe); restoreErr != nil {
+				fmt.Fprintf(os.Stderr, "Critical: failed to restore backup: %v\n", restoreErr)
+			}
+			return fmt.Errorf("failed to install new binary: %v", err)
+		}
+
+		// Remove backup file after successful installation
+		if removeErr := os.Remove(backupPath); removeErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to remove backup file: %v\n", removeErr)
+		}
+
+		return nil
+	} else {
+		// On Unix systems, use a replacement script to avoid self-modification issues
+		if err := createReplacementScript(binaryPath, currentExe, backupPath); err != nil {
+			return fmt.Errorf("failed to create replacement script: %v", err)
+		}
+
+		// The script will handle the replacement and this process will exit
+		fmt.Printf("✅ Upgrade process initiated. The binary will be replaced momentarily.\n")
+		os.Exit(0)
 	}
 
 	return nil
@@ -314,4 +330,59 @@ func extractTarGz(tarPath, destDir, binaryName string) (string, error) {
 	}
 
 	return "", fmt.Errorf("binary %s not found in tar.gz archive", binaryName)
+}
+
+func createReplacementScript(newBinaryPath, targetPath, backupPath string) error {
+	scriptPath := targetPath + ".upgrade.sh"
+
+	// Create a shell script that will replace the binary after this process exits
+	script := fmt.Sprintf(`#!/bin/bash
+set -e
+
+# Wait for the parent process to exit
+sleep 1
+
+# Function to restore backup on failure
+restore_backup() {
+    if [ -f "%s" ]; then
+        echo "🔄 Restoring backup..."
+        cp "%s" "%s" || {
+            echo "Critical: failed to restore backup" >&2
+            exit 1
+        }
+        rm -f "%s"
+    fi
+}
+
+# Set trap to restore backup on any error
+trap restore_backup ERR
+
+echo "🔧 Finalizing binary replacement..."
+
+# Replace the binary
+cp "%s" "%s"
+chmod +x "%s"
+
+# Remove backup on success
+rm -f "%s"
+rm -f "%s"
+
+echo "✅ Successfully upgraded to new version!"
+`, backupPath, backupPath, targetPath, backupPath,
+		newBinaryPath, targetPath, targetPath,
+		backupPath, scriptPath)
+
+	if err := os.WriteFile(scriptPath, []byte(script), 0755); err != nil {
+		return fmt.Errorf("failed to write replacement script: %v", err)
+	}
+
+	// Execute the script in the background
+	if err := exec.Command("/bin/bash", scriptPath).Start(); err != nil {
+		if removeErr := os.Remove(scriptPath); removeErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to remove script file: %v\n", removeErr)
+		}
+		return fmt.Errorf("failed to start replacement script: %v", err)
+	}
+
+	return nil
 }
