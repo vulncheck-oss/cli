@@ -48,7 +48,6 @@ func Command() *cobra.Command {
 		Short:   i18n.C.ScanShort,
 		Example: i18n.C.ScanExample,
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			if opts.SbomInput == "" && len(args) < 1 {
 				return ui.Error(i18n.C.ScanErrorDirectoryRequired)
 			}
@@ -73,7 +72,6 @@ func Command() *cobra.Command {
 					Task: func(t *taskin.Task) error {
 						var err error
 						sbm, inputRefs, err = bill.LoadSBOM(opts.SbomInput)
-
 						if err != nil {
 							return err
 						}
@@ -131,7 +129,6 @@ func Command() *cobra.Command {
 							{
 								Title: i18n.C.ScanScanCpeStartOffline,
 								Task: func(t *taskin.Task) error {
-
 									indices, err := cache.Indices()
 									if err != nil {
 										return err
@@ -155,7 +152,6 @@ func Command() *cobra.Command {
 						{
 							Title: i18n.C.ScanScanPurlStartOffline,
 							Task: func(t *taskin.Task) error {
-
 								indices, err := cache.Indices()
 								if err != nil {
 									return err
@@ -185,7 +181,6 @@ func Command() *cobra.Command {
 						2. populate vulns with metadata
 					*/
 					if opts.OfflineMeta {
-
 						tasks = append(tasks, taskin.Tasks{
 							{
 								Title: i18n.C.ScanVulnOfflineMetaStart,
@@ -204,7 +199,6 @@ func Command() *cobra.Command {
 								},
 							},
 						}...)
-
 					}
 				} else {
 					tasks = append(tasks, taskin.Tasks{
@@ -212,7 +206,7 @@ func Command() *cobra.Command {
 							Title: i18n.C.ScanScanPurlStart,
 							Task: func(t *taskin.Task) error {
 								purlVulns = []models.ScanResultVulnerabilities{}
-								results, err := bill.GetVulns(purls, func(cur int, total int) {
+								results, err := bill.GetBatchVulns(purls, func(cur int, total int) {
 									t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgress, cur, total)
 									t.Progress(cur, total)
 								})

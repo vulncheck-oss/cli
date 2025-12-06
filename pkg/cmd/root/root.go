@@ -4,8 +4,9 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
-	"github.com/vulncheck-oss/cli/pkg/cmd/upgrade"
 	"os"
+
+	"github.com/vulncheck-oss/cli/pkg/cmd/upgrade"
 
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline"
 
@@ -53,7 +54,6 @@ func NewCmdRoot() *cobra.Command {
 		$ vulncheck backup abb
 	`),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-
 			environment.Init()
 			config.Init()
 
@@ -63,7 +63,6 @@ func NewCmdRoot() *cobra.Command {
 			}
 
 			return nil
-
 		},
 	}
 

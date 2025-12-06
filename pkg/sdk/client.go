@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -92,6 +93,36 @@ func (c *Client) Request(method string, url string) (*http.Response, error) {
 	}
 
 	resp, err := c.HttpClient.Do(c.HttpRequest)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == 401 {
+		return nil, ErrorUnauthorized
+	}
+
+	if resp.StatusCode != 200 {
+		return nil, handleErrorResponse(resp)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) PostRequestWithBody(url string, body io.Reader) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodPost, c.GetUrl()+url, body)
+	if err != nil {
+		return nil, fmt.Errorf("making new post request: %w", err)
+	}
+
+	if c.HttpClient == nil {
+		c.HttpClient = &http.Client{}
+	}
+	c.SetAuthHeader(req)
+
+	if c.UserAgent != "" {
+		req.Header.Set("User-Agent", c.UserAgent)
+	}
+
+	resp, err := c.HttpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
