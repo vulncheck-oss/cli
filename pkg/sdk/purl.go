@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 )
@@ -34,9 +35,40 @@ type PurlResponse struct {
 	Data PurlData `json:"data"`
 }
 
+type BatchPurlData struct {
+	Purl            string              `json:"purl"`
+	PurlMeta        PurlMeta            `json:"purl_struct"`
+	Cves            []string            `json:"cves"`
+	Vulnerabilities []PurlVulnerability `json:"vulnerabilities"`
+}
+
+type PurlsResponse struct {
+	Benchmark float64 `json:"_benchmark"`
+	Meta      struct {
+		Timestamp      string  `json:"timestamp"`
+		TotalDocuments float64 `json:"total_documents"`
+	} `json:"_meta"`
+	PurlData []BatchPurlData `json:"data"`
+}
+
 // GetPurl https://docs.vulncheck.com/api/purl
 func (c *Client) GetPurl(purl string) (responseJSON *PurlResponse, err error) {
 	resp, err := c.Query("purl", purl).Request("GET", "/v3/purl")
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	return responseJSON, nil
+}
+
+// GetPurls https://docs.vulncheck.com/api/purls
+func (c *Client) GetPurls(purls []string) (responseJSON *PurlsResponse, err error) {
+	purlBytes, err := json.Marshal(purls)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.PostRequestWithBody("/v3/purls", bytes.NewReader(purlBytes))
 	if err != nil {
 		return nil, err
 	}

@@ -33,13 +33,11 @@ type InputSbomRef struct {
 
 func GetSBOM(dir string) (*sbom.SBOM, error) {
 	src, err := syft.GetSource(context.Background(), dir, nil)
-
 	if err != nil {
 		return nil, err
 	}
 
 	sbm, err := syft.CreateSBOM(context.Background(), src, nil)
-
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +46,6 @@ func GetSBOM(dir string) (*sbom.SBOM, error) {
 }
 
 func SaveSBOM(sbm *sbom.SBOM, file string) error {
-
 	f, err := os.Create(file)
 	if err != nil {
 		return fmt.Errorf("unable to create file %s: %w", file, err)
@@ -170,7 +167,6 @@ func GetCPEDetail(sbm *sbom.SBOM) []string {
 }
 
 func GetPURLDetail(sbm *sbom.SBOM, inputRefs []InputSbomRef) []models.PurlDetail {
-
 	if sbm == nil {
 		return []models.PurlDetail{}
 	}
@@ -205,8 +201,45 @@ func GetPURLDetail(sbm *sbom.SBOM, inputRefs []InputSbomRef) []models.PurlDetail
 	return purls
 }
 
-func GetVulns(purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
+func GetBatchVulns(purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
+	const batchSize = 100
 
+	var vulns []models.ScanResultVulnerabilities
+
+	purlStrings := make([]string, 0, len(purls))
+	for _, purl := range purls {
+		purlStrings = append(purlStrings, purl.Purl)
+	}
+
+	total := len(purlStrings)
+
+	for start := 0; start < total; start += batchSize {
+		end := min(start+batchSize, total)
+
+		batch := purlStrings[start:end]
+
+		response, err := session.Connect(config.Token()).GetPurls(batch)
+		if err != nil {
+			return nil, fmt.Errorf("error fetching purls %v: %w", batch, err)
+		}
+
+		for _, purlResponse := range response.PurlData {
+			for _, vuln := range purlResponse.Vulnerabilities {
+				vulns = append(vulns, models.ScanResultVulnerabilities{
+					Name:          purlResponse.PurlMeta.Name,
+					Version:       purlResponse.PurlMeta.Version,
+					CVE:           vuln.Detection,
+					FixedVersions: vuln.FixedVersion,
+				})
+			}
+		}
+		iterator(start, total)
+	}
+
+	return vulns, nil
+}
+
+func GetVulns(purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
 	var vulns []models.ScanResultVulnerabilities
 
 	i := 0
@@ -293,14 +326,12 @@ func GetOfflineCpeVulns(indices cache.InfoFile, cpes []string, iterator func(cur
 }
 
 func GetOfflineVulns(indices cache.InfoFile, purls []models.PurlDetail, iterator func(cur int, total int), warnOnly bool) ([]models.ScanResultVulnerabilities, error) {
-
 	var vulns []models.ScanResultVulnerabilities
 
 	i := 0
 	for _, purl := range purls {
 		i++
 		instance, err := packageurl.FromString(purl.Purl)
-
 		if err != nil {
 			return nil, err
 		}
@@ -335,7 +366,6 @@ func GetOfflineVulns(indices cache.InfoFile, purls []models.PurlDetail, iterator
 		index := indices.GetIndex(indexName)
 
 		results, _, err := db.PURLSearch(index.Name, instance)
-
 		if err != nil {
 			return nil, err
 		}
@@ -357,13 +387,11 @@ func GetOfflineVulns(indices cache.InfoFile, purls []models.PurlDetail, iterator
 	}
 
 	return vulns, nil
-
 }
 
 func GetMeta(vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulnerabilities, error) {
 	for i, vuln := range vulns {
 		nvd2Response, err := session.Connect(config.Token()).GetIndexVulncheckNvd2(sdk.IndexQueryParameters{Cve: vuln.CVE})
-
 		if err != nil {
 			return nil, err
 		}
@@ -378,10 +406,9 @@ func GetMeta(vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulne
 	}
 	return vulns, nil
 }
+
 func GetOfflineMeta(indices cache.InfoFile, vulns []models.ScanResultVulnerabilities, warnOnly bool) ([]models.ScanResultVulnerabilities, error) {
-
 	indexAvailable, err := sync.EnsureIndexSync(indices, "vulncheck-nvd2", true)
-
 	if err != nil {
 		if warnOnly {
 			fmt.Printf("[WARNING]: %s\n", err.Error())
