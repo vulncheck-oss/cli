@@ -85,7 +85,8 @@ func IsCPEFormattedString(s string) bool {
 	}
 	if !strings.HasPrefix(s, "cpe:2.3:a:") &&
 		!strings.HasPrefix(s, "cpe:2.3:h:") &&
-		!strings.HasPrefix(s, "cpe:2.3:o:") {
+		!strings.HasPrefix(s, "cpe:2.3:o:") &&
+		!strings.HasPrefix(s, "cpe:2.3:*:") {
 		return false
 	}
 	// meant as a weak check, ignores escapes.
