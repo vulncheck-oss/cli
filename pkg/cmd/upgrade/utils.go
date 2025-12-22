@@ -100,7 +100,48 @@ func getSpecificRelease(version string) (*Release, error) {
 	return &release, nil
 }
 
+func canWriteToBinaryDir(binaryPath string) error {
+	binaryDir := filepath.Dir(binaryPath)
+
+	// Check if we can create a temporary file in the directory
+	tempFile := filepath.Join(binaryDir, ".vulncheck-upgrade-test")
+	f, err := os.Create(tempFile)
+	if err != nil {
+		return err
+	}
+	f.Close()
+	os.Remove(tempFile)
+	return nil
+}
+
+func getPermissionErrorMessage(binaryPath string) string {
+	binaryDir := filepath.Dir(binaryPath)
+
+	if runtime.GOOS == "windows" {
+		return fmt.Sprintf("❌ Permission denied: The vulncheck binary is located in %s which requires administrator privileges.\n\n"+
+			"Please run this command as Administrator or install vulncheck to a user-writable location.", binaryDir)
+	}
+
+	return fmt.Sprintf("❌ Permission denied: The vulncheck binary is located in %s which requires elevated privileges.\n\n"+
+		"Please run this command with sudo:\n  sudo vulncheck upgrade\n\n"+
+		"Or install vulncheck to a user-writable location such as ~/bin", binaryDir)
+}
+
 func downloadAndInstall(downloadURL, filename, currentVersion string) error {
+	currentExe, err := os.Executable()
+	if err != nil {
+		return err
+	}
+
+	currentExe, err = filepath.EvalSymlinks(currentExe)
+	if err != nil {
+		return err
+	}
+
+	if err := canWriteToBinaryDir(currentExe); err != nil {
+		return fmt.Errorf("%s", getPermissionErrorMessage(currentExe))
+	}
+
 	// Create temporary directory
 	tempDir, err := os.MkdirTemp("", "vulncheck-upgrade-*")
 	if err != nil {
@@ -146,18 +187,6 @@ func downloadAndInstall(downloadURL, filename, currentVersion string) error {
 
 	fmt.Printf("📦 Extracting %s...\n", filename)
 	binaryPath, err := extractArchive(tempFile, tempDir)
-	if err != nil {
-		return err
-	}
-
-	// Get current executable path
-	currentExe, err := os.Executable()
-	if err != nil {
-		return err
-	}
-
-	// Get the real path (resolve symlinks)
-	currentExe, err = filepath.EvalSymlinks(currentExe)
 	if err != nil {
 		return err
 	}
