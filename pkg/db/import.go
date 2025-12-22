@@ -12,8 +12,8 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
 )
 
-const maxInsertSize int64 = 25_000_000     // 25MB - Conservative but performant
-const maxSQLiteVariables = 900            // Slightly below limit of 999 to be safe
+const maxInsertSize int64 = 25_000_000 // 25MB - Conservative but performant
+const maxSQLiteVariables = 900         // Slightly below limit of 999 to be safe
 
 func ImportIndex(filePath string, indexDir string, progressCallback func(int)) error {
 	db, err := DB()
