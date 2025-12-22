@@ -109,8 +109,14 @@ func canWriteToBinaryDir(binaryPath string) error {
 	if err != nil {
 		return err
 	}
-	f.Close()
-	os.Remove(tempFile)
+	defer func() {
+		if closeErr := f.Close(); closeErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to close temp file: %v\n", closeErr)
+		}
+		if removeErr := os.Remove(tempFile); removeErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to remove temp file: %v\n", removeErr)
+		}
+	}()
 	return nil
 }
 

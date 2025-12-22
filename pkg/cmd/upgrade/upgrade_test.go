@@ -96,7 +96,9 @@ func TestCanWriteToBinaryDir(t *testing.T) {
 				if err != nil {
 					t.Fatalf("Failed to create test binary: %v", err)
 				}
-				f.Close()
+				if err := f.Close(); err != nil {
+					t.Fatalf("Failed to close test binary: %v", err)
+				}
 				return binaryPath
 			},
 			expectError: false,
