@@ -17,6 +17,8 @@ type BackupFile struct {
 	URLUsWest2      string `json:"url_us-west-2"`
 	URLEuWest2      string `json:"url_eu-west-2"`
 	URLApSoutheast2 string `json:"url_ap-southeast-2"`
+	URLIlCentral1   string `json:"url_il-central-1"`
+	URLMeCentral1   string `json:"url_me-central-1"`
 }
 
 type BackupResponse struct {
