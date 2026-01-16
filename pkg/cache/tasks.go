@@ -47,6 +47,11 @@ func taskDownload(index string, filename string) taskin.Task {
 				return fmt.Errorf("S3 request failed with status %d: %s", resp.StatusCode, string(body))
 			}
 
+			// Create directory path if it doesn't exist
+			if err := os.MkdirAll(filepath.Dir(filename), 0755); err != nil {
+				return fmt.Errorf("could not create directory path: %w", err)
+			}
+
 			file, err := os.Create(filename)
 			if err != nil {
 				return fmt.Errorf("failed to create file: %w", err)

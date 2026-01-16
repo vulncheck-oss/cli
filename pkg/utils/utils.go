@@ -41,6 +41,15 @@ func ExtractFile(urlStr string) (string, error) {
 	return path, nil
 }
 
+// ExtractFileBasename extracts the base file name from a URL string from an index backup.
+func ExtractFileBasename(urlStr string) (string, error) {
+	name, err := ExtractFile(urlStr)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Base(name), nil
+}
+
 // ParseDate parses a date string in RFC3339 format and returns a formatted string.
 func ParseDate(date string) string {
 	dateAdded, err := time.Parse(time.RFC3339, date)

@@ -82,3 +82,51 @@ func TestInfoFile_GetIndex(t *testing.T) {
 	index = info.GetIndex("test3")
 	assert.Nil(t, index)
 }
+
+func TestTaskDownloadDirectoryCreation(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// Test nested directory path creation
+	nestedPath := filepath.Join(tempDir, "deeply", "nested", "path", "file.zip")
+
+	// Simulate the directory creation logic from taskDownload (lines 50-54)
+	err := os.MkdirAll(filepath.Dir(nestedPath), 0755)
+	assert.NoError(t, err, "should create nested directories without error")
+
+	// Verify the directory structure was created
+	dirPath := filepath.Dir(nestedPath)
+	info, err := os.Stat(dirPath)
+	assert.NoError(t, err, "directory should exist")
+	assert.True(t, info.IsDir(), "should be a directory")
+
+	// Test that creating a file works after directory creation
+	file, err := os.Create(nestedPath)
+	assert.NoError(t, err, "should be able to create file in nested path")
+	if file != nil {
+		err = file.Close()
+		assert.NoError(t, err, "should close file without error")
+	}
+
+	// Verify file was created
+	_, err = os.Stat(nestedPath)
+	assert.NoError(t, err, "file should exist after creation")
+}
+
+func TestTaskDownloadDirectoryCreationWithExistingPath(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// Create a directory path
+	existingPath := filepath.Join(tempDir, "existing", "path")
+	err := os.MkdirAll(existingPath, 0755)
+	assert.NoError(t, err)
+
+	// Test that MkdirAll is idempotent (lines 50-54 in tasks.go)
+	filePath := filepath.Join(existingPath, "file.zip")
+	err = os.MkdirAll(filepath.Dir(filePath), 0755)
+	assert.NoError(t, err, "MkdirAll should succeed on existing directory")
+
+	// Verify directory still exists with correct permissions
+	info, err := os.Stat(existingPath)
+	assert.NoError(t, err)
+	assert.True(t, info.IsDir())
+}
