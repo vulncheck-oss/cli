@@ -104,7 +104,8 @@ func TestTaskDownloadDirectoryCreation(t *testing.T) {
 	file, err := os.Create(nestedPath)
 	assert.NoError(t, err, "should be able to create file in nested path")
 	if file != nil {
-		file.Close()
+		err = file.Close()
+		assert.NoError(t, err, "should close file without error")
 	}
 
 	// Verify file was created
