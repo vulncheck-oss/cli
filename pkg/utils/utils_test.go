@@ -136,6 +136,53 @@ func TestExtractFile(t *testing.T) {
 	}
 }
 
+func TestExtractFileBasename(t *testing.T) {
+	tests := []struct {
+		name    string
+		urlStr  string
+		want    string
+		wantErr bool
+	}{
+		{
+			name:    "Valid URL",
+			urlStr:  "https://example.com/path/to/file.zip",
+			want:    "file.zip",
+			wantErr: false,
+		},
+		{
+			name:    "Invalid URL",
+			urlStr:  "://invalid-url",
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name:    "Non-zip file",
+			urlStr:  "https://example.com/path/to/file.txt",
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name:    "URL with query parameters",
+			urlStr:  "https://example.com/path/to/file.zip?param=value",
+			want:    "file.zip",
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ExtractFileBasename(tt.urlStr)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ExtractFileBasename() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("ExtractFileBasename() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestParseDate(t *testing.T) {
 	tests := []struct {
 		name string

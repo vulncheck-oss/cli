@@ -2,7 +2,6 @@ package backup
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
@@ -64,13 +63,11 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			file, err := utils.ExtractFile(response.GetData()[0].URL)
+			file, err := utils.ExtractFileBasename(response.GetData()[0].URL)
 
 			if err != nil {
 				return err
 			}
-
-			file = filepath.Base(file)
 
 			date := utils.ParseDate(response.GetData()[0].DateAdded)
 

@@ -90,7 +90,7 @@ func syncSingleIndex(index string, configDir string, indexInfo *InfoFile, force 
 		}
 	}
 
-	file, err := utils.ExtractFile(response.GetData()[0].URL)
+	file, err := utils.ExtractFileBasename(response.GetData()[0].URL)
 	if err != nil {
 		return taskin.Tasks{
 			{
