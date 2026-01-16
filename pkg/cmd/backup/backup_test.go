@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestExtractFile(t *testing.T) {
+func TestExtractFileBasename(t *testing.T) {
 	tests := []struct {
 		name    string
 		urlStr  string
@@ -15,7 +15,7 @@ func TestExtractFile(t *testing.T) {
 		{
 			name:    "Valid URL with zip file",
 			urlStr:  "http://example.com/path/to/file.zip",
-			want:    "path/to/file.zip",
+			want:    "file.zip",
 			wantErr: false,
 		},
 		{
@@ -30,17 +30,29 @@ func TestExtractFile(t *testing.T) {
 			want:    "",
 			wantErr: true,
 		},
+		{
+			name:    "URL with nested path",
+			urlStr:  "http://example.com/deeply/nested/path/archive.zip",
+			want:    "archive.zip",
+			wantErr: false,
+		},
+		{
+			name:    "URL with query parameters",
+			urlStr:  "http://example.com/path/to/file.zip?token=abc123",
+			want:    "file.zip",
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := utils.ExtractFile(tt.urlStr)
+			got, err := utils.ExtractFileBasename(tt.urlStr)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("extractFile() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ExtractFileBasename() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("extractFile() = %v, want %v", got, tt.want)
+				t.Errorf("ExtractFileBasename() = %v, want %v", got, tt.want)
 			}
 		})
 	}
