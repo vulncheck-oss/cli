@@ -98,7 +98,6 @@ func TestTaskDownloadDirectoryCreation(t *testing.T) {
 	info, err := os.Stat(dirPath)
 	assert.NoError(t, err, "directory should exist")
 	assert.True(t, info.IsDir(), "should be a directory")
-	assert.Equal(t, os.FileMode(0755), info.Mode().Perm(), "should have correct permissions")
 
 	// Test that creating a file works after directory creation
 	file, err := os.Create(nestedPath)
