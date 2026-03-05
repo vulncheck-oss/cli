@@ -61,10 +61,11 @@ type Copy struct {
 	BrowseIndicesSearch string
 	BrowseIndicesFull   string
 
-	IndexShort         string
-	IndexListShort     string
-	IndexBrowseShort   string
-	IndexErrorRequired string
+	IndexShort            string
+	IndexListShort        string
+	IndexBrowseShort      string
+	IndexErrorRequired    string
+	IndexFlagFullResponse string
 
 	BackupShort            string
 	BackupUrlShort         string
@@ -220,10 +221,11 @@ var En = Copy{
 	BrowseIndicesSearch: "Listing %d indices searching for \"%s\"",
 	BrowseIndicesFull:   "Listing %d indices",
 
-	IndexShort:         "Browse or list an index",
-	IndexListShort:     "List documents of a specified index",
-	IndexBrowseShort:   "Browse documents of an index interactively",
-	IndexErrorRequired: "index name is required",
+	IndexShort:            "Browse or list an index",
+	IndexListShort:        "List documents of a specified index",
+	IndexBrowseShort:      "Browse documents of an index interactively",
+	IndexErrorRequired:    "index name is required",
+	IndexFlagFullResponse: "Output full response",
 
 	BackupShort:         "Download a backup of a specified index",
 	BackupUrlShort:      "Get the temporary signed URL of the backup of an index",
