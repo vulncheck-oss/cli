@@ -4,12 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"strings"
+
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/format"
 	"github.com/anchore/syft/syft/format/cyclonedxjson"
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/package-url/packageurl-go"
 	"github.com/vulncheck-oss/cli/pkg/cache"
+	"github.com/vulncheck-oss/cli/pkg/client"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
 	"github.com/vulncheck-oss/cli/pkg/config"
@@ -17,12 +22,8 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
 	"github.com/vulncheck-oss/cli/pkg/db"
 	"github.com/vulncheck-oss/cli/pkg/models"
+	"github.com/vulncheck-oss/cli/pkg/sdk"
 	"github.com/vulncheck-oss/cli/pkg/session"
-	"github.com/vulncheck-oss/sdk-go"
-	"github.com/vulncheck-oss/sdk-go/pkg/client"
-	"io"
-	"os"
-	"strings"
 )
 
 type InputSbomRef struct {
@@ -32,13 +33,11 @@ type InputSbomRef struct {
 
 func GetSBOM(dir string) (*sbom.SBOM, error) {
 	src, err := syft.GetSource(context.Background(), dir, nil)
-
 	if err != nil {
 		return nil, err
 	}
 
 	sbm, err := syft.CreateSBOM(context.Background(), src, nil)
-
 	if err != nil {
 		return nil, err
 	}
@@ -47,12 +46,15 @@ func GetSBOM(dir string) (*sbom.SBOM, error) {
 }
 
 func SaveSBOM(sbm *sbom.SBOM, file string) error {
-
 	f, err := os.Create(file)
 	if err != nil {
 		return fmt.Errorf("unable to create file %s: %w", file, err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			_ = err
+		}
+	}()
 	encoder, err := cyclonedxjson.NewFormatEncoderWithConfig(cyclonedxjson.DefaultEncoderConfig())
 	if err != nil {
 		return err
@@ -62,8 +64,6 @@ func SaveSBOM(sbm *sbom.SBOM, file string) error {
 	if err != nil {
 		return fmt.Errorf("unable to encode SBOM: %w", err)
 	}
-
-	defer f.Close()
 
 	_, err = f.Write(data)
 	if err != nil {
@@ -78,7 +78,11 @@ func LoadSBOM(inputFile string) (*sbom.SBOM, []InputSbomRef, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to open SBOM file %s: %w", inputFile, err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	// Read the entire file content
 	content, err := io.ReadAll(file)
@@ -134,6 +138,17 @@ func GetCPEDetail(sbm *sbom.SBOM) []string {
 	var cpes []string
 	seen := make(map[string]struct{})
 
+	if sbm.Artifacts.LinuxDistribution != nil && sbm.Artifacts.LinuxDistribution.CPEName != "" {
+		cpeStr := strings.TrimSpace(sbm.Artifacts.LinuxDistribution.CPEName)
+		norm := cpeutils.NormalizeCPEString(cpeStr)
+		if !strings.Contains(cpeStr, ".github/workflows") {
+			if _, exists := seen[norm]; !exists {
+				cpes = append(cpes, cpeStr)
+				seen[norm] = struct{}{}
+			}
+		}
+	}
+
 	for p := range sbm.Artifacts.Packages.Enumerate() {
 		if len(p.CPEs) > 0 {
 			for _, cpe := range p.CPEs {
@@ -152,7 +167,6 @@ func GetCPEDetail(sbm *sbom.SBOM) []string {
 }
 
 func GetPURLDetail(sbm *sbom.SBOM, inputRefs []InputSbomRef) []models.PurlDetail {
-
 	if sbm == nil {
 		return []models.PurlDetail{}
 	}
@@ -187,8 +201,45 @@ func GetPURLDetail(sbm *sbom.SBOM, inputRefs []InputSbomRef) []models.PurlDetail
 	return purls
 }
 
-func GetVulns(purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
+func GetBatchVulns(purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
+	const batchSize = 100
 
+	var vulns []models.ScanResultVulnerabilities
+
+	purlStrings := make([]string, 0, len(purls))
+	for _, purl := range purls {
+		purlStrings = append(purlStrings, purl.Purl)
+	}
+
+	total := len(purlStrings)
+
+	for start := 0; start < total; start += batchSize {
+		end := min(start+batchSize, total)
+
+		batch := purlStrings[start:end]
+
+		response, err := session.Connect(config.Token()).GetPurls(batch)
+		if err != nil {
+			return nil, fmt.Errorf("error fetching purls %v: %w", batch, err)
+		}
+
+		for _, purlResponse := range response.PurlData {
+			for _, vuln := range purlResponse.Vulnerabilities {
+				vulns = append(vulns, models.ScanResultVulnerabilities{
+					Name:          purlResponse.PurlMeta.Name,
+					Version:       purlResponse.PurlMeta.Version,
+					CVE:           vuln.Detection,
+					FixedVersions: vuln.FixedVersion,
+				})
+			}
+		}
+		iterator(start, total)
+	}
+
+	return vulns, nil
+}
+
+func GetVulns(purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
 	var vulns []models.ScanResultVulnerabilities
 
 	i := 0
@@ -215,18 +266,28 @@ func GetVulns(purls []models.PurlDetail, iterator func(cur int, total int)) ([]m
 	return vulns, nil
 }
 
-func GetOfflineCpeVulns(indices cache.InfoFile, cpes []string, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
+func GetOfflineCpeVulns(indices cache.InfoFile, cpes []string, iterator func(cur int, total int), warnOnly bool) ([]models.ScanResultVulnerabilities, error) {
 	var vulns []models.ScanResultVulnerabilities
 	i := 0
 	seen := make(map[string]struct{})
 
 	indexAvailable, err := sync.EnsureIndexSync(indices, "cpecve", true)
 	if err != nil {
-		return nil, err
+		if warnOnly {
+			fmt.Printf("[WARNING]: %s\n", err.Error())
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	if !indexAvailable {
-		return nil, fmt.Errorf("index cpecve is required to proceed")
+		if warnOnly {
+			fmt.Printf("[WARNING]: index cpecve is required to proceed\n")
+			return nil, nil
+		} else {
+			return nil, fmt.Errorf("index cpecve is required to proceed")
+		}
 	}
 
 	for _, cpestring := range cpes {
@@ -250,8 +311,10 @@ func GetOfflineCpeVulns(indices cache.InfoFile, cpes []string, iterator func(cur
 			key := cpestring + "|" + cve
 			if _, exists := seen[key]; !exists {
 				vulns = append(vulns, models.ScanResultVulnerabilities{
-					CVE: cve,
-					CPE: cpestring,
+					Name:    cpeuri.RemoveSlashes(cpe.Product),
+					Version: cpeuri.RemoveSlashes(cpe.Version),
+					CVE:     cve,
+					CPE:     cpestring,
 				})
 				seen[key] = struct{}{}
 			}
@@ -262,15 +325,13 @@ func GetOfflineCpeVulns(indices cache.InfoFile, cpes []string, iterator func(cur
 	return vulns, nil
 }
 
-func GetOfflineVulns(indices cache.InfoFile, purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
-
+func GetOfflineVulns(indices cache.InfoFile, purls []models.PurlDetail, iterator func(cur int, total int), warnOnly bool) ([]models.ScanResultVulnerabilities, error) {
 	var vulns []models.ScanResultVulnerabilities
 
 	i := 0
 	for _, purl := range purls {
 		i++
 		instance, err := packageurl.FromString(purl.Purl)
-
 		if err != nil {
 			return nil, err
 		}
@@ -285,17 +346,26 @@ func GetOfflineVulns(indices cache.InfoFile, purls []models.PurlDetail, iterator
 
 		indexAvailable, err := sync.EnsureIndexSync(indices, indexName, true)
 		if err != nil {
-			return nil, err
+			if warnOnly {
+				fmt.Printf("[WARNING]: %s\n", err.Error())
+				continue
+			} else {
+				return nil, err
+			}
 		}
 
 		if !indexAvailable {
-			return nil, fmt.Errorf("index %s is required to proceed", instance.Type)
+			if warnOnly {
+				fmt.Printf("[WARNING]: index %s is required to PURL %s \n", indexName, purl.Purl)
+				continue
+			} else {
+				return nil, fmt.Errorf("index %s is required to proceed", instance.Type)
+			}
 		}
 
 		index := indices.GetIndex(indexName)
 
 		results, _, err := db.PURLSearch(index.Name, instance)
-
 		if err != nil {
 			return nil, err
 		}
@@ -317,21 +387,61 @@ func GetOfflineVulns(indices cache.InfoFile, purls []models.PurlDetail, iterator
 	}
 
 	return vulns, nil
-
 }
 
 func GetMeta(vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulnerabilities, error) {
 	for i, vuln := range vulns {
 		nvd2Response, err := session.Connect(config.Token()).GetIndexVulncheckNvd2(sdk.IndexQueryParameters{Cve: vuln.CVE})
-
 		if err != nil {
 			return nil, err
 		}
 
 		vulns[i].InKEV = nvd2Response.Data[0].VulncheckKEVExploitAdd != nil
+		vulns[i].Published = *nvd2Response.Data[0].Published
 		vulns[i].CVSSBaseScore = baseScore(nvd2Response.Data[0])
 		vulns[i].CVSSTemporalScore = temporalScore(nvd2Response.Data[0])
+		vulns[i].Metrics = nvd2Response.Data[0].Metrics
+		vulns[i].Weaknesses = nvd2Response.Data[0].Weaknesses
 
+	}
+	return vulns, nil
+}
+
+func GetOfflineMeta(indices cache.InfoFile, vulns []models.ScanResultVulnerabilities, warnOnly bool) ([]models.ScanResultVulnerabilities, error) {
+	indexAvailable, err := sync.EnsureIndexSync(indices, "vulncheck-nvd2", true)
+	if err != nil {
+		if warnOnly {
+			fmt.Printf("[WARNING]: %s\n", err.Error())
+			return nil, nil
+		} else {
+			return nil, err
+		}
+	}
+
+	if !indexAvailable {
+		if warnOnly {
+			fmt.Printf("[WARNING]: index vulncheck-nvd2 is required to proceed\n")
+			return vulns, nil
+		} else {
+			return nil, fmt.Errorf("index vulncheck-nvd2 is required to proceed")
+		}
+	}
+
+	for i, vuln := range vulns {
+		nvd2Response, err := db.MetaByCVE(vuln.CVE)
+		if err != nil {
+			continue
+		}
+
+		if len(nvd2Response.Data) > 0 {
+			vulns[i].InKEV = nvd2Response.Data[0].VulncheckKEVExploitAdd != nil
+			vulns[i].Published = *nvd2Response.Data[0].Published
+			vulns[i].CVSSBaseScore = baseScore(nvd2Response.Data[0])
+			vulns[i].CVSSTemporalScore = temporalScore(nvd2Response.Data[0])
+			vulns[i].Metrics = nvd2Response.Data[0].Metrics
+			vulns[i].Weaknesses = nvd2Response.Data[0].Weaknesses
+			vulns[i].Description = nvd2Response.Description
+		}
 	}
 	return vulns, nil
 }
@@ -366,11 +476,7 @@ func temporalScore(item client.ApiNVD20CVEExtended) string {
 	}
 	var score *float32
 
-	if item.Metrics.CvssMetricV31 != nil && len(*item.Metrics.CvssMetricV31) > 0 {
-		score = (*item.Metrics.CvssMetricV31)[0].CvssData.TemporalScore
-	}
-
-	if score == nil && item.Metrics.TemporalCVSSV31 != nil {
+	if item.Metrics.TemporalCVSSV31 != nil {
 		score = item.Metrics.TemporalCVSSV31.TemporalScore
 	}
 

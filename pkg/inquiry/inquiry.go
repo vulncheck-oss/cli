@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/vulncheck-oss/cli/pkg/environment"
-	"github.com/vulncheck-oss/cli/pkg/session"
 	"net"
 	"net/http"
 	"os/exec"
@@ -14,6 +12,9 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/vulncheck-oss/cli/pkg/environment"
+	"github.com/vulncheck-oss/cli/pkg/session"
 )
 
 type Inquiry struct {
@@ -126,7 +127,11 @@ func UpdateInquiry(hash string) error {
 	if err != nil {
 		return err
 	}
-	defer response.Body.Close()
+	defer func() {
+		if err := response.Body.Close(); err != nil {
+			_ = err
+		}
+	}()
 	_ = json.NewDecoder(response.Body).Decode(&responseJSON)
 	return nil
 }

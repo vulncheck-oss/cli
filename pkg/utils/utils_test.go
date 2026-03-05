@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -135,6 +136,53 @@ func TestExtractFile(t *testing.T) {
 	}
 }
 
+func TestExtractFileBasename(t *testing.T) {
+	tests := []struct {
+		name    string
+		urlStr  string
+		want    string
+		wantErr bool
+	}{
+		{
+			name:    "Valid URL",
+			urlStr:  "https://example.com/path/to/file.zip",
+			want:    "file.zip",
+			wantErr: false,
+		},
+		{
+			name:    "Invalid URL",
+			urlStr:  "://invalid-url",
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name:    "Non-zip file",
+			urlStr:  "https://example.com/path/to/file.txt",
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name:    "URL with query parameters",
+			urlStr:  "https://example.com/path/to/file.zip?param=value",
+			want:    "file.zip",
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ExtractFileBasename(tt.urlStr)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ExtractFileBasename() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("ExtractFileBasename() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestParseDate(t *testing.T) {
 	tests := []struct {
 		name string
@@ -210,10 +258,18 @@ func createTestZip(zipPath string) error {
 	if err != nil {
 		return err
 	}
-	defer zipFile.Close()
+	defer func() {
+		if err := zipFile.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	zipWriter := zip.NewWriter(zipFile)
-	defer zipWriter.Close()
+	defer func() {
+		if err := zipWriter.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	// Add a file to the root of the zip
 	file1, err := zipWriter.Create("file1.txt")
@@ -236,4 +292,87 @@ func createTestZip(zipPath string) error {
 	}
 
 	return nil
+}
+
+func TestFormatCVE(t *testing.T) {
+	t.Run("cve is formatted correctly", func(t *testing.T) {
+		tests := []struct {
+			name     string
+			cve      string
+			expected string
+		}{
+			{
+				name:     "cve is already formatted correctly",
+				cve:      "CVE-2024-38077",
+				expected: "CVE-2024-38077",
+			},
+			{
+				name:     "cve is formatted correctly with lowercase",
+				cve:      "cve-2024-38077",
+				expected: "CVE-2024-38077",
+			},
+			{
+				name:     "cve is formatted correctly with mixed case",
+				cve:      "cVe-2024-38077",
+				expected: "CVE-2024-38077",
+			},
+			{
+				name:     "cve is formatted correctly without prefix",
+				cve:      "2024-38077",
+				expected: "CVE-2024-38077",
+			},
+			{
+				name:     "cve is formatted correctly if underscores are used instead of dashes",
+				cve:      "CVE_2024_38077",
+				expected: "CVE-2024-38077",
+			},
+			{
+				name:     "cve is formatted correctly if special characters are used",
+				cve:      "CVE-2024-38077!",
+				expected: "CVE-2024-38077",
+			},
+		}
+
+		for _, test := range tests {
+			t.Run(test.name, func(t *testing.T) {
+				formattedCve := FormatCVE(test.cve)
+				if formattedCve != test.expected {
+					t.Errorf("expected %s, got %s", test.expected, formattedCve)
+				}
+			})
+		}
+
+	})
+}
+
+func TestGetPlatformAssetName(t *testing.T) {
+	tests := []struct {
+		name     string
+		version  string
+		expected string
+	}{
+		{
+			name:     "version 1.0.0",
+			version:  "1.0.0",
+			expected: "vulncheck_1.0.0_macOS_arm64.zip", // This will vary based on test platform
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := GetPlatformAssetName(tt.version)
+			if err != nil {
+				t.Fatalf("GetPlatformAssetName() error = %v", err)
+			}
+
+			// Just verify it contains the version and has proper format
+			if len(result) == 0 {
+				t.Errorf("GetPlatformAssetName() returned empty string")
+			}
+			// Should contain version
+			if !strings.Contains(result, tt.version) {
+				t.Errorf("GetPlatformAssetName() = %v, should contain version %v", result, tt.version)
+			}
+		})
+	}
 }

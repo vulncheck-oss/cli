@@ -55,7 +55,10 @@ func main() {
 	args := os.Args[:1]
 	for _, arg := range os.Args[1:] {
 		if idx := strings.IndexRune(arg, '='); idx >= 0 {
-			os.Setenv(arg[:idx], arg[idx+1:])
+			if err := os.Setenv(arg[:idx], arg[idx+1:]); err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to set environment variable: %v\n", err)
+				os.Exit(1)
+			}
 		} else {
 			args = append(args, arg)
 		}

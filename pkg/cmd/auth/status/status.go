@@ -2,6 +2,7 @@ package status
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
@@ -18,7 +19,7 @@ func Command() *cobra.Command {
 			config.Init()
 
 			if !config.HasToken() {
-				return fmt.Errorf(i18n.C.ErrorNoToken)
+				return fmt.Errorf("%s", i18n.C.ErrorNoToken)
 			}
 
 			token := config.Token()

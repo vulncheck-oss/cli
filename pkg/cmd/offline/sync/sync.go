@@ -2,14 +2,15 @@ package sync
 
 import (
 	"fmt"
+	"slices"
+	"time"
+
 	"github.com/charmbracelet/huh"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
-	"slices"
-	"time"
 )
 
 var specialIndices = []string{"cpecve"}
@@ -86,7 +87,7 @@ func Command() *cobra.Command {
 				})
 			}
 
-			if len(selectedIndices) == 0 || choose {
+			if (len(selectedIndices) == 0 && len(removeIndices) == 0) || choose {
 
 				options := make([]huh.Option[string], len(indices))
 
@@ -127,7 +128,7 @@ func Command() *cobra.Command {
 	}
 
 	cmd.Flags().BoolP("choose", "c", false, "Prompt to choose indices to sync, even if cached ones exist")
-	cmd.Flags().StringSliceVar(&addIndices, "add", nil, "Add specific indices to sync")
+	cmd.Flags().StringSliceVar(&addIndices, "add", nil, "Add specific indices to sync, separated by commas")
 	cmd.Flags().StringSliceVar(&removeIndices, "remove", nil, "Remove specific indices from sync")
 	cmd.Flags().BoolVar(&purge, "purge", false, "Purge all cached indices")
 	cmd.Flags().BoolVar(&force, "force", false, "Force a sync ignoring if the index is up-to-date")

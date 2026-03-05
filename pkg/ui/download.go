@@ -2,12 +2,14 @@ package ui
 
 import (
 	"fmt"
-	"github.com/charmbracelet/bubbles/progress"
-	tea "github.com/charmbracelet/bubbletea"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+
+	"github.com/charmbracelet/bubbles/progress"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 var p *tea.Program
@@ -58,6 +60,11 @@ func Download(url string, filename string) error {
 	// it's impossible see progress without total
 	if resp.ContentLength <= 0 {
 		return fmt.Errorf("can't parse content length, aborting download")
+	}
+
+	// Create directory path if it doesn't exist
+	if err := os.MkdirAll(filepath.Dir(filename), 0755); err != nil {
+		return fmt.Errorf("could not create directory path: %w", err)
 	}
 
 	file, err := os.Create(filename)

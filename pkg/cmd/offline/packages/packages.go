@@ -5,7 +5,7 @@ import (
 )
 
 var OS = []string{"alma", "alpine", "amazon", "arch", "cbl-mariner", "centos", "chainguard", "debian", "fedora", "oracle", "redhat", "rocky", "suse", "ubuntu", "wolfi"}
-var OSSupported = []string{"alpine", "rocky", "debian"}
+var OSSupported = []string{"alpine", "rocky", "debian", "ubuntu"}
 
 func IndexFromName(name string) string {
 	for _, osName := range OSSupported {

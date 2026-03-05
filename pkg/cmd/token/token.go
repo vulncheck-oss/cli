@@ -11,9 +11,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
+	"github.com/vulncheck-oss/cli/pkg/sdk"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
-	"github.com/vulncheck-oss/sdk-go"
 )
 
 func Command() *cobra.Command {
@@ -41,7 +41,7 @@ func Create() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
-				return fmt.Errorf(i18n.C.CreateTokenLabelRequired)
+				return fmt.Errorf("%s", i18n.C.CreateTokenLabelRequired)
 			}
 
 			response, err := session.Connect(config.Token()).CreateToken(args[0])
@@ -62,7 +62,7 @@ func Remove() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
-				return fmt.Errorf(i18n.C.RemoveTokenIDRequired)
+				return fmt.Errorf("%s", i18n.C.RemoveTokenIDRequired)
 			}
 
 			_, err := session.Connect(config.Token()).DeleteToken(args[0])
@@ -182,7 +182,7 @@ func BrowseCreate() error {
 	}
 
 	if label == "" {
-		return fmt.Errorf(i18n.C.CreateTokenLabelRequired)
+		return fmt.Errorf("%s", i18n.C.CreateTokenLabelRequired)
 	}
 
 	// Create the token
@@ -263,8 +263,12 @@ func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
 	tabWriter := tabwriter.NewWriter(&buf, maxLabelWidth, 0, 1, ' ', 0)
 
 	// Write content to tabWriter
-	fmt.Fprint(tabWriter, content)
-	tabWriter.Flush()
+	if _, err := fmt.Fprint(tabWriter, content); err != nil {
+		return fmt.Errorf("failed to write to tabWriter: %w", err)
+	}
+	if err := tabWriter.Flush(); err != nil {
+		return fmt.Errorf("failed to flush tabWriter: %w", err)
+	}
 
 	// Render the box with all content
 	ui.ClearScreen()

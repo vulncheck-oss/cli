@@ -4,8 +4,11 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
-	"github.com/vulncheck-oss/cli/pkg/cmd/offline"
 	"os"
+
+	"github.com/vulncheck-oss/cli/pkg/cmd/upgrade"
+
+	"github.com/vulncheck-oss/cli/pkg/cmd/offline"
 
 	"github.com/vulncheck-oss/cli/pkg/cmd/token"
 
@@ -26,9 +29,9 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/environment"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
+	"github.com/vulncheck-oss/cli/pkg/sdk"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
-	"github.com/vulncheck-oss/sdk-go"
 )
 
 type AuthError struct {
@@ -51,7 +54,6 @@ func NewCmdRoot() *cobra.Command {
 		$ vulncheck backup abb
 	`),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-
 			environment.Init()
 			config.Init()
 
@@ -61,7 +63,6 @@ func NewCmdRoot() *cobra.Command {
 			}
 
 			return nil
-
 		},
 	}
 
@@ -79,6 +80,7 @@ func NewCmdRoot() *cobra.Command {
 	cmd.AddCommand(about.Command())
 	cmd.AddCommand(auth.Command())
 	cmd.AddCommand(token.Command())
+	cmd.AddCommand(upgrade.Command())
 	cmd.AddCommand(indices.Command())
 	cmd.AddCommand(index.Command())
 	cmd.AddCommand(backup.Command())

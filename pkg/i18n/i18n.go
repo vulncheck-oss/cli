@@ -122,8 +122,21 @@ type Copy struct {
 
 	ScanVulnMetaStart string
 	ScanVulnMetaEnd   string
-	ScanNoCvesFound   string
-	ScanBenchmark     string
+
+	ScanVulnOfflineMetaStart string
+	ScanVulnOfflineMetaEnd   string
+
+	ScanNoCvesFound string
+	ScanBenchmark   string
+
+	UpgradeShort string
+	UpgradeLong  string
+
+	UpgradeLatestShort string
+	UpgradeLatestLong  string
+
+	UpgradeStatusShort string
+	UpgradeStatusLong  string
 
 	ErrorNoToken      string
 	ErrorUnauthorized string
@@ -272,9 +285,24 @@ var En = Copy{
 	ScanVulnMetaStart: "Fetching vulnerability metadata",
 	ScanVulnMetaEnd:   "Vulnerability metadata fetched",
 
+	ScanVulnOfflineMetaStart: "[OFFLINE] Fetching vulnerability metadata",
+	ScanVulnOfflineMetaEnd:   "[OFFLINE] Vulnerability metadata fetched",
+
 	ScanNoCvesFound:            "No vulnerabilities found in %d packages",
 	ScanBenchmark:              "Scan completed in %s",
 	ScanErrorDirectoryRequired: "Error: Directory is required",
+
+	UpgradeShort: "Upgrade the vulncheck CLI to the latest version",
+	UpgradeLong: heredoc.Doc(`
+			Upgrade the vulncheck CLI to the latest version by downloading
+			and installing the appropriate binary for your platform from GitHub releases.
+		`),
+
+	UpgradeLatestShort: "Upgrade to the latest version",
+	UpgradeLatestLong:  "Upgrade to the latest version of the CLI.",
+
+	UpgradeStatusShort: "Check upgrade status",
+	UpgradeStatusLong:  "Check if a new version of the CLI is available.",
 
 	ErrorUnauthorized: "Error: Unauthorized, Try authenticating with: vulncheck auth login",
 	ErrorNoToken:      "No token found. Please run `vulncheck auth login` to authenticate or populate the environment variable `VC_TOKEN`.",

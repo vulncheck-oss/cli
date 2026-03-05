@@ -3,10 +3,11 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"github.com/vulncheck-oss/cli/pkg/config"
-	_ "modernc.org/sqlite"
 	"os"
 	"path/filepath"
+
+	"github.com/vulncheck-oss/cli/pkg/config"
+	_ "modernc.org/sqlite"
 )
 
 var dbInstance *sql.DB
@@ -48,7 +49,9 @@ func DB() (*sql.DB, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to create database file: %w", err)
 		}
-		file.Close()
+		if err := file.Close(); err != nil {
+			return nil, fmt.Errorf("failed to close file: %w", err)
+		}
 
 		dbInstance, err = sql.Open("sqlite", dbPath)
 		if err != nil {

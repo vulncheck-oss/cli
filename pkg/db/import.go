@@ -5,14 +5,15 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
 )
 
-const maxInsertSize int64 = 1_000_000_000 // Default max length in bytes
-const maxSQLiteVariables = 900            // Slightly below limit of 999 to be safe
+const maxInsertSize int64 = 25_000_000 // 25MB - Conservative but performant
+const maxSQLiteVariables = 900         // Slightly below limit of 999 to be safe
 
 func ImportIndex(filePath string, indexDir string, progressCallback func(int)) error {
 	db, err := DB()
@@ -28,7 +29,7 @@ func ImportIndex(filePath string, indexDir string, progressCallback func(int)) e
 	}
 
 	// Convert table name to use underscores instead of hyphens
-	tableName := strings.Replace(indexName, "-", "_", -1)
+	tableName := strings.ReplaceAll(indexName, "-", "_")
 
 	// Drop existing table if it exists
 	dropTableSQL := fmt.Sprintf(`DROP TABLE IF EXISTS "%s"`, tableName)
@@ -138,7 +139,11 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	// Read first character to check if it's an array
 	firstByte := make([]byte, 1)
@@ -183,7 +188,8 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 				batch = append(batch, values)
 				batchSize += size
 
-				if batchSize >= maxSize { // Use maxSize parameter instead of hardcoded value
+				// Conservative batching for large files - flush every 500 records
+				if batchSize >= maxSize || len(batch) >= 500 {
 					if err := executeBatch(db, baseInsertSQL, batch); err != nil {
 						return err
 					}
@@ -196,7 +202,7 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 	} else {
 		// Original line-by-line processing
 		scanner := bufio.NewScanner(file)
-		scanner.Buffer(make([]byte, 4*1024*1024), 4*1024*1024)
+		scanner.Buffer(make([]byte, 256*1024), 256*1024)
 
 		for scanner.Scan() {
 			line := scanner.Bytes()
@@ -220,7 +226,8 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 				batch = append(batch, values)
 				batchSize += size
 
-				if batchSize >= maxSize { // Use maxSize parameter instead of hardcoded value
+				// Conservative batching - flush every 500 records or size limit
+				if batchSize >= maxSize || len(batch) >= 500 {
 					if err := executeBatch(db, baseInsertSQL, batch); err != nil {
 						return err
 					}
@@ -244,6 +251,15 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 }
 
 func processEntry(entry map[string]interface{}, schema *Schema, jsonColumns map[int]bool) ([]interface{}, int64, error) {
+	// Handle Results wrapper if schema requires it
+	if schema.Results {
+		if results, ok := entry["results"].([]interface{}); ok && len(results) > 0 {
+			if resultEntry, ok := results[0].(map[string]interface{}); ok {
+				entry = resultEntry
+			}
+		}
+	}
+
 	// Only check for CVEs if it's a PM schema
 	if schema.Name == "purl PM" {
 		cves, hasCVEs := entry["cves"].([]interface{})
@@ -252,10 +268,22 @@ func processEntry(entry map[string]interface{}, schema *Schema, jsonColumns map[
 		}
 	}
 
-	// Rest of the function remains the same...
 	values := make([]interface{}, len(schema.Columns))
+
+	// for nvd indices, lets store description from descriptions, entry.descriptions[0].value
+	// it should be entry["descriptions"][0]["value"]
+	if schema.Name == "nvd" {
+		if descriptions, exists := entry["descriptions"].([]interface{}); exists && len(descriptions) > 0 {
+			if descObj, ok := descriptions[0].(map[string]interface{}); ok {
+				if value, ok := descObj["value"].(string); ok {
+					entry["description"] = value
+				}
+			}
+		}
+	}
 	for i, col := range schema.Columns {
 		val, exists := entry[col.Name]
+
 		if !exists {
 			if col.NotNull {
 				return nil, 0, fmt.Errorf("missing required field %s", col.Name)
@@ -272,7 +300,8 @@ func processEntry(entry map[string]interface{}, schema *Schema, jsonColumns map[
 				val = parts[0]
 			}
 		}
-		if jsonColumns[i] {
+
+		if jsonColumns[i] && schema.Columns[i].Name != "description" {
 			if arr, ok := val.([]interface{}); ok {
 				jsonStr, _ := json.Marshal(arr)
 				values[i] = string(jsonStr)

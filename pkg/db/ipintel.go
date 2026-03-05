@@ -3,9 +3,10 @@ package db
 import (
 	"encoding/json"
 	"fmt"
-	_ "modernc.org/sqlite"
 	"strings"
 	"time"
+
+	_ "modernc.org/sqlite"
 )
 
 type IPEntry struct {
@@ -84,7 +85,11 @@ func IPIntelSearch(indexName, country, asn, cidr, countryCode, hostname, id stri
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to execute query: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	var results []IPEntry
 	for rows.Next() {

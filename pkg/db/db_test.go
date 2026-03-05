@@ -12,7 +12,9 @@ var testDB *sql.DB
 // TestMain is the main entry point for all tests in the db package
 func TestMain(m *testing.M) {
 	// Set TEST_ENV for in-memory database
-	os.Setenv("TEST_ENV", "true")
+	if err := os.Setenv("TEST_ENV", "true"); err != nil {
+		panic("failed to set TEST_ENV: " + err.Error())
+	}
 
 	// Initialize the database once for all tests
 	var err error
@@ -25,7 +27,9 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 
 	// Close the database connection
-	testDB.Close()
+	if err := testDB.Close(); err != nil {
+		panic("failed to close test database: " + err.Error())
+	}
 
 	os.Exit(code)
 }

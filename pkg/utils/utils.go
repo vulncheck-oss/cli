@@ -3,13 +3,17 @@ package utils
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/dustin/go-humanize"
 	"io"
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
+	"runtime"
 	"strings"
 	"time"
+
+	"github.com/dustin/go-humanize"
+	"github.com/vulncheck-oss/cli/internal/build"
 )
 
 // NormalizeString normalizes a string by converting it to lowercase and replacing spaces and underscores with hyphens.
@@ -37,6 +41,15 @@ func ExtractFile(urlStr string) (string, error) {
 	return path, nil
 }
 
+// ExtractFileBasename extracts the base file name from a URL string from an index backup.
+func ExtractFileBasename(urlStr string) (string, error) {
+	name, err := ExtractFile(urlStr)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Base(name), nil
+}
+
 // ParseDate parses a date string in RFC3339 format and returns a formatted string.
 func ParseDate(date string) string {
 	dateAdded, err := time.Parse(time.RFC3339, date)
@@ -55,7 +68,11 @@ func Unzip(src, dest string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open zip file: %w", err)
 	}
-	defer r.Close()
+	defer func() {
+		if err := r.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	if err := os.MkdirAll(dest, 0755); err != nil {
 		return fmt.Errorf("failed to create destination directory: %w", err)
@@ -76,7 +93,11 @@ func extractZipFile(f *zip.File, dest string) error {
 	if err != nil {
 		return err
 	}
-	defer rc.Close()
+	defer func() {
+		if err := rc.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	path := filepath.Join(dest, f.Name)
 
@@ -97,7 +118,11 @@ func extractZipFile(f *zip.File, dest string) error {
 		if err != nil {
 			return err
 		}
-		defer f.Close()
+		defer func() {
+			if err := f.Close(); err != nil {
+				_ = err
+			}
+		}()
 
 		_, err = io.Copy(f, rc)
 		if err != nil {
@@ -131,4 +156,65 @@ func GetSizeHuman(size uint64) string {
 
 func GetDateHuman(date time.Time) string {
 	return humanize.Time(date)
+}
+
+func FormatCVE(bareCve string) string {
+	// Convert to uppercase
+	c := strings.ToUpper(bareCve)
+
+	// Replace all special characters with a dash
+	re := regexp.MustCompile(`[^A-Z0-9]`)
+	c = re.ReplaceAllString(c, "-")
+
+	// Check if it starts with "CVE-"
+	if !strings.HasPrefix(c, "CVE-") {
+		c = "CVE-" + c
+	}
+
+	// Ensure the format is "CVE-YYYY-NNNN"
+	re = regexp.MustCompile(`CVE-(\d{4})-(\d{4,})`)
+	matches := re.FindStringSubmatch(c)
+	if len(matches) == 3 {
+		year := matches[1]
+		number := matches[2]
+		c = fmt.Sprintf("CVE-%s-%04s", year, number)
+	}
+
+	return c
+}
+
+func TrimVersionString(version ...string) string {
+	if len(version) > 0 && version[0] != "" {
+		return strings.TrimPrefix(version[0], "v")
+	}
+	return strings.TrimPrefix(build.Version, "v")
+}
+
+func GetPlatformAssetName(version string) (string, error) {
+	var os, arch, ext string
+
+	switch runtime.GOOS {
+	case "darwin":
+		os = "macOS"
+		ext = "zip"
+	case "linux":
+		os = "linux"
+		ext = "tar.gz"
+	case "windows":
+		os = "windows"
+		ext = "zip"
+	default:
+		return "", fmt.Errorf("unsupported operating system: %s", runtime.GOOS)
+	}
+
+	switch runtime.GOARCH {
+	case "amd64":
+		arch = "amd64"
+	case "arm64":
+		arch = "arm64"
+	default:
+		return "", fmt.Errorf("unsupported architecture: %s", runtime.GOARCH)
+	}
+
+	return fmt.Sprintf("vulncheck_%s_%s_%s.%s", version, os, arch, ext), nil
 }

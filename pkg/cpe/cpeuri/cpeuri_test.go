@@ -37,6 +37,12 @@ func TestToStruct(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name:    "CPE 2.3 formatted string with wildcard part prefix is accepted but ToStruct rejects vendor+product both ANY",
+			input:   "cpe:2.3:*:*:*:version:update:edition:lang:sw_edition:target_sw:target_hw:other",
+			want:    nil,
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -84,6 +90,7 @@ func TestIsCPEFormattedString(t *testing.T) {
 		{"Invalid prefix", "invalid:2.3:a:vendor:product:version:update:edition:lang:sw_edition:target_sw:target_hw:other", false},
 		{"Not enough components", "cpe:2.3:a:vendor:product", false},
 		{"Non-ASCII characters", "cpe:2.3:a:vend□r:product:version:update:edition:lang:sw_edition:target_sw:target_hw:other", false},
+		{"Valid CPE 2.3 with wildcard part prefix", "cpe:2.3:*:vendor:product:version:update:edition:lang:sw_edition:target_sw:target_hw:other", true},
 	}
 
 	for _, tt := range tests {

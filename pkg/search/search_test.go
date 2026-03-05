@@ -2,13 +2,14 @@ package search
 
 import (
 	"fmt"
-	"github.com/itchyny/gojq"
-	"github.com/package-url/packageurl-go"
 	"os"
 	"path/filepath"
 	"sort"
 	"sync"
 	"testing"
+
+	"github.com/itchyny/gojq"
+	"github.com/package-url/packageurl-go"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -175,7 +176,11 @@ func TestListIndexFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp directory: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			t.Errorf("Failed to remove temp directory: %v", err)
+		}
+	}()
 
 	// Create a nested directory structure with some files
 	files := []string{
@@ -226,7 +231,11 @@ func TestProcessFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tempFile.Name())
+	defer func() {
+		if err := os.Remove(tempFile.Name()); err != nil {
+			t.Errorf("Failed to remove temp file: %v", err)
+		}
+	}()
 
 	// Write test data to the file
 	testData := `{"ip":"192.168.1.1","port":80,"country":"TestCountry","cve":["CVE-2021-1234"]}
@@ -236,7 +245,9 @@ func TestProcessFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to write test data: %v", err)
 	}
-	tempFile.Close()
+	if err := tempFile.Close(); err != nil {
+		t.Fatalf("Failed to close temp file: %v", err)
+	}
 
 	// Set up test parameters
 	query := ".country == \"TestCountry\""
