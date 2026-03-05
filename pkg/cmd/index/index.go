@@ -127,8 +127,8 @@ func Command() *cobra.Command {
 		},
 	}
 
-	cmdList.Flags().BoolVarP(&opts.Full, "full", "f", false, "Output full response")
-	cmdBrowse.Flags().BoolVarP(&opts.Full, "full", "f", false, "Output full response")
+	cmdList.Flags().BoolVarP(&opts.Full, "full", "f", false, i18n.C.IndexFlagFullResponse)
+	cmdBrowse.Flags().BoolVarP(&opts.Full, "full", "f", false, i18n.C.IndexFlagFullResponse)
 
 	cmd.AddCommand(cmdList)
 	cmd.AddCommand(cmdBrowse)
