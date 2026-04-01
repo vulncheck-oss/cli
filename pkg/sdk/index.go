@@ -38,6 +38,7 @@ type IndexQueryParameters struct {
 	SrcCountry         string `json:"src_country"`
 	DstCountry         string `json:"dst_country"`
 	SourceIP           string `json:"src_ip"`
+	SourceASN          string `json:"src_asn"`
 
 	// PAGINATION RELATED
 	Limit       int    `json:"limit"`
@@ -159,6 +160,9 @@ func setIndexQueryParameters(query url.Values, queryParameters ...IndexQueryPara
 		}
 		if queryParameter.SourceIP != "" {
 			query.Add("src_ip", queryParameter.SourceIP)
+		}
+		if queryParameter.SourceASN != "" {
+			query.Add("src_asn", queryParameter.SourceASN)
 		}
 		// PAGINATION RELATED
 		if queryParameter.Limit != 0 {

@@ -138,6 +138,7 @@ vulncheck index browse|list <index> [flags]
 | --src_country          | string | SrcCountry            |
 | --dst_country          | string | DstCountry            |
 | --src_ip               | string | SrcIp                 |
+| --src_asn              | string | SrcASN                |
 | --help                 |        | Show help for command |
 
 
