@@ -40,7 +40,7 @@ jobs:
       - name: Install GoReleaser
         uses: goreleaser/goreleaser-action@v7
         with:
-          version: "~1.17.1"
+          version: "~1.25.5"
           install-only: true
       - name: Build release binaries
         env:
@@ -92,7 +92,7 @@ jobs:
       - name: Install GoReleaser
         uses: goreleaser/goreleaser-action@v7
         with:
-          version: "~1.17.1"
+          version: "~1.25.5"
           install-only: true
       - name: Build release binaries
         env:
@@ -131,7 +131,7 @@ jobs:
       - name: Install GoReleaser
         uses: goreleaser/goreleaser-action@v7
         with:
-          version: "~1.17.1"
+          version: "~1.25.5"
           install-only: true
       - name: Install Azure Code Signing Client
         shell: pwsh

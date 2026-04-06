@@ -21,7 +21,7 @@ jobs:
       - name: Set up Go 1.24
         uses: actions/setup-go@v6
         with:
-          go-version: 1.24
+          go-version: "1.25.5"
           cache-dependency-path: "/home/runner/work/cli/go.sum"
 
       - name: Check out code
