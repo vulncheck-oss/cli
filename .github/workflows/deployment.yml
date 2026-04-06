@@ -32,13 +32,13 @@ jobs:
     if: contains(inputs.platforms, 'linux')
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
       - name: Install GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: "~1.17.1"
           install-only: true
@@ -50,7 +50,7 @@ jobs:
         run: |
           go run ./cmd/gen-docs --website --doc-path dist/manual
           tar -czvf dist/manual.tar.gz -C dist -- manual
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: linux
           if-no-files-found: error
@@ -66,9 +66,9 @@ jobs:
     if: contains(inputs.platforms, 'macos')
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
       - name: Configure macOS signing
@@ -90,7 +90,7 @@ jobs:
           security set-key-partition-list -S "apple-tool:,apple:,codesign:" -s -k "$keychain_password" "$keychain"
           rm "$RUNNER_TEMP/cert.p12"
       - name: Install GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: "~1.17.1"
           install-only: true
@@ -108,7 +108,7 @@ jobs:
         run: |
           shopt -s failglob
           script/sign dist/gh_*_macOS_*.zip
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: macos
           if-no-files-found: error
@@ -123,13 +123,13 @@ jobs:
     if: contains(inputs.platforms, 'windows')
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
       - name: Install GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: "~1.17.1"
           install-only: true
@@ -168,7 +168,7 @@ jobs:
         run: script/release --local "$TAG_NAME" --platform windows
       - name: Set up MSBuild
         id: setupmsbuild
-        uses: microsoft/setup-msbuild@v2.0.0
+        uses: microsoft/setup-msbuild@v3.0.0
       - name: Build MSI
         shell: bash
         env:
@@ -212,7 +212,7 @@ jobs:
           Get-ChildItem -Path .\dist -Filter *.msi | ForEach-Object {
             .\script\sign.ps1 $_.FullName
           }
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: windows
           if-no-files-found: error
@@ -228,11 +228,11 @@ jobs:
     if: inputs.release
     steps:
       - name: Checkout cli/cli
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Merge built artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
       - name: Checkout documentation site
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: github/cli.github.com
           path: site
