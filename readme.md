@@ -134,10 +134,12 @@ vulncheck index browse|list <index> [flags]
 | --threat_actor         | string | ThreatActor           |
 | --updatedAtEndDate     | string | UpdatedAtEndDate      |
 | --updatedAtStartDate   | string | UpdatedAtStartDate    |
+| --date                 | string | Date                  |
 | --src_country          | string | SrcCountry            |
 | --dst_country          | string | DstCountry            |
+| --src_ip               | string | SrcIp                 |
+| --src_asn              | string | SrcASN                |
 | --help                 |        | Show help for command |
-
 
 
 ### Download a backup 

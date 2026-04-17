@@ -20,6 +20,7 @@ type IndexQueryParameters struct {
 	LastModEndDate     string `json:"lastModEndDate"`
 	PubStartDate       string `json:"pubStartDate"`
 	PubEndDate         string `json:"pubEndDate"`
+	Date               string `json:"date"`
 	ThreatActor        string `json:"threat_actor"`
 	MitreId            string `json:"mitre_id"`
 	MispId             string `json:"misp_id"`
@@ -36,6 +37,8 @@ type IndexQueryParameters struct {
 	Jvndb              string `json:"jvndb"`
 	SrcCountry         string `json:"src_country"`
 	DstCountry         string `json:"dst_country"`
+	SourceIP           string `json:"src_ip"`
+	SourceASN          string `json:"src_asn"`
 
 	// PAGINATION RELATED
 	Limit       int    `json:"limit"`
@@ -104,6 +107,9 @@ func setIndexQueryParameters(query url.Values, queryParameters ...IndexQueryPara
 		if queryParameter.PubEndDate != "" {
 			query.Add("pubEndDate", queryParameter.PubEndDate)
 		}
+		if queryParameter.Date != "" {
+			query.Add("date", queryParameter.Date)
+		}
 		if queryParameter.ThreatActor != "" {
 			query.Add("threat_actor", queryParameter.ThreatActor)
 		}
@@ -151,6 +157,12 @@ func setIndexQueryParameters(query url.Values, queryParameters ...IndexQueryPara
 		}
 		if queryParameter.DstCountry != "" {
 			query.Add("dst_country", queryParameter.DstCountry)
+		}
+		if queryParameter.SourceIP != "" {
+			query.Add("src_ip", queryParameter.SourceIP)
+		}
+		if queryParameter.SourceASN != "" {
+			query.Add("src_asn", queryParameter.SourceASN)
 		}
 		// PAGINATION RELATED
 		if queryParameter.Limit != 0 {
