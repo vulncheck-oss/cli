@@ -18,10 +18,10 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.24
+      - name: Set up Go 1.25
         uses: actions/setup-go@v6
         with:
-          go-version: "1.25.5"
+          go-version: "1.25.8"
           cache-dependency-path: "/home/runner/work/cli/go.sum"
 
       - name: Check out code
