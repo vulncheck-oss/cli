@@ -1,9 +1,10 @@
 package db
 
 import (
-	"github.com/package-url/packageurl-go"
 	"strings"
 	"testing"
+
+	"github.com/package-url/packageurl-go"
 )
 
 func setupPurlTable(t *testing.T) {
@@ -149,4 +150,24 @@ func mustParsePurl(s string) packageurl.PackageURL {
 		panic("Invalid PURL string: " + s)
 	}
 	return purl
+}
+
+func TestIsDigits(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected bool
+	}{
+		{"12345", true},
+		{"abc123", false},
+		{"", false},
+		{"0000", true},
+		{"12.34", false},
+	}
+
+	for _, tt := range tests {
+		result := isDigits(tt.input)
+		if result != tt.expected {
+			t.Errorf("isDigits(%q) = %v; expected %v", tt.input, result, tt.expected)
+		}
+	}
 }
