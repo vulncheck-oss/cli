@@ -345,6 +345,79 @@ func TestFormatCVE(t *testing.T) {
 	})
 }
 
+func TestSuggestFor(t *testing.T) {
+	tests := []struct {
+		name       string
+		typed      string
+		candidates []string
+		want       []string
+	}{
+		{
+			name:       "exact match",
+			typed:      "pdns",
+			candidates: []string{"pdns", "nvd"},
+			want:       []string{"pdns"},
+		},
+		{
+			name:       "one character typo",
+			typed:      "pdnx",
+			candidates: []string{"pdns", "nvd"},
+			want:       []string{"pdns"},
+		},
+		{
+			name:       "two character typo",
+			typed:      "pdxx",
+			candidates: []string{"pdns", "nvd"},
+			want:       []string{"pdns"},
+		},
+		{
+			name:       "three character typo returns nothing",
+			typed:      "pxxx",
+			candidates: []string{"pdns", "nvd"},
+			want:       nil,
+		},
+		{
+			name:       "prefix match",
+			typed:      "initial-access",
+			candidates: []string{"initial-access-exploits", "nvd"},
+			want:       []string{"initial-access-exploits"},
+		},
+		{
+			name:       "case insensitive",
+			typed:      "PDNS",
+			candidates: []string{"pdns"},
+			want:       []string{"pdns"},
+		},
+		{
+			name:       "no close matches",
+			typed:      "zzz",
+			candidates: []string{"pdns", "nvd"},
+			want:       nil,
+		},
+		{
+			name:       "multiple suggestions",
+			typed:      "pdns",
+			candidates: []string{"pdns", "pdcp", "nvd"},
+			want:       []string{"pdns", "pdcp"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := SuggestFor(tt.typed, tt.candidates)
+			if len(got) != len(tt.want) {
+				t.Errorf("SuggestFor() = %v, want %v", got, tt.want)
+				return
+			}
+			for i, s := range got {
+				if s != tt.want[i] {
+					t.Errorf("SuggestFor()[%d] = %v, want %v", i, s, tt.want[i])
+				}
+			}
+		})
+	}
+}
+
 func TestGetPlatformAssetName(t *testing.T) {
 	tests := []struct {
 		name     string
