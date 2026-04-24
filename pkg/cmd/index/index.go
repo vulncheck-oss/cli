@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
@@ -11,7 +12,39 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/sdk"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
+	"github.com/vulncheck-oss/cli/pkg/utils"
 )
+
+func validateIndex(index string) (*sdk.Client, error) {
+	client := session.Connect(config.Token())
+	indicesResponse, err := client.GetIndices()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a map of indices to compare against
+	var indexNames []string
+	available := make(map[string]bool)
+	for _, idx := range indicesResponse.GetData() {
+		available[idx.Name] = true
+		indexNames = append(indexNames, idx.Name)
+	}
+
+	// If the index is not present in the map, print output and suggest
+	// options for what the argument may have intended
+	if !available[index] {
+		var msg strings.Builder
+		fmt.Fprintf(&msg, "index '%s' does not exist", index)
+		if suggestions := utils.SuggestFor(index, indexNames); len(suggestions) > 0 {
+			msg.WriteString("\n\nDid you mean this?\n")
+			for _, s := range suggestions {
+				fmt.Fprintf(&msg, "\t%s\n", s)
+			}
+		}
+		return nil, fmt.Errorf("%s", msg.String())
+	}
+	return client, nil
+}
 
 type Options struct {
 	Full bool
@@ -66,7 +99,11 @@ func Command() *cobra.Command {
 				}
 			}
 
-			response, err := session.Connect(config.Token()).GetIndex(args[0], queryParameters)
+			client, err := validateIndex(args[0])
+			if err != nil {
+				return err
+			}
+			response, err := client.GetIndex(args[0], queryParameters)
 			if err != nil {
 				return err
 			}
@@ -111,7 +148,11 @@ func Command() *cobra.Command {
 				}
 			}
 
-			response, err := session.Connect(config.Token()).GetIndex(args[0], queryParameters)
+			client, err := validateIndex(args[0])
+			if err != nil {
+				return err
+			}
+			response, err := client.GetIndex(args[0], queryParameters)
 			if err != nil {
 				return err
 			}
