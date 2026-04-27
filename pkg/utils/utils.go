@@ -183,6 +183,51 @@ func FormatCVE(bareCve string) string {
 	return c
 }
 
+func SuggestFor(typed string, candidates []string) []string {
+	var suggestions []string
+	for _, c := range candidates {
+		dist := levenshtein(typed, c)
+		if dist <= 2 || strings.HasPrefix(strings.ToLower(c), strings.ToLower(typed)) {
+			suggestions = append(suggestions, c)
+		}
+	}
+	return suggestions
+}
+
+// levenshtein returns the edit distance between a and b (case-insensitive).
+// Edit distance is the minimum number of single-character insertions, deletions,
+// or substitutions needed to transform one string into the other.
+func levenshtein(a, b string) int {
+	a = strings.ToLower(a)
+	b = strings.ToLower(b)
+
+	// matrix[i][j] is the edit distance between the first i chars of a and
+	// the first j chars of b. Row 0 and column 0 represent the empty string:
+	// transforming "" into b[:j] costs j insertions; a[:i] into "" costs i deletions.
+	matrix := make([][]int, len(a)+1)
+	for i := range matrix {
+		matrix[i] = make([]int, len(b)+1)
+		matrix[i][0] = i
+	}
+	for j := range matrix[0] {
+		matrix[0][j] = j
+	}
+
+	for i := 1; i <= len(a); i++ {
+		for j := 1; j <= len(b); j++ {
+			if a[i-1] == b[j-1] {
+				// Characters match — carry the diagonal cost unchanged.
+				matrix[i][j] = matrix[i-1][j-1]
+			} else {
+				// Pick the cheapest of: delete from a, insert from b, or substitute.
+				matrix[i][j] = 1 + min(matrix[i-1][j], matrix[i][j-1], matrix[i-1][j-1])
+			}
+		}
+	}
+
+	return matrix[len(a)][len(b)]
+}
+
 func TrimVersionString(version ...string) string {
 	if len(version) > 0 && version[0] != "" {
 		return strings.TrimPrefix(version[0], "v")
