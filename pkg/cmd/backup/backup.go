@@ -2,8 +2,8 @@ package backup
 
 import (
 	"fmt"
-	"strings"
 
+	"github.com/charmbracelet/huh"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
@@ -13,11 +13,13 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/utils"
 )
 
-func validateIndex(index string) (*sdk.Client, error) {
-	client := session.Connect(config.Token())
-	indicesResponse, err := client.GetIndices()
+// validateIndex checks whether index exists. If it does not but close matches
+// are found, an interactive select is presented so the user can pick one.
+// Returns the confirmed index name, or an error if the name is unrecognised.
+func validateIndex(index string) (string, error) {
+	indicesResponse, err := session.Connect(config.Token()).GetIndices()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// Create a map of indices to compare against
@@ -28,20 +30,36 @@ func validateIndex(index string) (*sdk.Client, error) {
 		indexNames = append(indexNames, idx.Name)
 	}
 
-	// If the index is not present in the map, print output and suggest
-	// options for what the argument may have intended
-	if !available[index] {
-		var msg strings.Builder
-		fmt.Fprintf(&msg, "index '%s' does not exist", index)
-		if suggestions := utils.SuggestFor(index, indexNames); len(suggestions) > 0 {
-			msg.WriteString("\n\nDid you mean this?\n")
-			for _, s := range suggestions {
-				fmt.Fprintf(&msg, "\t%s\n", s)
-			}
-		}
-		return nil, fmt.Errorf("%s", msg.String())
+	if available[index] {
+		return index, nil
 	}
-	return client, nil
+
+	suggestions := utils.SuggestFor(index, indexNames)
+	if len(suggestions) == 0 {
+		return "", fmt.Errorf("index '%s' does not exist", index)
+	}
+
+	// If the index is not present in the map but close matches exist, present
+	// an interactive select so the user can choose the intended index
+	options := make([]huh.Option[string], len(suggestions))
+	for i, s := range suggestions {
+		options[i] = huh.NewOption(s, s)
+	}
+
+	var selected string
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title(fmt.Sprintf("index '%s' does not exist. Did you mean one of these?", index)).
+				Options(options...).
+				Value(&selected),
+		),
+	)
+	if err := form.Run(); err != nil {
+		return "", fmt.Errorf("index '%s' does not exist", index)
+	}
+
+	return selected, nil
 }
 
 type UrlOptions struct {
@@ -67,14 +85,26 @@ func Command() *cobra.Command {
 				return ui.Error("index name is required")
 			}
 
-			client, err := validateIndex(args[0])
-			if err != nil {
-				return err
-			}
+			index := args[0]
+			client := session.Connect(config.Token())
+			response, err := client.GetIndexBackup(index)
 
-			response, err := client.GetIndexBackup(args[0])
+			// If GetIndexBackup fails due to a HTTP request error fallback
+			// and attempt to validate the index name argument provided if
+			// there was a typo/spelling error it will suggest similar names
 			if err != nil {
-				return err
+				if _, ok := err.(sdk.ReqError); ok {
+					corrected, validationErr := validateIndex(index)
+					if validationErr != nil {
+						return validationErr
+					}
+					response, err = client.GetIndexBackup(corrected)
+					if err != nil {
+						return err
+					}
+				} else {
+					return err
+				}
 			}
 
 			if opts.Json {
@@ -99,14 +129,27 @@ func Command() *cobra.Command {
 				return ui.Error(i18n.C.IndexErrorRequired)
 			}
 
-			client, err := validateIndex(args[0])
-			if err != nil {
-				return err
-			}
+			index := args[0]
+			client := session.Connect(config.Token())
+			response, err := client.GetIndexBackup(index)
 
-			response, err := client.GetIndexBackup(args[0])
+			// If GetIndexBackup fails due to a HTTP request error fallback
+			// and attempt to validate the index name argument provided if
+			// there was a typo/spelling error it will suggest similar names
 			if err != nil {
-				return err
+				if _, ok := err.(sdk.ReqError); ok {
+					corrected, validationErr := validateIndex(index)
+					if validationErr != nil {
+						return validationErr
+					}
+					index = corrected
+					response, err = client.GetIndexBackup(index)
+					if err != nil {
+						return err
+					}
+				} else {
+					return err
+				}
 			}
 
 			file, err := utils.ExtractFileBasename(response.GetData()[0].URL)
@@ -116,7 +159,7 @@ func Command() *cobra.Command {
 
 			date := utils.ParseDate(response.GetData()[0].DateAdded)
 
-			ui.Info(fmt.Sprintf(i18n.C.BackupDownloadInfo, args[0], date))
+			ui.Info(fmt.Sprintf(i18n.C.BackupDownloadInfo, index, date))
 			ui.Info(fmt.Sprintf(i18n.C.BackupDownloadProgress, file))
 			if err := ui.Download(response.GetData()[0].URL, file); err != nil {
 				return err
