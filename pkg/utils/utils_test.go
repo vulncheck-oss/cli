@@ -345,6 +345,108 @@ func TestFormatCVE(t *testing.T) {
 	})
 }
 
+func TestSuggestFor(t *testing.T) {
+	tests := []struct {
+		name       string
+		typed      string
+		candidates []string
+		want       []string
+	}{
+		{
+			name:       "exact match",
+			typed:      "pdns",
+			candidates: []string{"pdns", "nvd"},
+			want:       []string{"pdns"},
+		},
+		{
+			name:       "one character typo",
+			typed:      "pdnx",
+			candidates: []string{"pdns", "nvd"},
+			want:       []string{"pdns"},
+		},
+		{
+			name:       "two character typo",
+			typed:      "pdxx",
+			candidates: []string{"pdns", "nvd"},
+			want:       []string{"pdns"},
+		},
+		{
+			name:       "three character typo returns nothing",
+			typed:      "pxxx",
+			candidates: []string{"pdns", "nvd"},
+			want:       nil,
+		},
+		{
+			name:       "prefix match",
+			typed:      "initial-access",
+			candidates: []string{"initial-access-exploits", "nvd"},
+			want:       []string{"initial-access-exploits"},
+		},
+		{
+			name:       "case insensitive",
+			typed:      "PDNS",
+			candidates: []string{"pdns"},
+			want:       []string{"pdns"},
+		},
+		{
+			name:       "no close matches",
+			typed:      "zzz",
+			candidates: []string{"pdns", "nvd"},
+			want:       nil,
+		},
+		{
+			name:       "multiple suggestions",
+			typed:      "pdns",
+			candidates: []string{"pdns", "pdcp", "nvd"},
+			want:       []string{"pdns", "pdcp"},
+		},
+		{
+			name:       "utf-8 one rune typo",
+			typed:      "índex",
+			candidates: []string{"índices", "index"},
+			want:       []string{"index"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := SuggestFor(tt.typed, tt.candidates)
+			if len(got) != len(tt.want) {
+				t.Errorf("SuggestFor() = %v, want %v", got, tt.want)
+				return
+			}
+			for i, s := range got {
+				if s != tt.want[i] {
+					t.Errorf("SuggestFor()[%d] = %v, want %v", i, s, tt.want[i])
+				}
+			}
+		})
+	}
+}
+
+func TestLevenshtein(t *testing.T) {
+	tests := []struct {
+		a, b string
+		want int
+	}{
+		{"", "", 0},
+		{"abc", "abc", 0},
+		{"abc", "ab", 1},
+		{"abc", "axc", 1},
+		{"", "abc", 3},
+		// Multi-byte UTF-8: each accented character is one rune, not 2+ bytes.
+		{"café", "cafe", 1},
+		{"naïve", "naive", 1},
+		{"résumé", "resume", 2},
+		{"日本語", "日本", 1},
+	}
+	for _, tt := range tests {
+		if got := levenshtein(tt.a, tt.b); got != tt.want {
+			t.Errorf("levenshtein(%q, %q) = %d, want %d", tt.a, tt.b, got, tt.want)
+		}
+	}
+}
+
 func TestGetPlatformAssetName(t *testing.T) {
 	tests := []struct {
 		name     string
