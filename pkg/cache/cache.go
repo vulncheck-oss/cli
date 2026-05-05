@@ -6,11 +6,12 @@ import (
 	"path/filepath"
 	"time"
 
+	"slices"
+
 	"github.com/fumeapp/taskin"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/utils"
-	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 
