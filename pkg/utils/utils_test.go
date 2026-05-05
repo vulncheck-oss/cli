@@ -400,6 +400,12 @@ func TestSuggestFor(t *testing.T) {
 			candidates: []string{"pdns", "pdcp", "nvd"},
 			want:       []string{"pdns", "pdcp"},
 		},
+		{
+			name:       "utf-8 one rune typo",
+			typed:      "índex",
+			candidates: []string{"índices", "index"},
+			want:       []string{"index"},
+		},
 	}
 
 	for _, tt := range tests {
@@ -415,6 +421,29 @@ func TestSuggestFor(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestLevenshtein(t *testing.T) {
+	tests := []struct {
+		a, b string
+		want int
+	}{
+		{"", "", 0},
+		{"abc", "abc", 0},
+		{"abc", "ab", 1},
+		{"abc", "axc", 1},
+		{"", "abc", 3},
+		// Multi-byte UTF-8: each accented character is one rune, not 2+ bytes.
+		{"café", "cafe", 1},
+		{"naïve", "naive", 1},
+		{"résumé", "resume", 2},
+		{"日本語", "日本", 1},
+	}
+	for _, tt := range tests {
+		if got := levenshtein(tt.a, tt.b); got != tt.want {
+			t.Errorf("levenshtein(%q, %q) = %d, want %d", tt.a, tt.b, got, tt.want)
+		}
 	}
 }
 
