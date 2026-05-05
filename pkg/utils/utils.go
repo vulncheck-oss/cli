@@ -198,34 +198,34 @@ func SuggestFor(typed string, candidates []string) []string {
 // Edit distance is the minimum number of single-character insertions, deletions,
 // or substitutions needed to transform one string into the other.
 func levenshtein(a, b string) int {
-	a = strings.ToLower(a)
-	b = strings.ToLower(b)
+	ra := []rune(strings.ToLower(a))
+	rb := []rune(strings.ToLower(b))
 
-	// matrix[i][j] is the edit distance between the first i chars of a and
-	// the first j chars of b. Row 0 and column 0 represent the empty string:
-	// transforming "" into b[:j] costs j insertions; a[:i] into "" costs i deletions.
-	matrix := make([][]int, len(a)+1)
+	// matrix[i][j] is the edit distance between the first i runes of ra and
+	// the first j runes of rb. Row 0 and column 0 represent the empty string:
+	// transforming "" into rb[:j] costs j insertions; ra[:i] into "" costs i deletions.
+	matrix := make([][]int, len(ra)+1)
 	for i := range matrix {
-		matrix[i] = make([]int, len(b)+1)
+		matrix[i] = make([]int, len(rb)+1)
 		matrix[i][0] = i
 	}
 	for j := range matrix[0] {
 		matrix[0][j] = j
 	}
 
-	for i := 1; i <= len(a); i++ {
-		for j := 1; j <= len(b); j++ {
-			if a[i-1] == b[j-1] {
-				// Characters match — carry the diagonal cost unchanged.
+	for i := 1; i <= len(ra); i++ {
+		for j := 1; j <= len(rb); j++ {
+			if ra[i-1] == rb[j-1] {
+				// Runes match — carry the diagonal cost unchanged.
 				matrix[i][j] = matrix[i-1][j-1]
 			} else {
-				// Pick the cheapest of: delete from a, insert from b, or substitute.
+				// Pick the cheapest of: delete from ra, insert from rb, or substitute.
 				matrix[i][j] = 1 + min(matrix[i-1][j], matrix[i][j-1], matrix[i-1][j-1])
 			}
 		}
 	}
 
-	return matrix[len(a)][len(b)]
+	return matrix[len(ra)][len(rb)]
 }
 
 func TrimVersionString(version ...string) string {
