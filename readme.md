@@ -42,7 +42,7 @@ This will prompt you to choose between system-wide installation (requires sudo) 
 > ```
 
 ### Windows
-Option 1: Using PowerShell
+
 Open PowerShell and run:
 
 ```
@@ -51,10 +51,15 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercon
 
 `vulncheck` binaries are also available for MacOS, Linux, and Windows. You can download precompiled binaries from our [releases page](https://github.com/vulncheck-oss/cli/releases/latest)
 
+### Verify the installation
 
-> [!NOTE]
-> Support for package managers is coming soon.
+Once installed, confirm the binary prints the desired version:
 
+```bash
+vulncheck version
+```
+
+You should see the version, build date, and changelog URL. If you get "command not found", reopen your shell so the new `PATH` is picked up, then try again.
 
 ## Configuration
 * Run `vulncheck auth login` to authenticate with your VulnCheck account.
@@ -183,7 +188,6 @@ This command will scan a directory for traces of packages via generating an SBOM
 
 ```
 vulncheck scan <path> [flags]
-
 ```
 
 #### Flags
