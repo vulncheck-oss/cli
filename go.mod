@@ -17,7 +17,7 @@ require (
 	github.com/hashicorp/go-version v1.8.0
 	github.com/itchyny/gojq v0.12.19
 	github.com/oapi-codegen/runtime v1.1.2
-	github.com/package-url/packageurl-go v0.1.3
+	github.com/package-url/packageurl-go v0.1.6
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
