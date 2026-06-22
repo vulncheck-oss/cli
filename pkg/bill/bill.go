@@ -29,6 +29,7 @@ import (
 type InputSbomRef struct {
 	SbomRef string
 	PURL    string
+	CPE     string
 }
 
 func GetSBOM(dir string) (*sbom.SBOM, error) {
@@ -99,16 +100,21 @@ func LoadSBOM(inputFile string) (*sbom.SBOM, []InputSbomRef, error) {
 
 	var inputSbomRefs []InputSbomRef
 
-	// Extract bom-ref and purl from components
+	// Extract bom-ref, purl and cpe from components. We read these straight from
+	// the raw JSON because Syft only surfaces packages: CycloneDX components of
+	// type "file" (and others) carry purls/cpes that never make it into
+	// sbm.Artifacts.Packages, so relying on the decoded SBOM alone drops them
 	if components, ok := rawSBOM["components"].([]interface{}); ok {
 		for _, comp := range components {
 			if component, ok := comp.(map[string]interface{}); ok {
-				bomRef, bomRefOk := component["bom-ref"].(string)
-				purl, purlOk := component["purl"].(string)
-				if bomRefOk && purlOk {
+				bomRef, _ := component["bom-ref"].(string)
+				purl, _ := component["purl"].(string)
+				cpe, _ := component["cpe"].(string)
+				if purl != "" || cpe != "" {
 					inputSbomRefs = append(inputSbomRefs, InputSbomRef{
 						SbomRef: bomRef,
 						PURL:    purl,
+						CPE:     cpe,
 					})
 				}
 			}
@@ -130,39 +136,41 @@ func LoadSBOM(inputFile string) (*sbom.SBOM, []InputSbomRef, error) {
 	return sbm, inputSbomRefs, nil
 }
 
-func GetCPEDetail(sbm *sbom.SBOM) []string {
-	if sbm == nil {
-		return []string{}
-	}
-
+func GetCPEDetail(sbm *sbom.SBOM, inputRefs []InputSbomRef) []string {
 	var cpes []string
 	seen := make(map[string]struct{})
 
-	if sbm.Artifacts.LinuxDistribution != nil && sbm.Artifacts.LinuxDistribution.CPEName != "" {
-		cpeStr := strings.TrimSpace(sbm.Artifacts.LinuxDistribution.CPEName)
+	add := func(cpeStr string) {
+		cpeStr = strings.TrimSpace(cpeStr)
+		if cpeStr == "" || strings.Contains(cpeStr, ".github/workflows") {
+			return
+		}
 		norm := cpeutils.NormalizeCPEString(cpeStr)
-		if !strings.Contains(cpeStr, ".github/workflows") {
-			if _, exists := seen[norm]; !exists {
-				cpes = append(cpes, cpeStr)
-				seen[norm] = struct{}{}
+		if _, exists := seen[norm]; exists {
+			return
+		}
+		seen[norm] = struct{}{}
+		cpes = append(cpes, cpeStr)
+	}
+
+	if sbm != nil {
+		if sbm.Artifacts.LinuxDistribution != nil {
+			add(sbm.Artifacts.LinuxDistribution.CPEName)
+		}
+
+		for p := range sbm.Artifacts.Packages.Enumerate() {
+			for _, cpe := range p.CPEs {
+				add(cpe.Attributes.BindToFmtString())
 			}
 		}
 	}
 
-	for p := range sbm.Artifacts.Packages.Enumerate() {
-		if len(p.CPEs) > 0 {
-			for _, cpe := range p.CPEs {
-				cpeStr := strings.TrimSpace(cpe.Attributes.BindToFmtString())
-				norm := cpeutils.NormalizeCPEString(cpeStr)
-				if !strings.Contains(cpeStr, ".github/workflows") {
-					if _, exists := seen[norm]; !exists {
-						cpes = append(cpes, cpeStr)
-						seen[norm] = struct{}{}
-					}
-				}
-			}
-		}
+	// CycloneDX components of type "file" (and others) carry CPEs that Syft does
+	// not surface as packages, so pull them straight from the parsed SBOM
+	for _, ref := range inputRefs {
+		add(ref.CPE)
 	}
+
 	return cpes
 }
 

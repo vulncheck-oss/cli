@@ -79,6 +79,33 @@ func TestGetPURLDetail(t *testing.T) {
 	}
 }
 
+func TestGetCPEDetail(t *testing.T) {
+	// nil SBOM with no refs yields nothing.
+	if got := GetCPEDetail(nil, nil); len(got) != 0 {
+		t.Errorf("expected 0 CPEs for nil SBOM/refs, got %d", len(got))
+	}
+
+	// CPEs declared on CycloneDX "file" components are not surfaced by Syft as
+	// packages, so they reach us only through the raw inputRefs.
+	refs := []InputSbomRef{
+		{SbomRef: "ref-1", PURL: "pkg:generic/qnx_software_development_platform@7.1",
+			CPE: "cpe:2.3:a:blackberry:qnx_software_development_platform:7.1:*:*:*:*:*:*:*"},
+		{SbomRef: "ref-2", PURL: "pkg:generic/qnx_software_development_platform@7.1",
+			CPE: "cpe:2.3:a:blackberry:qnx_software_development_platform:7.1:*:*:*:*:*:*:*"}, // duplicate
+		{SbomRef: "ref-3", PURL: "pkg:generic/other@1.0", CPE: ""},                          // no CPE
+	}
+
+	got := GetCPEDetail(nil, refs)
+
+	if len(got) != 1 {
+		t.Fatalf("expected 1 deduplicated CPE, got %d: %v", len(got), got)
+	}
+	want := "cpe:2.3:a:blackberry:qnx_software_development_platform:7.1:*:*:*:*:*:*:*"
+	if got[0] != want {
+		t.Errorf("expected %q, got %q", want, got[0])
+	}
+}
+
 func TestFormatSingleDecimal(t *testing.T) {
 	testCases := []struct {
 		input    float32

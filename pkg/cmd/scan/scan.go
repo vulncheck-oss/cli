@@ -115,7 +115,7 @@ func Command() *cobra.Command {
 						{
 							Title: i18n.C.ScanExtractCpeStart,
 							Task: func(t *taskin.Task) error {
-								cpes = bill.GetCPEDetail(sbm)
+								cpes = bill.GetCPEDetail(sbm, inputRefs)
 								t.Title = fmt.Sprintf(i18n.C.ScanExtractCpeEnd, len(cpes))
 								return nil
 							},

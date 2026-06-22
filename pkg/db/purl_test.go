@@ -143,6 +143,126 @@ func TestPURLSearch(t *testing.T) {
 	}
 }
 
+// setupAlpinePurlsTable builds an alpine-purls table that mimics the index
+func setupAlpinePurlsTable(t *testing.T) {
+	schema := GetSchema("alpine-purls")
+	if schema == nil {
+		t.Fatalf("failed to get schema for alpine-purls")
+	}
+
+	var columns []string
+	for _, col := range schema.Columns {
+		colDef := "\"" + col.Name + "\" " + col.Type
+		if col.NotNull {
+			colDef += " NOT NULL"
+		}
+		columns = append(columns, colDef)
+	}
+	tableDef := "CREATE TABLE IF NOT EXISTS alpine_purls (" + strings.Join(columns, ", ") + ")"
+	if _, err := testDB.Exec(tableDef); err != nil {
+		t.Fatalf("failed to create alpine_purls table: %v", err)
+	}
+
+	rows := []struct {
+		purl  string
+		cves  string
+		vulns string
+	}{
+		// Includes a still-open CVE, an already-fixed CVE, and a fix
+		// with an Alpine "_git" build suffix
+		{
+			`["pkg:apk/alpine/musl@1.1.0-3.0"]`,
+			`["CVE-OPEN","CVE-PATCHED","CVE-GIT"]`,
+			`[{"detection":"CVE-OPEN","fixed_version":"1.1.22-r3"},` +
+				`{"detection":"CVE-PATCHED","fixed_version":"1.1.22-r1"},` +
+				`{"detection":"CVE-GIT","fixed_version":"1.2.4_git20230717-r6"}]`,
+		},
+		// reports a bogus fix for CVE-PATCHED.
+		{
+			`["pkg:apk/alpine/musl@1.1.22-3.10"]`,
+			`["CVE-PATCHED"]`,
+			`[{"detection":"CVE-PATCHED","fixed_version":"1.1.22-r2"}]`,
+		},
+		// A different package that must not leak into musl results
+		{
+			`["pkg:apk/alpine/zlib@1.2.11-3.10"]`,
+			`["CVE-ZLIB"]`,
+			`[{"detection":"CVE-ZLIB","fixed_version":"1.2.12-r0"}]`,
+		},
+	}
+	for _, r := range rows {
+		if _, err := testDB.Exec(
+			`INSERT INTO alpine_purls (name, version, purl, licenses, cves, vulnerabilities) VALUES (?,?,?,?,?,?)`,
+			"musl", "1.1.22", r.purl, `[]`, r.cves, r.vulns,
+		); err != nil {
+			t.Fatalf("failed to insert alpine test data: %v", err)
+		}
+	}
+}
+
+func TestPURLSearchOS(t *testing.T) {
+	setupAlpinePurlsTable(t)
+
+	// Installed musl 1.1.22-r2.
+	purl := mustParsePurl("pkg:apk/alpine/musl@1.1.22-r2?arch=x86_64&distro=alpine-3.10.0")
+
+	results, stats, err := PURLSearch("alpine-purls", purl)
+	if err != nil {
+		t.Fatalf("PURLSearch failed: %v", err)
+	}
+	if stats == nil {
+		t.Error("expected valid stats object")
+	}
+	if len(results) != 1 {
+		t.Fatalf("expected 1 PurlEntry, got %d", len(results))
+	}
+
+	got := map[string]struct{}{}
+	for _, v := range results[0].Vulnerabilities {
+		got[v.Detection] = struct{}{}
+	}
+
+	// CVE-OPEN (fixed 1.1.22-r3 > installed r2): affected, only in the complete row.
+	// CVE-GIT (fixed 1.2.4_git...): affected, requires "_git" suffix to parse.
+	// CVE-PATCHED (fixed 1.1.22-r1 <= installed r2): not affected.
+	wantPresent := []string{"CVE-OPEN", "CVE-GIT"}
+	wantAbsent := []string{"CVE-PATCHED", "CVE-ZLIB"}
+
+	for _, cve := range wantPresent {
+		if _, ok := got[cve]; !ok {
+			t.Errorf("expected %s to be reported, got %v", cve, got)
+		}
+	}
+	for _, cve := range wantAbsent {
+		if _, ok := got[cve]; ok {
+			t.Errorf("expected %s to be filtered out, got %v", cve, got)
+		}
+	}
+
+	// Results should be reported against the installed version, like the API.
+	if results[0].Version != "1.1.22-r2" {
+		t.Errorf("expected reported version 1.1.22-r2, got %s", results[0].Version)
+	}
+}
+
+func TestIsAffectedVersion(t *testing.T) {
+	tests := []struct {
+		current, fixed string
+		want           bool
+	}{
+		{"1.30.1-r2", "1.30.1-r5", true},            // older revision is affected
+		{"1.30.1-r2", "1.30.1-r2", false},           // equal is patched
+		{"1.2.11-r1", "1.2.11-r0", false},           // newer revision is patched
+		{"1.1.22-r2", "1.2.4_git20230717-r6", true}, // Alpine "_git" build suffix parses
+		{"2.10.4-r1", "2.12.0-r0", true},            // newer upstream fix is affected
+	}
+	for _, tt := range tests {
+		if got := isAffectedVersion(tt.current, tt.fixed); got != tt.want {
+			t.Errorf("isAffectedVersion(%q, %q) = %v; want %v", tt.current, tt.fixed, got, tt.want)
+		}
+	}
+}
+
 // Helper function to parse PURLs without error handling in tests
 func mustParsePurl(s string) packageurl.PackageURL {
 	purl, err := packageurl.FromString(s)
@@ -150,24 +270,4 @@ func mustParsePurl(s string) packageurl.PackageURL {
 		panic("Invalid PURL string: " + s)
 	}
 	return purl
-}
-
-func TestIsDigits(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected bool
-	}{
-		{"12345", true},
-		{"abc123", false},
-		{"", false},
-		{"0000", true},
-		{"12.34", false},
-	}
-
-	for _, tt := range tests {
-		result := isDigits(tt.input)
-		if result != tt.expected {
-			t.Errorf("isDigits(%q) = %v; expected %v", tt.input, result, tt.expected)
-		}
-	}
 }
