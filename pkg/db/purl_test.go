@@ -247,19 +247,42 @@ func TestPURLSearchOS(t *testing.T) {
 
 func TestIsAffectedVersion(t *testing.T) {
 	tests := []struct {
+		name           string
 		current, fixed string
 		want           bool
 	}{
-		{"1.30.1-r2", "1.30.1-r5", true},            // older revision is affected
-		{"1.30.1-r2", "1.30.1-r2", false},           // equal is patched
-		{"1.2.11-r1", "1.2.11-r0", false},           // newer revision is patched
-		{"1.1.22-r2", "1.2.4_git20230717-r6", true}, // Alpine "_git" build suffix parses
-		{"2.10.4-r1", "2.12.0-r0", true},            // newer upstream fix is affected
+		{"apk older revision", "1.30.1-r2", "1.30.1-r5", true},
+		{"apk equal revision", "1.30.1-r2", "1.30.1-r2", false},
+		{"apk newer revision", "1.2.11-r1", "1.2.11-r0", false},
+		{"apk _git build suffix", "1.1.22-r2", "1.2.4_git20230717-r6", true},
+		{"apk newer upstream fix", "2.10.4-r1", "2.12.0-r0", true},
+
+		// RPM-style release tags - underscores must be stripped or the parser rejects them.
+		// LIMITATION: stripping is lossy, so RPM errata bumps within the same upstream
+		// version (1.0.0_4 vs 1.0.0_5, .el8_3 vs .el8_5) collapse to equal and are
+		// treated as "not affected". This matches the upstream API and is left as-is
+		// here; lifting it requires keeping the release suffix and teaching the
+		// comparator about it.
+		{"rpm _N release bumps collapse to equal", "1.0.0_4", "1.0.0_5", false},
+		{"rpm .elN_N release bumps collapse to equal", "1.0.0.el8_3", "1.0.0.el8_5", false},
+		{"rpm .elN newer than no-suffix", "1.0.0", "1.0.0.el8", true},
+
+		// Linux-kernel style versions with embedded underscores - parser would reject without the strip.
+		{"kernel +gitAUTOINC fixed", "5.15.201+gitAUTOINC+a_b", "5.15.202", true},
+		{"kernel +gitAUTOINC current matches", "5.15.201+gitAUTOINC+a_b", "5.15.201+gitAUTOINC+a_b", false},
+
+		// Unparseable inputs return false rather than panicking - protects the offline scan loop
+		// from blowing up on malformed advisories.
+		{"garbage current", "not a version", "1.0.0", false},
+		{"garbage fixed", "1.0.0", "not a version", false},
+		{"empty fixed", "1.0.0", "", false},
 	}
 	for _, tt := range tests {
-		if got := isAffectedVersion(tt.current, tt.fixed); got != tt.want {
-			t.Errorf("isAffectedVersion(%q, %q) = %v; want %v", tt.current, tt.fixed, got, tt.want)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isAffectedVersion(tt.current, tt.fixed); got != tt.want {
+				t.Errorf("isAffectedVersion(%q, %q) = %v; want %v", tt.current, tt.fixed, got, tt.want)
+			}
+		})
 	}
 }
 
