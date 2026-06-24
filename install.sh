@@ -59,12 +59,31 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     fi
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     OS="Linux"
-    ARCH="amd64"
+    case "$(uname -m)" in
+        x86_64|amd64)         ARCH="amd64" ;;
+        i386|i686)            ARCH="386" ;;
+        aarch64|arm64)        ARCH="arm64" ;;
+        armv6*|armv7*|armhf)  ARCH="armv6" ;;
+        *)
+            echo "Unsupported Linux architecture: $(uname -m)"
+            echo "Supported: x86_64, i386/i686, aarch64/arm64, armv6/armv7"
+            exit 1
+            ;;
+    esac
     DEFAULT_INSTALL_DIR="/usr/local/bin"
     LOCAL_INSTALL_DIR="$HOME/.local/bin"
 elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
     OS="Windows"
-    ARCH="amd64"
+    case "$(uname -m)" in
+        x86_64|amd64)   ARCH="amd64" ;;
+        i386|i686)      ARCH="386" ;;
+        aarch64|arm64)  ARCH="arm64" ;;
+        *)
+            echo "Unsupported Windows architecture: $(uname -m)"
+            echo "Supported: x86_64, i386/i686, aarch64/arm64"
+            exit 1
+            ;;
+    esac
     DEFAULT_INSTALL_DIR="/c/Windows/System32"
     LOCAL_INSTALL_DIR="$USERPROFILE/bin"
 else

@@ -1,6 +1,17 @@
 $ErrorActionPreference = 'Stop'
 
-$arch = if ([Environment]::Is64BitOperatingSystem) { "amd64" } else { "386" }
+# Read the OS architecture (not the process architecture — PROCESSOR_ARCHITEW6432
+# is set when a 32-bit PowerShell is running on a 64-bit OS).
+$procArch = if ($env:PROCESSOR_ARCHITEW6432) { $env:PROCESSOR_ARCHITEW6432 } else { $env:PROCESSOR_ARCHITECTURE }
+$arch = switch ($procArch.ToUpper()) {
+    "AMD64" { "amd64" }
+    "X86"   { "386" }
+    "ARM64" { "arm64" }
+    default {
+        Write-Error "Unsupported Windows architecture: $procArch (supported: AMD64, X86, ARM64)"
+        exit 1
+    }
+}
 $latestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/vulncheck-oss/cli/releases/latest"
 $asset = $latestRelease.assets | Where-Object { $_.name -like "*windows_$arch.zip" } | Select-Object -First 1
 

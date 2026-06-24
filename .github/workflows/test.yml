@@ -9,7 +9,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os:
+          - ubuntu-latest      # linux amd64
+          - ubuntu-24.04-arm   # linux arm64
+          - windows-latest     # windows amd64
+          - windows-11-arm     # windows arm64
+          - macos-latest       # darwin arm64
+          # darwin amd64 intentionally not covered here. The Intel macOS runner
+          # (macos-13) is deprecation-era scarce — runs queue indefinitely —
+          # and the shipped darwin/amd64 binary is cross-compiled from Linux by
+          # GoReleaser, so a native Intel CI run would test a configuration
+          # that isn't actually how the release is produced.
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -29,11 +39,26 @@ jobs:
           restore-keys: |
             go-${{ runner.os }}-
 
+      - name: Disable CGO on windows/arm64
+        # The windows-11-arm runner ships MinGW for x86_64 only, so any CGO build
+        # fails to assemble runtime/cgo's arm64 stubs. The released Windows ARM64
+        # binary is cross-compiled from Linux with CGO off — match that.
+        if: matrix.os == 'windows-11-arm'
+        shell: bash
+        run: echo "CGO_ENABLED=0" >> "$GITHUB_ENV"
+
       - name: Download dependencies
         run: go mod download
 
       - name: Run tests
-        run: go test -race ./...
+        # Go's race detector is not supported on windows/arm64.
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-11-arm" ]; then
+            go test ./...
+          else
+            go test -race ./...
+          fi
 
       - name: Build
         run: go build -v ./cmd/vulncheck
