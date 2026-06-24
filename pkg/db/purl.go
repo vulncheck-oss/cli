@@ -204,9 +204,15 @@ func scanPurlRow(rows *sql.Rows) (*PurlEntry, error) {
 	return &result, nil
 }
 
-// versionReleaseSuffix strips distro release/build tags that the Debian version
-// parser cannot handle (RPM-style "_4"/".elN" tags and Alpine "_gitNNNN" build
-// suffixes), while preserving the upstream version and the "-rN" apk revision.
+// versionReleaseSuffix removes underscores (and any digits following them) so
+// versions like "1.0.0_4", ".el8_4", and "1.2.4_git20230717-r6" parse cleanly
+// under Debian semver - the parser rejects "_". An optional preceding ".elN"
+// tag is captured and kept via the $1 backref, so "1.0.0.el8_4" → "1.0.0.el8"
+// rather than "1.0.0". The "-rN" apk revision is untouched. See
+// TestIsAffectedVersion for the cases this is verified against. Mirrors the
+// vulncheck/api purl-matching behaviour, including its limitation that RPM
+// errata bumps within the same upstream (e.g. .el8_3 vs .el8_5) collapse to
+// equal.
 var versionReleaseSuffix = regexp.MustCompile(`(.el\d)*_\d*`)
 
 // isAffectedVersion reports whether the installed version is below the fixed
