@@ -39,7 +39,14 @@ jobs:
         run: go mod download
 
       - name: Run tests
-        run: go test -race ./...
+        # Go's race detector is not supported on windows/arm64.
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-11-arm" ]; then
+            go test ./...
+          else
+            go test -race ./...
+          fi
 
       - name: Build
         run: go build -v ./cmd/vulncheck
