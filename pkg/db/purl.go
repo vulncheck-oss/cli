@@ -60,7 +60,15 @@ func purlSearchExact(indexName string, instance packageurl.PackageURL) ([]PurlEn
 		Subpath:   instance.Subpath,
 	}.String()
 
-	rows, err := db.Query(query, "%"+searchPURL+"%")
+	// Anchor on JSON string quotes so "1.0.1" doesn't bleed into rows storing
+	// "1.0.10". When the caller supplies a versionless PURL, match any version
+	// for that package by anchoring on "@" instead of a closing quote.
+	pattern := `%"` + searchPURL + `"%`
+	if instance.Version == "" {
+		pattern = `%"` + searchPURL + `@%"%`
+	}
+
+	rows, err := db.Query(query, pattern)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to execute query: %w", err)
 	}

@@ -31,6 +31,12 @@ func setupPurlTable(t *testing.T) {
 		t.Fatalf("failed to create test table: %v", err)
 	}
 
+	// testDB is shared across the whole package - clear prior rows so this
+	// helper is idempotent regardless of which test ran first.
+	if _, err := testDB.Exec(`DELETE FROM npm`); err != nil {
+		t.Fatalf("failed to clear npm table: %v", err)
+	}
+
 	// Insert test data with all required values
 	_, err = testDB.Exec(`INSERT INTO npm (
 		name, version, purl, licenses, cves, vulnerabilities
@@ -57,6 +63,50 @@ func setupPurlTable(t *testing.T) {
 	)
 	if err != nil {
 		t.Fatalf("failed to insert second test data: %v", err)
+	}
+}
+
+// setupPurlAmbiguousVersions inserts two rows whose stored PURLs share a
+// version prefix - exercising the substring LIKE risk in purlSearchExact.
+func setupPurlAmbiguousVersions(t *testing.T) {
+	if _, err := testDB.Exec(`INSERT INTO npm (name, version, purl, licenses, cves, vulnerabilities) VALUES (?,?,?,?,?,?)`,
+		"foo", "1.0.1",
+		`["pkg:npm/foo@1.0.1"]`,
+		`[]`,
+		`["CVE-FOO-101"]`,
+		`[{"detection":"CVE-FOO-101","fixed_version":"2.0.0"}]`,
+	); err != nil {
+		t.Fatalf("insert foo@1.0.1: %v", err)
+	}
+	if _, err := testDB.Exec(`INSERT INTO npm (name, version, purl, licenses, cves, vulnerabilities) VALUES (?,?,?,?,?,?)`,
+		"foo", "1.0.10",
+		`["pkg:npm/foo@1.0.10"]`,
+		`[]`,
+		`["CVE-FOO-1010"]`,
+		`[{"detection":"CVE-FOO-1010","fixed_version":"2.0.0"}]`,
+	); err != nil {
+		t.Fatalf("insert foo@1.0.10: %v", err)
+	}
+}
+
+func TestPURLSearchExactNoVersionPrefixLeak(t *testing.T) {
+	setupPurlTable(t)
+	setupPurlAmbiguousVersions(t)
+
+	// Searching for 1.0.1 must not bleed into the 1.0.10 row even though "1.0.1"
+	// is a substring of "1.0.10".
+	results, _, err := PURLSearch("npm", mustParsePurl("pkg:npm/foo@1.0.1"))
+	if err != nil {
+		t.Fatalf("PURLSearch failed: %v", err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("expected exactly 1 row for foo@1.0.1, got %d: %+v", len(results), results)
+	}
+	if results[0].Version != "1.0.1" {
+		t.Errorf("expected version 1.0.1, got %s", results[0].Version)
+	}
+	if len(results[0].CVEs) != 1 || results[0].CVEs[0] != "CVE-FOO-101" {
+		t.Errorf("expected only CVE-FOO-101, got %v", results[0].CVEs)
 	}
 }
 
