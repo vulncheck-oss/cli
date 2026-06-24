@@ -15,7 +15,11 @@ jobs:
           - windows-latest     # windows amd64
           - windows-11-arm     # windows arm64
           - macos-latest       # darwin arm64
-          - macos-13           # darwin amd64
+          # darwin amd64 intentionally not covered here. The Intel macOS runner
+          # (macos-13) is deprecation-era scarce — runs queue indefinitely —
+          # and the shipped darwin/amd64 binary is cross-compiled from Linux by
+          # GoReleaser, so a native Intel CI run would test a configuration
+          # that isn't actually how the release is produced.
     runs-on: ${{ matrix.os }}
 
     steps:
