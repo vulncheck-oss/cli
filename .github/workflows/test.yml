@@ -35,6 +35,14 @@ jobs:
           restore-keys: |
             go-${{ runner.os }}-
 
+      - name: Disable CGO on windows/arm64
+        # The windows-11-arm runner ships MinGW for x86_64 only, so any CGO build
+        # fails to assemble runtime/cgo's arm64 stubs. The released Windows ARM64
+        # binary is cross-compiled from Linux with CGO off — match that.
+        if: matrix.os == 'windows-11-arm'
+        shell: bash
+        run: echo "CGO_ENABLED=0" >> "$GITHUB_ENV"
+
       - name: Download dependencies
         run: go mod download
 
