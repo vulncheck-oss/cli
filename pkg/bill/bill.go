@@ -415,24 +415,28 @@ func GetMeta(vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulne
 	return vulns, nil
 }
 
-func GetOfflineMeta(indices cache.InfoFile, vulns []models.ScanResultVulnerabilities, warnOnly bool) ([]models.ScanResultVulnerabilities, error) {
+// GetOfflineMeta enriches each vuln with CVSS / KEV / description data from
+// the vulncheck-nvd2 index. The second return value reports whether that index
+// was actually available; callers use it to surface a hint to the user when
+// the table would otherwise show empty score columns. Without warnOnly the
+// missing-index condition is a hard error; with warnOnly the input vulns are
+// passed through unchanged so the caller can still render what it found.
+func GetOfflineMeta(indices cache.InfoFile, vulns []models.ScanResultVulnerabilities, warnOnly bool) ([]models.ScanResultVulnerabilities, bool, error) {
 	indexAvailable, err := sync.EnsureIndexSync(indices, "vulncheck-nvd2", true)
 	if err != nil {
 		if warnOnly {
 			fmt.Printf("[WARNING]: %s\n", err.Error())
-			return nil, nil
-		} else {
-			return nil, err
+			return vulns, false, nil
 		}
+		return nil, false, err
 	}
 
 	if !indexAvailable {
 		if warnOnly {
 			fmt.Printf("[WARNING]: index vulncheck-nvd2 is required to proceed\n")
-			return vulns, nil
-		} else {
-			return nil, fmt.Errorf("index vulncheck-nvd2 is required to proceed")
+			return vulns, false, nil
 		}
+		return nil, false, fmt.Errorf("index vulncheck-nvd2 is required to proceed")
 	}
 
 	for i, vuln := range vulns {
@@ -451,7 +455,7 @@ func GetOfflineMeta(indices cache.InfoFile, vulns []models.ScanResultVulnerabili
 			vulns[i].Description = nvd2Response.Description
 		}
 	}
-	return vulns, nil
+	return vulns, true, nil
 }
 
 func baseScore(item client.ApiNVD20CVEExtended) string {

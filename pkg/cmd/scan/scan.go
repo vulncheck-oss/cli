@@ -59,6 +59,12 @@ func Command() *cobra.Command {
 			var cpeVulns []models.ScanResultVulnerabilities
 			var purlVulns []models.ScanResultVulnerabilities
 			var vulns []models.ScanResultVulnerabilities
+			// metaAvailable tracks whether the vulncheck-nvd2 index was
+			// usable. When --offline-meta is requested but the index is
+			// missing (with --warn-on-index), we still surface the CVEs
+			// we found - just without empty score columns - and tell the
+			// user how to populate them.
+			metaAvailable := true
 
 			var output models.ScanResult
 
@@ -186,12 +192,17 @@ func Command() *cobra.Command {
 								Title: i18n.C.ScanVulnOfflineMetaStart,
 								Task: func(t *taskin.Task) error {
 									indices, _ := cache.Indices()
-									results, err := bill.GetOfflineMeta(indices, vulns, opts.WarnOnIndex)
+									results, ok, err := bill.GetOfflineMeta(indices, vulns, opts.WarnOnIndex)
 									if err != nil {
 										return err
 									}
 									vulns = results
-									t.Title = i18n.C.ScanVulnOfflineMetaEnd
+									metaAvailable = ok
+									if ok {
+										t.Title = i18n.C.ScanVulnOfflineMetaEnd
+									} else {
+										t.Title = i18n.C.ScanVulnOfflineMetaUnavailable
+									}
 									output = models.ScanResult{
 										Vulnerabilities: vulns,
 									}
@@ -289,8 +300,16 @@ func Command() *cobra.Command {
 							ui.Json(output)
 							return nil
 						} else {
-							if err := ui.ScanResults(output.Vulnerabilities, opts.Offline && !opts.OfflineMeta); err != nil {
+							// Hide score columns whenever we don't have nvd2
+							// metadata - either we explicitly skipped it
+							// (--offline without --offline-meta) or the user
+							// asked for it but the index wasn't cached.
+							hideScores := opts.Offline && (!opts.OfflineMeta || !metaAvailable)
+							if err := ui.ScanResults(output.Vulnerabilities, hideScores); err != nil {
 								return err
+							}
+							if opts.OfflineMeta && !metaAvailable {
+								ui.Info(i18n.C.ScanVulnOfflineMetaUnavailable)
 							}
 						}
 					}

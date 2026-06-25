@@ -146,7 +146,7 @@ func TestGetOfflineMeta(t *testing.T) {
 			},
 		}
 
-		result, err := GetOfflineMeta(indices, vulns, false)
+		result, _, err := GetOfflineMeta(indices, vulns, false)
 		if err == nil {
 			t.Skip("Cannot test without mocking dependencies")
 		}
@@ -165,9 +165,36 @@ func TestGetOfflineMeta(t *testing.T) {
 			Indices: []cache.IndexInfo{},
 		}
 
-		_, err := GetOfflineMeta(indices, vulns, false)
+		_, _, err := GetOfflineMeta(indices, vulns, false)
 		if err == nil {
 			t.Skip("Cannot test without mocking dependencies")
+		}
+	})
+
+	// Regression: with --warn-on-index, a missing nvd2 index must not drop
+	// the already-found vulns. They come back unchanged, ok=false signals to
+	// the caller that score columns should be hidden and a hint shown.
+	t.Run("missing index with warnOnly preserves vulns", func(t *testing.T) {
+		vulns := []models.ScanResultVulnerabilities{
+			{CVE: "CVE-2021-44228", Name: "log4j", Version: "2.14.1"},
+			{CVE: "CVE-2022-12345", Name: "express", Version: "4.17.1"},
+		}
+		indices := cache.InfoFile{Indices: []cache.IndexInfo{}}
+
+		out, ok, err := GetOfflineMeta(indices, vulns, true)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if ok {
+			t.Errorf("expected ok=false when nvd2 index is missing")
+		}
+		if len(out) != len(vulns) {
+			t.Fatalf("expected %d vulns to pass through, got %d", len(vulns), len(out))
+		}
+		for i := range vulns {
+			if out[i].CVE != vulns[i].CVE {
+				t.Errorf("vuln %d: got CVE %s, want %s", i, out[i].CVE, vulns[i].CVE)
+			}
 		}
 	})
 }
