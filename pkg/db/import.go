@@ -1,10 +1,11 @@
 package db
 
 import (
-	"bufio"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -200,25 +201,37 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 			}
 		}
 	} else {
-		// Original line-by-line processing
-		scanner := bufio.NewScanner(file)
-		scanner.Buffer(make([]byte, 256*1024), 256*1024)
-
-		for scanner.Scan() {
-			line := scanner.Bytes()
+		// Stream NDJSON values to avoid scanner token size limits on large records.
+		decoder := json.NewDecoder(file)
+		for {
+			var raw json.RawMessage
+			if err := decoder.Decode(&raw); err != nil {
+				if errors.Is(err, io.EOF) {
+					break
+				}
+				return fmt.Errorf("failed to decode NDJSON entry: %w", err)
+			}
 
 			// Fast path for fallback schema
 			if len(schema.Columns) == 1 && schema.Columns[0].Name == "data" {
-				if !json.Valid(line) {
+				if !json.Valid(raw) {
 					return fmt.Errorf("invalid JSON")
 				}
-				batch = append(batch, []interface{}{string(line)})
-				batchSize += int64(len(line))
+				batch = append(batch, []interface{}{string(raw)})
+				batchSize += int64(len(raw))
+				if batchSize >= maxSize || len(batch) >= 500 {
+					if err := executeBatch(db, baseInsertSQL, batch); err != nil {
+						return err
+					}
+					progressFn(batchSize)
+					batch = batch[:0]
+					batchSize = 0
+				}
 				continue
 			}
 
 			var entry map[string]interface{}
-			if err := json.Unmarshal(line, &entry); err != nil {
+			if err := json.Unmarshal(raw, &entry); err != nil {
 				return fmt.Errorf("failed to unmarshal JSON: %w", err)
 			}
 
