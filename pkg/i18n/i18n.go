@@ -127,6 +127,8 @@ type Copy struct {
 	ScanVulnOfflineMetaStart string
 	ScanVulnOfflineMetaEnd   string
 
+	ScanVulnOfflineMetaUnavailable string
+
 	ScanNoCvesFound string
 	ScanBenchmark   string
 
@@ -289,6 +291,8 @@ var En = Copy{
 
 	ScanVulnOfflineMetaStart: "[OFFLINE] Fetching vulnerability metadata",
 	ScanVulnOfflineMetaEnd:   "[OFFLINE] Vulnerability metadata fetched",
+
+	ScanVulnOfflineMetaUnavailable: "CVSS scores, KEV status, and descriptions are unavailable because the vulncheck-nvd2 index is not cached. Run: vulncheck offline sync --add vulncheck-nvd2",
 
 	ScanNoCvesFound:            "No vulnerabilities found in %d packages",
 	ScanBenchmark:              "Scan completed in %s",

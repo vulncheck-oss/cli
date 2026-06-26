@@ -29,6 +29,7 @@ import (
 type InputSbomRef struct {
 	SbomRef string
 	PURL    string
+	CPE     string
 }
 
 func GetSBOM(dir string) (*sbom.SBOM, error) {
@@ -99,16 +100,21 @@ func LoadSBOM(inputFile string) (*sbom.SBOM, []InputSbomRef, error) {
 
 	var inputSbomRefs []InputSbomRef
 
-	// Extract bom-ref and purl from components
+	// Extract bom-ref, purl and cpe from components. We read these straight from
+	// the raw JSON because Syft only surfaces packages: CycloneDX components of
+	// type "file" (and others) carry purls/cpes that never make it into
+	// sbm.Artifacts.Packages, so relying on the decoded SBOM alone drops them
 	if components, ok := rawSBOM["components"].([]interface{}); ok {
 		for _, comp := range components {
 			if component, ok := comp.(map[string]interface{}); ok {
-				bomRef, bomRefOk := component["bom-ref"].(string)
-				purl, purlOk := component["purl"].(string)
-				if bomRefOk && purlOk {
+				bomRef, _ := component["bom-ref"].(string)
+				purl, _ := component["purl"].(string)
+				cpe, _ := component["cpe"].(string)
+				if purl != "" || cpe != "" {
 					inputSbomRefs = append(inputSbomRefs, InputSbomRef{
 						SbomRef: bomRef,
 						PURL:    purl,
+						CPE:     cpe,
 					})
 				}
 			}
@@ -130,39 +136,41 @@ func LoadSBOM(inputFile string) (*sbom.SBOM, []InputSbomRef, error) {
 	return sbm, inputSbomRefs, nil
 }
 
-func GetCPEDetail(sbm *sbom.SBOM) []string {
-	if sbm == nil {
-		return []string{}
-	}
-
+func GetCPEDetail(sbm *sbom.SBOM, inputRefs []InputSbomRef) []string {
 	var cpes []string
 	seen := make(map[string]struct{})
 
-	if sbm.Artifacts.LinuxDistribution != nil && sbm.Artifacts.LinuxDistribution.CPEName != "" {
-		cpeStr := strings.TrimSpace(sbm.Artifacts.LinuxDistribution.CPEName)
+	add := func(cpeStr string) {
+		cpeStr = strings.TrimSpace(cpeStr)
+		if cpeStr == "" || strings.Contains(cpeStr, ".github/workflows") {
+			return
+		}
 		norm := cpeutils.NormalizeCPEString(cpeStr)
-		if !strings.Contains(cpeStr, ".github/workflows") {
-			if _, exists := seen[norm]; !exists {
-				cpes = append(cpes, cpeStr)
-				seen[norm] = struct{}{}
+		if _, exists := seen[norm]; exists {
+			return
+		}
+		seen[norm] = struct{}{}
+		cpes = append(cpes, cpeStr)
+	}
+
+	if sbm != nil {
+		if sbm.Artifacts.LinuxDistribution != nil {
+			add(sbm.Artifacts.LinuxDistribution.CPEName)
+		}
+
+		for p := range sbm.Artifacts.Packages.Enumerate() {
+			for _, cpe := range p.CPEs {
+				add(cpe.Attributes.BindToFmtString())
 			}
 		}
 	}
 
-	for p := range sbm.Artifacts.Packages.Enumerate() {
-		if len(p.CPEs) > 0 {
-			for _, cpe := range p.CPEs {
-				cpeStr := strings.TrimSpace(cpe.Attributes.BindToFmtString())
-				norm := cpeutils.NormalizeCPEString(cpeStr)
-				if !strings.Contains(cpeStr, ".github/workflows") {
-					if _, exists := seen[norm]; !exists {
-						cpes = append(cpes, cpeStr)
-						seen[norm] = struct{}{}
-					}
-				}
-			}
-		}
+	// CycloneDX components of type "file" (and others) carry CPEs that Syft does
+	// not surface as packages, so pull them straight from the parsed SBOM
+	for _, ref := range inputRefs {
+		add(ref.CPE)
 	}
+
 	return cpes
 }
 
@@ -407,24 +415,28 @@ func GetMeta(vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulne
 	return vulns, nil
 }
 
-func GetOfflineMeta(indices cache.InfoFile, vulns []models.ScanResultVulnerabilities, warnOnly bool) ([]models.ScanResultVulnerabilities, error) {
+// GetOfflineMeta enriches each vuln with CVSS / KEV / description data from
+// the vulncheck-nvd2 index. The second return value reports whether that index
+// was actually available; callers use it to surface a hint to the user when
+// the table would otherwise show empty score columns. Without warnOnly the
+// missing-index condition is a hard error; with warnOnly the input vulns are
+// passed through unchanged so the caller can still render what it found.
+func GetOfflineMeta(indices cache.InfoFile, vulns []models.ScanResultVulnerabilities, warnOnly bool) ([]models.ScanResultVulnerabilities, bool, error) {
 	indexAvailable, err := sync.EnsureIndexSync(indices, "vulncheck-nvd2", true)
 	if err != nil {
 		if warnOnly {
 			fmt.Printf("[WARNING]: %s\n", err.Error())
-			return nil, nil
-		} else {
-			return nil, err
+			return vulns, false, nil
 		}
+		return nil, false, err
 	}
 
 	if !indexAvailable {
 		if warnOnly {
 			fmt.Printf("[WARNING]: index vulncheck-nvd2 is required to proceed\n")
-			return vulns, nil
-		} else {
-			return nil, fmt.Errorf("index vulncheck-nvd2 is required to proceed")
+			return vulns, false, nil
 		}
+		return nil, false, fmt.Errorf("index vulncheck-nvd2 is required to proceed")
 	}
 
 	for i, vuln := range vulns {
@@ -443,7 +455,7 @@ func GetOfflineMeta(indices cache.InfoFile, vulns []models.ScanResultVulnerabili
 			vulns[i].Description = nvd2Response.Description
 		}
 	}
-	return vulns, nil
+	return vulns, true, nil
 }
 
 func baseScore(item client.ApiNVD20CVEExtended) string {
