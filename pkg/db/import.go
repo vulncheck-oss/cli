@@ -15,6 +15,15 @@ import (
 const maxInsertSize int64 = 25_000_000 // 25MB - Conservative but performant
 const maxSQLiteVariables = 900         // Slightly below limit of 999 to be safe
 
+// NDJSON scanner buffer for line-by-line imports. The cpecve backup
+// occasionally ships rows above 256KB (the previous ceiling), which silently
+// dropped the rest of the file. 4MB gives ~14x headroom over the largest line
+// observed in the wild.
+const (
+	scannerInitialBuf = 256 * 1024
+	scannerMaxBuf     = 4 * 1024 * 1024
+)
+
 func ImportIndex(filePath string, indexDir string, progressCallback func(int)) error {
 	db, err := DB()
 	if err != nil {
@@ -200,9 +209,17 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 			}
 		}
 	} else {
-		// Original line-by-line processing
+		// Original line-by-line processing.
+		//
+		// bufio.Scanner silently stops at the first line exceeding its buffer
+		// (returning bufio.ErrTooLong via Err()). The cpecve backup ships some
+		// records that exceed 256KB once their CVE arrays grow (one row at the
+		// time of writing was 276KB), and the rest of the file gets dropped
+		// after the first oversized line - so the imported index ends up
+		// missing the tail. We size generously and check Err() so this fails
+		// loud if a future line ever does exceed the new ceiling.
 		scanner := bufio.NewScanner(file)
-		scanner.Buffer(make([]byte, 256*1024), 256*1024)
+		scanner.Buffer(make([]byte, scannerInitialBuf), scannerMaxBuf)
 
 		for scanner.Scan() {
 			line := scanner.Bytes()
@@ -236,6 +253,9 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 					batchSize = 0
 				}
 			}
+		}
+		if err := scanner.Err(); err != nil {
+			return fmt.Errorf("failed to scan %s: %w", filePath, err)
 		}
 	}
 
