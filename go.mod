@@ -14,7 +14,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fumeapp/taskin v0.3.0
 	github.com/getkin/kin-openapi v0.140.0
-	github.com/hashicorp/go-version v1.8.0
+	github.com/hashicorp/go-version v1.9.0
 	github.com/itchyny/gojq v0.12.19
 	github.com/oapi-codegen/runtime v1.1.2
 	github.com/package-url/packageurl-go v0.1.3
