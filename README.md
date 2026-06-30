@@ -67,6 +67,114 @@ You should see the version, build date, and changelog URL. If you get "command n
 * `vulncheck auth` by itself will show other options like checking your status and logging out.
 
 
+## Agentic / scripted usage
+
+The CLI is designed to be safe to drive from scripts and AI agents. This section is the contract — the surfaces below are intended to remain stable across releases (additions are not breaking changes; renames / removals are).
+
+### Global flags
+
+| Flag                | Effect |
+|---------------------|--------|
+| `--json`            | Emit JSON on stdout; route info/progress lines to stderr; errors emitted as a structured envelope. |
+| `--quiet`           | Suppress informational output. Errors and payloads still render. |
+| `--verbose` / `-v`  | Extra detail on stderr (debug-level). |
+| `--no-color`        | Disable ANSI styling. Also honours the `NO_COLOR` env var. |
+| `--no-interactive` | Refuse to block on TUI prompts; commands that need a prompt return an error instead. Implied by `--json`, non-TTY stdin/stdout, and any of the `CI` / `BUILD_NUMBER` / `RUN_ID` env vars. |
+
+### Environment variables
+
+| Variable                                   | Effect |
+|--------------------------------------------|--------|
+| `VC_TOKEN`                                 | API token. Takes precedence over `~/.config/vulncheck/vulncheck.yaml`. |
+| `NO_COLOR`                                 | Any non-empty value disables ANSI styling. |
+| `CI` / `BUILD_NUMBER` / `RUN_ID`           | Any of these set implies non-interactive mode (no prompts). |
+
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| 0    | Success. |
+| 1    | Generic / internal error. |
+| 2    | Validation failure (bad args, missing required flag, malformed request). |
+| 3    | Auth failure (no token, or the server rejected the token). |
+| 4    | Resource not found (HTTP 404, no such index). |
+| 5    | Rate limited (HTTP 429). |
+| 6    | Network failure (DNS, connection refused, timeout). |
+| 130  | Cancelled by SIGINT (POSIX `128 + 2`). |
+
+### Error envelope
+
+In `--json` mode, errors are emitted to **stdout** as:
+
+```json
+{
+  "schema_version": 1,
+  "error": {
+    "code": "auth_required",
+    "message": "...",
+    "http_status": 401
+  }
+}
+```
+
+`code` is one of: `internal`, `validation`, `auth_required`, `auth_invalid`, `not_found`, `rate_limited`, `network`, `bad_request`, `cancelled`. `http_status` is omitted for non-HTTP errors.
+
+### Probe commands
+
+Use these to inspect the CLI itself before dispatching work:
+
+```bash
+vulncheck version --json
+# {"schema_version": 1, "version": "...", "build_date": "...", "changelog_url": "..."}
+
+vulncheck auth status --json
+# {"schema_version": 1, "authenticated": true, "token_source": "env", "user": "...", "email": "..."}
+# Exit 0 even when authenticated=false — agents dispatch on the bool.
+```
+
+### Pagination
+
+```bash
+vulncheck token list --json --limit 10 --page 2
+vulncheck token list --json --all       # auto-paginate, single combined array
+vulncheck index list <index> --json --all
+```
+
+### Batch input
+
+`purl`, `cpe`, `tag`, `pdns` accept multiple inputs via positional args, stdin (when piped), or `--from-file <path>`. Blank lines and `#`-prefixed comments in the file are ignored. Batch mode requires `--json`.
+
+```bash
+# Stdin
+cat purls.txt | vulncheck purl --json
+
+# File
+vulncheck cpe --from-file ./cpes.txt --json
+```
+
+The batch envelope is a stable array, one row per input, in input order:
+
+```json
+[
+  {"input": "pkg:npm/lodash@4.0.0", "data": { ... }},
+  {"input": "pkg:bad/string", "error": "no result returned for this purl"}
+]
+```
+
+### Cancellation
+
+`SIGINT` / `SIGTERM` cancel in-flight HTTP requests cleanly via context propagation. Long-running ops (`scan`, `offline sync`, `backup download`) honour cancellation; partial files are removed on the way out where applicable.
+
+### JSON output discipline
+
+When `--json` is set:
+- stdout carries **only** the JSON payload (or the error envelope above).
+- stderr carries every info line, progress bar, spinner, prompt, and warning.
+- TUI elements (bubbletea, huh prompts) are automatically suppressed.
+
+This means `vulncheck <cmd> --json | jq` always works — no `tail`/`sed` cleanup needed.
+
+
 ## Available commands
 
 - [Browse/list indices](#browselist-indices)

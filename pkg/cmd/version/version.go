@@ -11,9 +11,10 @@ import (
 // Agents probe the CLI's version up-front to decide which flags they can
 // safely use; keeping this shape stable across releases is the contract.
 type versionInfo struct {
-	Version      string `json:"version"`
-	BuildDate    string `json:"build_date,omitempty"`
-	ChangelogURL string `json:"changelog_url"`
+	SchemaVersion int    `json:"schema_version"`
+	Version       string `json:"version"`
+	BuildDate     string `json:"build_date,omitempty"`
+	ChangelogURL  string `json:"changelog_url"`
 }
 
 func Command() *cobra.Command {
@@ -24,9 +25,10 @@ func Command() *cobra.Command {
 			r := output.FromCmd(cmd)
 			if r.IsJSON() {
 				return r.JSON(versionInfo{
-					Version:      build.Version,
-					BuildDate:    build.Date,
-					ChangelogURL: session.ChangelogURL(build.Version),
+					SchemaVersion: output.SchemaVersion,
+					Version:       build.Version,
+					BuildDate:     build.Date,
+					ChangelogURL:  session.ChangelogURL(build.Version),
 				})
 			}
 			r.Println(session.VersionFormat(build.Version, build.Date))

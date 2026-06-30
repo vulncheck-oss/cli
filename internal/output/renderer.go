@@ -22,6 +22,19 @@ import (
 	"os"
 )
 
+// SchemaVersion is the integer version of the CLI's machine-readable
+// payload shapes (the error envelope, auth status, version info, batch
+// results, sync summaries). Bump it on a breaking change so agents can
+// detect a CLI they don't speak.
+//
+// Stability contract:
+//   - schema_version is stamped only on CLI-shaped payloads. Pass-through
+//     API responses (cpe / purl / tag / pdns / indices list) keep the
+//     server's existing shape.
+//   - Adding optional fields is NOT a breaking change.
+//   - Removing or renaming a field IS a breaking change → bump.
+const SchemaVersion = 1
+
 // Mode selects the output shape.
 type Mode int
 

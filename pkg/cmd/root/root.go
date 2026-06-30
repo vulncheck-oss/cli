@@ -150,8 +150,11 @@ func rendererFromCmd(cmd *cobra.Command) *output.Renderer {
 // errorEnvelope is the structured error shape emitted in JSON mode.
 // `code` and `http_status` are stable across releases — agents can key off
 // `.error.code` (one of the errs.Kind values) for programmatic dispatch.
+// `schema_version` lets agents detect a CLI whose envelope they don't
+// speak — see internal/output.SchemaVersion.
 type errorEnvelope struct {
-	Error errorBody `json:"error"`
+	SchemaVersion int       `json:"schema_version"`
+	Error         errorBody `json:"error"`
 }
 
 type errorBody struct {
@@ -191,11 +194,14 @@ func Execute() {
 	}
 
 	if r.IsJSON() {
-		_ = r.JSON(errorEnvelope{Error: errorBody{
-			Code:       string(classified.Kind),
-			Message:    classified.Message,
-			HTTPStatus: classified.HTTPStatus,
-		}})
+		_ = r.JSON(errorEnvelope{
+			SchemaVersion: output.SchemaVersion,
+			Error: errorBody{
+				Code:       string(classified.Kind),
+				Message:    classified.Message,
+				HTTPStatus: classified.HTTPStatus,
+			},
+		})
 	} else {
 		fmt.Fprintln(r.Stderr(), ui.Danger(classified.Message).Error())
 	}

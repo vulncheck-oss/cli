@@ -13,10 +13,15 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/session"
 )
 
+func newAuthStatus() authStatus {
+	return authStatus{SchemaVersion: output.SchemaVersion}
+}
+
 // authStatus is the JSON payload emitted by `auth status --json`.
 // Agents can rely on .authenticated being a bool — never null — so a
 // missing token cleanly maps to {"authenticated": false, ...}.
 type authStatus struct {
+	SchemaVersion int    `json:"schema_version"`
 	Authenticated bool   `json:"authenticated"`
 	TokenSource   string `json:"token_source,omitempty"` // "env" | "config" | ""
 	User          string `json:"user,omitempty"`
@@ -38,10 +43,10 @@ func Command() *cobra.Command {
 					// No token = not an error from the agent's POV; emit the
 					// status payload and exit 0 so callers can dispatch on
 					// .authenticated rather than parsing error envelopes.
-					return r.JSON(authStatus{
-						Authenticated: false,
-						Reason:        i18n.C.ErrorNoToken,
-					})
+					s := newAuthStatus()
+					s.Authenticated = false
+					s.Reason = i18n.C.ErrorNoToken
+					return r.JSON(s)
 				}
 				return errs.AuthRequired(i18n.C.ErrorNoToken)
 			}
@@ -59,22 +64,22 @@ func Command() *cobra.Command {
 					if errors.Is(err, sdk.ErrorUnauthorized) {
 						reason = "token rejected by server"
 					}
-					return r.JSON(authStatus{
-						Authenticated: false,
-						TokenSource:   source,
-						Reason:        reason,
-					})
+					s := newAuthStatus()
+					s.Authenticated = false
+					s.TokenSource = source
+					s.Reason = reason
+					return r.JSON(s)
 				}
 				return err
 			}
 
 			if r.IsJSON() {
-				return r.JSON(authStatus{
-					Authenticated: true,
-					TokenSource:   source,
-					User:          resp.Data.Name,
-					Email:         resp.Data.Email,
-				})
+				s := newAuthStatus()
+				s.Authenticated = true
+				s.TokenSource = source
+				s.User = resp.Data.Name
+				s.Email = resp.Data.Email
+				return r.JSON(s)
 			}
 
 			return login.SaveToken(config.Token())

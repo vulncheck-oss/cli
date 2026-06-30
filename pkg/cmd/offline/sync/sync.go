@@ -20,6 +20,7 @@ var specialIndices = []string{"cpecve"}
 // a sync. Agents can rely on .selected for the list of indices the command
 // attempted to sync, and .elapsed_seconds for timing.
 type syncResult struct {
+	SchemaVersion  int      `json:"schema_version"`
 	Action         string   `json:"action"`
 	Selected       []string `json:"selected,omitempty"`
 	ElapsedSeconds float64  `json:"elapsed_seconds,omitempty"`
@@ -58,7 +59,7 @@ func Command() *cobra.Command {
 					return fmt.Errorf("failed to purge indices: %w", err)
 				}
 				if r.IsJSON() {
-					return r.JSON(syncResult{Action: "purge"})
+					return r.JSON(syncResult{SchemaVersion: output.SchemaVersion, Action: "purge"})
 				}
 				r.Info("All cached indices have been purged.")
 				return nil
@@ -129,6 +130,7 @@ func Command() *cobra.Command {
 
 			if r.IsJSON() {
 				return r.JSON(syncResult{
+					SchemaVersion:  output.SchemaVersion,
 					Action:         "sync",
 					Selected:       selectedIndices,
 					ElapsedSeconds: elapsed.Seconds(),
