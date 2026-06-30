@@ -17,7 +17,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/utils"
 )
 
-func validateIndex(ctx context.Context, index string) (string, error) {
+func validateIndex(ctx context.Context, index string, interactive bool) (string, error) {
 	indicesResponse, err := session.ConnectWithContext(ctx, config.Token()).GetIndices()
 	if err != nil {
 		return "", err
@@ -39,6 +39,13 @@ func validateIndex(ctx context.Context, index string) (string, error) {
 		return "", fmt.Errorf("index '%s' does not exist", index)
 	}
 
+	// Non-interactive callers (--json, --no-interactive, CI, headless)
+	// can't see a prompt — return the original error with the suggestions
+	// surfaced in the message so the user can pick one and retry.
+	if !interactive {
+		return "", fmt.Errorf("index '%s' does not exist; did you mean: %s", index, joinSuggestions(suggestions))
+	}
+
 	options := make([]huh.Option[string], len(suggestions))
 	for i, s := range suggestions {
 		options[i] = huh.NewOption(s, s)
@@ -58,6 +65,17 @@ func validateIndex(ctx context.Context, index string) (string, error) {
 	}
 
 	return selected, nil
+}
+
+func joinSuggestions(s []string) string {
+	if len(s) == 0 {
+		return ""
+	}
+	out := s[0]
+	for _, x := range s[1:] {
+		out += ", " + x
+	}
+	return out
 }
 
 type Options struct {
@@ -114,7 +132,7 @@ func Command() *cobra.Command {
 
 			if err != nil {
 				if _, ok := err.(sdk.ReqError); ok {
-					corrected, validationErr := validateIndex(cmd.Context(), index)
+					corrected, validationErr := validateIndex(cmd.Context(), index, r.Interactive())
 					if validationErr != nil {
 						return validationErr
 					}
@@ -170,7 +188,7 @@ func Command() *cobra.Command {
 
 			if err != nil {
 				if _, ok := err.(sdk.ReqError); ok {
-					corrected, validationErr := validateIndex(cmd.Context(), index)
+					corrected, validationErr := validateIndex(cmd.Context(), index, r.Interactive())
 					if validationErr != nil {
 						return validationErr
 					}
@@ -189,10 +207,9 @@ func Command() *cobra.Command {
 				viewportOutput = response
 			}
 
-			// `browse` is interactive — when JSON mode is requested we emit
-			// the payload as JSON and skip the viewport, so the command is
-			// safely scriptable too.
-			if r.IsJSON() {
+			// `browse` is interactive — fall back to JSON output whenever the
+			// renderer can't show TUI (--json, --no-interactive, non-TTY, CI).
+			if r.IsJSON() || !r.Interactive() {
 				return r.JSON(viewportOutput)
 			}
 

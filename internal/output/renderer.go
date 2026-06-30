@@ -45,8 +45,10 @@ func (m Mode) String() string {
 // Renderer routes informational, payload, and error output to the right
 // stream based on the selected Mode. Zero value is not useful; use New().
 type Renderer struct {
-	mode  Mode
-	color bool
+	mode        Mode
+	color       bool
+	interactive bool
+	verbose     bool
 
 	stdout io.Writer
 	stderr io.Writer
@@ -58,22 +60,26 @@ type Renderer struct {
 
 // Options controls Renderer construction.
 type Options struct {
-	Mode   Mode
-	Color  bool // when false, callers should render without ANSI sequences
-	Quiet  bool
-	Stdout io.Writer // defaults to os.Stdout
-	Stderr io.Writer // defaults to os.Stderr
+	Mode        Mode
+	Color       bool // when false, callers should render without ANSI sequences
+	Quiet       bool
+	Verbose     bool
+	Interactive bool      // when false, commands MUST NOT block on prompts
+	Stdout      io.Writer // defaults to os.Stdout
+	Stderr      io.Writer // defaults to os.Stderr
 }
 
 // New constructs a Renderer from explicit options. Callers that want
 // environment defaults should use NewFromEnv.
 func New(opts Options) *Renderer {
 	r := &Renderer{
-		mode:   opts.Mode,
-		color:  opts.Color,
-		quiet:  opts.Quiet,
-		stdout: opts.Stdout,
-		stderr: opts.Stderr,
+		mode:        opts.Mode,
+		color:       opts.Color,
+		quiet:       opts.Quiet,
+		verbose:     opts.Verbose,
+		interactive: opts.Interactive,
+		stdout:      opts.Stdout,
+		stderr:      opts.Stderr,
 	}
 	if r.stdout == nil {
 		r.stdout = os.Stdout
@@ -89,8 +95,9 @@ func New(opts Options) *Renderer {
 // else is inferred from the environment.
 func NewFromEnv(mode Mode) *Renderer {
 	return New(Options{
-		Mode:  mode,
-		Color: ColorEnabled(),
+		Mode:        mode,
+		Color:       ColorEnabled(),
+		Interactive: Interactive(),
 	})
 }
 
@@ -107,6 +114,21 @@ func (r *Renderer) Color() bool { return r.color }
 
 // Quiet reports whether informational output is suppressed.
 func (r *Renderer) Quiet() bool { return r.quiet }
+
+// Verbose reports whether the user asked for extra detail (e.g. debug logs).
+// Commands that have nothing extra to print can ignore this.
+func (r *Renderer) Verbose() bool { return r.verbose }
+
+// Interactive reports whether commands may block on TUI prompts (huh
+// forms, bubbletea screens). Returns false under CI, --no-interactive,
+// when stdin is non-TTY, or when --json is set (JSON output is for
+// machines — never block them on prompts).
+func (r *Renderer) Interactive() bool {
+	if r.mode == ModeJSON {
+		return false
+	}
+	return r.interactive
+}
 
 // Stdout returns the payload stream. Use for raw payload writes when
 // the structured helpers (JSON, Println) are not a fit — e.g. a command

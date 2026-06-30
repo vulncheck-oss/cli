@@ -2,6 +2,7 @@ package indices
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/internal/errs"
 	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
@@ -61,6 +62,9 @@ func Browse() *cobra.Command {
 		Short: i18n.C.BrowseIndicesShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			r := output.FromCmd(cmd)
+			if !r.Interactive() {
+				return errs.Validation("indices browse requires an interactive terminal; use `vulncheck indices list --json` instead")
+			}
 
 			response, err := session.ConnectWithContext(cmd.Context(), config.Token()).GetIndices()
 			if err != nil {

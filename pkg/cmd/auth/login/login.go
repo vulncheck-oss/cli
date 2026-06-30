@@ -2,6 +2,8 @@ package login
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/internal/errs"
+	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/cmd/auth/login/token"
 	"github.com/vulncheck-oss/cli/pkg/cmd/auth/login/web"
 	"github.com/vulncheck-oss/cli/pkg/config"
@@ -24,9 +26,9 @@ func Command() *cobra.Command {
 		Long:    i18n.C.AuthLoginLong,
 		Example: i18n.C.AuthLoginExample,
 		RunE: func(cmd *cobra.Command, args []string) error {
-
-			if config.IsCI() {
-				return ui.Error(i18n.C.AuthLoginErrorCI)
+			r := output.FromCmd(cmd)
+			if !r.Interactive() {
+				return errs.Validation("%s", i18n.C.AuthLoginErrorCI)
 			}
 
 			if config.HasConfig() && config.HasToken() {

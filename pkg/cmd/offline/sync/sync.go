@@ -7,6 +7,7 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/internal/errs"
 	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/config"
@@ -92,6 +93,9 @@ func Command() *cobra.Command {
 			}
 
 			if (len(selectedIndices) == 0 && len(removeIndices) == 0) || choose {
+				if !r.Interactive() {
+					return errs.Validation("no indices to sync; pass --add <name> (repeatable), --remove <name>, or --purge")
+				}
 				options := make([]huh.Option[string], len(indices))
 				for i, index := range indices {
 					options[i] = huh.Option[string]{
@@ -147,13 +151,17 @@ func Command() *cobra.Command {
 
 // EnsureIndexSync checks if the given index is synced, and if not, prompts the user to sync it.
 // It returns true if the index is available (either already synced or newly synced), and false otherwise.
+//
+// In non-interactive contexts (CI, --no-interactive, --json) it refuses to
+// download silently — the caller must have synced the index ahead of time
+// via `vulncheck offline sync --add <name>`.
 func EnsureIndexSync(indices cache.InfoFile, indexType string, fail bool) (bool, error) {
 	if indices.GetIndex(indexType) != nil {
 		return true, nil
 	}
 
-	if config.IsCI() || fail {
-		return false, fmt.Errorf("index %s is required and not cached yet", indexType)
+	if config.IsCI() || fail || !output.Interactive() {
+		return false, fmt.Errorf("index %s is required and not cached yet; run `vulncheck offline sync --add %s` first", indexType, indexType)
 	}
 
 	shouldSync := true

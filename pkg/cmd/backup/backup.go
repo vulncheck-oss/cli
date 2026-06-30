@@ -18,7 +18,7 @@ import (
 // validateIndex checks whether index exists. If it does not but close matches
 // are found, an interactive select is presented so the user can pick one.
 // Returns the confirmed index name, or an error if the name is unrecognised.
-func validateIndex(ctx context.Context, index string) (string, error) {
+func validateIndex(ctx context.Context, index string, interactive bool) (string, error) {
 	indicesResponse, err := session.ConnectWithContext(ctx, config.Token()).GetIndices()
 	if err != nil {
 		return "", err
@@ -38,6 +38,14 @@ func validateIndex(ctx context.Context, index string) (string, error) {
 	suggestions := utils.SuggestFor(index, indexNames)
 	if len(suggestions) == 0 {
 		return "", fmt.Errorf("index '%s' does not exist", index)
+	}
+
+	if !interactive {
+		joined := suggestions[0]
+		for _, s := range suggestions[1:] {
+			joined += ", " + s
+		}
+		return "", fmt.Errorf("index '%s' does not exist; did you mean: %s", index, joined)
 	}
 
 	options := make([]huh.Option[string], len(suggestions))
@@ -82,7 +90,7 @@ func Command() *cobra.Command {
 
 			if err != nil {
 				if _, ok := err.(sdk.ReqError); ok {
-					corrected, validationErr := validateIndex(cmd.Context(), index)
+					corrected, validationErr := validateIndex(cmd.Context(), index, r.Interactive())
 					if validationErr != nil {
 						return validationErr
 					}
@@ -123,7 +131,7 @@ func Command() *cobra.Command {
 
 			if err != nil {
 				if _, ok := err.(sdk.ReqError); ok {
-					corrected, validationErr := validateIndex(cmd.Context(), index)
+					corrected, validationErr := validateIndex(cmd.Context(), index, r.Interactive())
 					if validationErr != nil {
 						return validationErr
 					}
