@@ -3,12 +3,12 @@ package root
 import (
 	"context"
 	_ "embed"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/vulncheck-oss/cli/internal/errs"
 	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/cmd/upgrade"
 
@@ -33,7 +33,6 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/environment"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
-	"github.com/vulncheck-oss/cli/pkg/sdk"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 )
@@ -73,7 +72,7 @@ func NewCmdRoot() *cobra.Command {
 				if !r.IsJSON() {
 					fmt.Fprintln(r.Stderr(), authHelp())
 				}
-				return ui.Error(i18n.C.ErrorNoToken)
+				return errs.AuthRequired(i18n.C.ErrorNoToken)
 			}
 
 			return nil
@@ -139,14 +138,16 @@ func rendererFromCmd(cmd *cobra.Command) *output.Renderer {
 }
 
 // errorEnvelope is the structured error shape emitted in JSON mode.
-// Phase 3 will expand this with stable error codes; for now the shape is
-// fixed so agents can already key off `.error.message`.
+// `code` and `http_status` are stable across releases — agents can key off
+// `.error.code` (one of the errs.Kind values) for programmatic dispatch.
 type errorEnvelope struct {
 	Error errorBody `json:"error"`
 }
 
 type errorBody struct {
-	Message string `json:"message"`
+	Code       string `json:"code"`
+	Message    string `json:"message"`
+	HTTPStatus int    `json:"http_status,omitempty"`
 }
 
 func Execute() {
@@ -171,22 +172,23 @@ func Execute() {
 	// flag-parsing failures, so we don't rely on context.)
 	r := rendererFromCmd(root)
 
-	msg := err.Error()
-	exitCode := 1
-	if errors.Is(err, sdk.ErrorUnauthorized) {
-		msg = i18n.C.ErrorUnauthorized
-	}
-	if errors.Is(err, context.Canceled) || errors.Is(ctx.Err(), context.Canceled) {
-		// Honour the conventional 130 (SIGINT) when the user interrupted us.
-		msg = "cancelled"
-		exitCode = 130
+	// If the context was cancelled by a signal, the underlying error may not
+	// itself wrap context.Canceled — promote it explicitly so the user sees
+	// "cancelled" and exit 130 rather than a network-shaped error.
+	classified := errs.Classify(err)
+	if ctx.Err() != nil && classified.Kind != errs.KindCancelled {
+		classified = errs.Wrap(errs.KindCancelled, err, "cancelled")
 	}
 
 	if r.IsJSON() {
-		_ = r.JSON(errorEnvelope{Error: errorBody{Message: msg}})
+		_ = r.JSON(errorEnvelope{Error: errorBody{
+			Code:       string(classified.Kind),
+			Message:    classified.Message,
+			HTTPStatus: classified.HTTPStatus,
+		}})
 	} else {
-		fmt.Fprintln(r.Stderr(), ui.Danger(msg).Error())
+		fmt.Fprintln(r.Stderr(), ui.Danger(classified.Message).Error())
 	}
 
-	os.Exit(exitCode)
+	os.Exit(classified.ExitCode())
 }
