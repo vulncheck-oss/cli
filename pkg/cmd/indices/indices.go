@@ -28,7 +28,7 @@ func List() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			r := output.FromCmd(cmd)
 
-			response, err := session.Connect(config.Token()).GetIndices()
+			response, err := session.ConnectWithContext(cmd.Context(), config.Token()).GetIndices()
 			if err != nil {
 				return err
 			}
@@ -62,7 +62,7 @@ func Browse() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			r := output.FromCmd(cmd)
 
-			response, err := session.Connect(config.Token()).GetIndices()
+			response, err := session.ConnectWithContext(cmd.Context(), config.Token()).GetIndices()
 			if err != nil {
 				return err
 			}

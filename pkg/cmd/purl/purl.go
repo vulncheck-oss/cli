@@ -21,7 +21,7 @@ func Command() *cobra.Command {
 			if len(args) != 1 {
 				return ui.Error(i18n.C.PurlErrorSchemeRequired)
 			}
-			response, err := session.Connect(config.Token()).GetPurl(args[0])
+			response, err := session.ConnectWithContext(cmd.Context(), config.Token()).GetPurl(args[0])
 			if err != nil {
 				return fmt.Errorf("error fetching purl %s: %w", args[0], err)
 			}

@@ -1,6 +1,7 @@
 package index
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -16,8 +17,8 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/utils"
 )
 
-func validateIndex(index string) (string, error) {
-	indicesResponse, err := session.Connect(config.Token()).GetIndices()
+func validateIndex(ctx context.Context, index string) (string, error) {
+	indicesResponse, err := session.ConnectWithContext(ctx, config.Token()).GetIndices()
 	if err != nil {
 		return "", err
 	}
@@ -108,12 +109,12 @@ func Command() *cobra.Command {
 			}
 
 			index := args[0]
-			client := session.Connect(config.Token())
+			client := session.ConnectWithContext(cmd.Context(), config.Token())
 			response, err := client.GetIndex(index, queryParameters)
 
 			if err != nil {
 				if _, ok := err.(sdk.ReqError); ok {
-					corrected, validationErr := validateIndex(index)
+					corrected, validationErr := validateIndex(cmd.Context(), index)
 					if validationErr != nil {
 						return validationErr
 					}
@@ -164,12 +165,12 @@ func Command() *cobra.Command {
 			}
 
 			index := args[0]
-			client := session.Connect(config.Token())
+			client := session.ConnectWithContext(cmd.Context(), config.Token())
 			response, err := client.GetIndex(index, queryParameters)
 
 			if err != nil {
 				if _, ok := err.(sdk.ReqError); ok {
-					corrected, validationErr := validateIndex(index)
+					corrected, validationErr := validateIndex(cmd.Context(), index)
 					if validationErr != nil {
 						return validationErr
 					}

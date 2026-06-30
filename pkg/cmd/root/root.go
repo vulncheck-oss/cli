@@ -1,10 +1,13 @@
 package root
 
 import (
+	"context"
 	_ "embed"
 	"errors"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/cmd/upgrade"
@@ -147,8 +150,17 @@ type errorBody struct {
 }
 
 func Execute() {
+	// Install a single cancellable context that listens for SIGINT/SIGTERM
+	// and propagates cancellation through every cmd.Context() consumer
+	// (SDK HTTP requests, future scan/sync long-runners). Ctrl-C now cleanly
+	// cancels in-flight work instead of leaving partial state.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	root := NewCmdRoot()
-	err := root.Execute()
+	root.SetContext(ctx)
+
+	err := root.ExecuteContext(ctx)
 	if err == nil {
 		return
 	}
@@ -160,8 +172,14 @@ func Execute() {
 	r := rendererFromCmd(root)
 
 	msg := err.Error()
+	exitCode := 1
 	if errors.Is(err, sdk.ErrorUnauthorized) {
 		msg = i18n.C.ErrorUnauthorized
+	}
+	if errors.Is(err, context.Canceled) || errors.Is(ctx.Err(), context.Canceled) {
+		// Honour the conventional 130 (SIGINT) when the user interrupted us.
+		msg = "cancelled"
+		exitCode = 130
 	}
 
 	if r.IsJSON() {
@@ -170,5 +188,5 @@ func Execute() {
 		fmt.Fprintln(r.Stderr(), ui.Danger(msg).Error())
 	}
 
-	os.Exit(1)
+	os.Exit(exitCode)
 }

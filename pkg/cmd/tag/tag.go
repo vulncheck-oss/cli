@@ -22,7 +22,7 @@ func Command() *cobra.Command {
 			if len(args) != 1 {
 				return ui.Error(i18n.C.TagErrorTagNameRequired)
 			}
-			response, err := session.Connect(config.Token()).GetTag(args[0])
+			response, err := session.ConnectWithContext(cmd.Context(), config.Token()).GetTag(args[0])
 			if err != nil {
 				return err
 			}

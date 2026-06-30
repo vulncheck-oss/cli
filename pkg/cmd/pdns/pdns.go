@@ -23,7 +23,7 @@ func Command() *cobra.Command {
 				return ui.Error(i18n.C.PdnsErrorListNameRequired)
 			}
 
-			response, err := session.Connect(config.Token()).GetPdns(args[0])
+			response, err := session.ConnectWithContext(cmd.Context(), config.Token()).GetPdns(args[0])
 			if err != nil {
 				return err
 			}

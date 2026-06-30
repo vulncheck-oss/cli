@@ -1,6 +1,7 @@
 package session
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -56,6 +57,13 @@ func VersionFormat(version, buildDate string) string {
 
 func Connect(token string) *sdk.Client {
 	return sdk.Connect(environment.Env.API, token).SetUserAgent(fmt.Sprintf("VulnCheck CLI %s", build.Version))
+}
+
+// ConnectWithContext is Connect with a context attached for cancellation /
+// timeout. Prefer this in command bodies so SIGINT cleanly cancels in-flight
+// HTTP requests rather than terminating mid-response.
+func ConnectWithContext(ctx context.Context, token string) *sdk.Client {
+	return Connect(token).WithContext(ctx)
 }
 
 func CheckToken(token string) (response *sdk.UserResponse, err error) {

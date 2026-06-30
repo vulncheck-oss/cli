@@ -2,6 +2,7 @@ package token
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"text/tabwriter"
@@ -42,7 +43,7 @@ func Create() *cobra.Command {
 				return fmt.Errorf("%s", i18n.C.CreateTokenLabelRequired)
 			}
 
-			response, err := session.Connect(config.Token()).CreateToken(args[0])
+			response, err := session.ConnectWithContext(cmd.Context(), config.Token()).CreateToken(args[0])
 			if err != nil {
 				return err
 			}
@@ -69,7 +70,7 @@ func Remove() *cobra.Command {
 				return fmt.Errorf("%s", i18n.C.RemoveTokenIDRequired)
 			}
 
-			_, err := session.Connect(config.Token()).DeleteToken(args[0])
+			_, err := session.ConnectWithContext(cmd.Context(), config.Token()).DeleteToken(args[0])
 			if err != nil {
 				return err
 			}
@@ -90,7 +91,7 @@ func List() *cobra.Command {
 		Short: i18n.C.ListTokensShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			r := output.FromCmd(cmd)
-			response, err := session.Connect(config.Token()).GetTokens()
+			response, err := session.ConnectWithContext(cmd.Context(), config.Token()).GetTokens()
 			if err != nil {
 				return err
 			}
@@ -124,7 +125,7 @@ func Browse() *cobra.Command {
 			r := output.FromCmd(cmd)
 
 			for {
-				response, err := session.Connect(config.Token()).GetTokens()
+				response, err := session.ConnectWithContext(cmd.Context(), config.Token()).GetTokens()
 				if err != nil {
 					return err
 				}
@@ -141,7 +142,7 @@ func Browse() *cobra.Command {
 				}
 
 				if selectedID == "createEntry" {
-					if err := BrowseCreate(); err != nil {
+					if err := BrowseCreate(cmd.Context()); err != nil {
 						return err
 					}
 					continue
@@ -149,7 +150,7 @@ func Browse() *cobra.Command {
 
 				token := tokenFromId(tokens, selectedID)
 				if token != nil {
-					if err := BrowseActions(*token, tokens); err != nil {
+					if err := BrowseActions(cmd.Context(), *token, tokens); err != nil {
 						return err
 					}
 				} else {
@@ -162,7 +163,7 @@ func Browse() *cobra.Command {
 	return cmd
 }
 
-func BrowseCreate() error {
+func BrowseCreate(ctx context.Context) error {
 	var label string
 
 	form := huh.NewForm(
@@ -182,7 +183,7 @@ func BrowseCreate() error {
 		return fmt.Errorf("%s", i18n.C.CreateTokenLabelRequired)
 	}
 
-	response, err := session.Connect(config.Token()).CreateToken(label)
+	response, err := session.ConnectWithContext(ctx, config.Token()).CreateToken(label)
 	if err != nil {
 		return err
 	}
@@ -211,7 +212,7 @@ func BrowseCreate() error {
 	return nil
 }
 
-func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
+func BrowseActions(ctx context.Context, token sdk.TokenData, tokens []sdk.TokenData) error {
 	boxStyle := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("#6667ab")).
@@ -290,7 +291,7 @@ func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
 			return err
 		}
 		if confirmed {
-			_, err := session.Connect(config.Token()).DeleteToken(token.ID)
+			_, err := session.ConnectWithContext(ctx, config.Token()).DeleteToken(token.ID)
 			if err != nil {
 				return err
 			}

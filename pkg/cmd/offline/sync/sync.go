@@ -38,7 +38,7 @@ func Command() *cobra.Command {
 			r := output.FromCmd(cmd)
 			choose, _ := cmd.Flags().GetBool("choose")
 
-			response, err := session.Connect(config.Token()).GetIndices()
+			response, err := session.ConnectWithContext(cmd.Context(), config.Token()).GetIndices()
 			if err != nil {
 				return err
 			}
