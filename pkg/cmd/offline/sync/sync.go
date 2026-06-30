@@ -122,7 +122,7 @@ func Command() *cobra.Command {
 			}
 
 			startTime := time.Now()
-			if err := cache.IndicesSync(selectedIndices, force); err != nil {
+			if err := cache.IndicesSync(cmd.Context(), selectedIndices, force); err != nil {
 				return err
 			}
 			elapsed := time.Since(startTime)

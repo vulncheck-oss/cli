@@ -41,6 +41,7 @@ func Command() *cobra.Command {
 		Example: i18n.C.ScanExample,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			r := output.FromCmd(cmd)
+			ctx := cmd.Context()
 
 			if opts.SbomInput == "" && len(args) < 1 {
 				return ui.Error(i18n.C.ScanErrorDirectoryRequired)
@@ -206,7 +207,7 @@ func Command() *cobra.Command {
 							Title: i18n.C.ScanScanPurlStart,
 							Task: func(t *taskin.Task) error {
 								purlVulns = []models.ScanResultVulnerabilities{}
-								results, err := bill.GetBatchVulns(purls, func(cur int, total int) {
+								results, err := bill.GetBatchVulns(ctx, purls, func(cur int, total int) {
 									t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgress, cur, total)
 									t.Progress(cur, total)
 								})
@@ -222,7 +223,7 @@ func Command() *cobra.Command {
 						{
 							Title: i18n.C.ScanVulnMetaStart,
 							Task: func(t *taskin.Task) error {
-								results, err := bill.GetMeta(vulns)
+								results, err := bill.GetMeta(ctx, vulns)
 								if err != nil {
 									return err
 								}

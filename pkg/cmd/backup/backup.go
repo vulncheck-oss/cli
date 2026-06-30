@@ -154,8 +154,18 @@ func Command() *cobra.Command {
 
 			r.Info(i18n.C.BackupDownloadInfo, index, date)
 			r.Info(i18n.C.BackupDownloadProgress, file)
-			if err := ui.Download(response.GetData()[0].URL, file); err != nil {
-				return err
+
+			// Use the bubbletea-driven progress bar only when we have a real
+			// TTY and the user hasn't asked for non-interactive output. The
+			// headless path streams progress to stderr and supports SIGINT.
+			downloadErr := func() error {
+				if r.Interactive() {
+					return ui.Download(response.GetData()[0].URL, file)
+				}
+				return ui.DownloadHeadless(cmd.Context(), response.GetData()[0].URL, file, r.Stderr())
+			}()
+			if downloadErr != nil {
+				return downloadErr
 			}
 			if r.IsJSON() {
 				return r.JSON(map[string]any{

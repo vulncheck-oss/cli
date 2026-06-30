@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,12 +16,15 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/utils"
 )
 
-// DownloadTask creates a task for downloading a file from the given URL.
-func taskDownload(index string, filename string) taskin.Task {
+// taskDownload creates a task for downloading a file from the given URL.
+// The supplied ctx is honoured: SIGINT during a multi-gigabyte download
+// will tear down the underlying HTTP read cleanly rather than leaving a
+// half-written file behind.
+func taskDownload(ctx context.Context, index string, filename string) taskin.Task {
 	return taskin.Task{
 		Title: fmt.Sprintf("Download %s", index),
 		Task: func(t *taskin.Task) error {
-			response, err := session.Connect(config.Token()).GetIndexBackup(index)
+			response, err := session.ConnectWithContext(ctx, config.Token()).GetIndexBackup(index)
 			if err != nil {
 				return fmt.Errorf("failed to get index backup: %w", err)
 			}
@@ -32,7 +36,11 @@ func taskDownload(index string, filename string) taskin.Task {
 			url := response.GetData()[0].URL
 
 			eta := utils.NewETACalculator()
-			resp, err := http.Get(url)
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+			if err != nil {
+				return fmt.Errorf("failed to build download request: %w", err)
+			}
+			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				return fmt.Errorf("failed to get URL: %w", err)
 			}

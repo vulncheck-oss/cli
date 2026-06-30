@@ -209,7 +209,7 @@ func GetPURLDetail(sbm *sbom.SBOM, inputRefs []InputSbomRef) []models.PurlDetail
 	return purls
 }
 
-func GetBatchVulns(purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
+func GetBatchVulns(ctx context.Context, purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
 	const batchSize = 100
 
 	var vulns []models.ScanResultVulnerabilities
@@ -226,7 +226,7 @@ func GetBatchVulns(purls []models.PurlDetail, iterator func(cur int, total int))
 
 		batch := purlStrings[start:end]
 
-		response, err := session.Connect(config.Token()).GetPurls(batch)
+		response, err := session.ConnectWithContext(ctx, config.Token()).GetPurls(batch)
 		if err != nil {
 			return nil, fmt.Errorf("error fetching purls %v: %w", batch, err)
 		}
@@ -247,13 +247,13 @@ func GetBatchVulns(purls []models.PurlDetail, iterator func(cur int, total int))
 	return vulns, nil
 }
 
-func GetVulns(purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
+func GetVulns(ctx context.Context, purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
 	var vulns []models.ScanResultVulnerabilities
 
 	i := 0
 	for _, purl := range purls {
 		i++
-		response, err := session.Connect(config.Token()).GetPurl(purl.Purl)
+		response, err := session.ConnectWithContext(ctx, config.Token()).GetPurl(purl.Purl)
 		if err != nil {
 			return nil, fmt.Errorf("error fetching purl %s: %v", purl.Purl, err)
 		}
@@ -397,9 +397,14 @@ func GetOfflineVulns(indices cache.InfoFile, purls []models.PurlDetail, iterator
 	return vulns, nil
 }
 
-func GetMeta(vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulnerabilities, error) {
+func GetMeta(ctx context.Context, vulns []models.ScanResultVulnerabilities) ([]models.ScanResultVulnerabilities, error) {
 	for i, vuln := range vulns {
-		nvd2Response, err := session.Connect(config.Token()).GetIndexVulncheckNvd2(sdk.IndexQueryParameters{Cve: vuln.CVE})
+		// Honour SIGINT between iterations — each iteration is a fresh
+		// HTTP call so the user can cancel a long scan promptly.
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		nvd2Response, err := session.ConnectWithContext(ctx, config.Token()).GetIndexVulncheckNvd2(sdk.IndexQueryParameters{Cve: vuln.CVE})
 		if err != nil {
 			return nil, err
 		}

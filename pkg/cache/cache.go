@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -67,8 +68,8 @@ func (i *InfoFile) GetIndex(name string) *IndexInfo {
 	return nil
 }
 
-func syncSingleIndex(index string, configDir string, indexInfo *InfoFile, force bool) taskin.Tasks {
-	response, err := session.Connect(config.Token()).GetIndexBackup(index)
+func syncSingleIndex(ctx context.Context, index string, configDir string, indexInfo *InfoFile, force bool) taskin.Tasks {
+	response, err := session.ConnectWithContext(ctx, config.Token()).GetIndexBackup(index)
 	if err != nil {
 		return taskin.Tasks{
 			{
@@ -118,7 +119,7 @@ func syncSingleIndex(index string, configDir string, indexInfo *InfoFile, force 
 	}
 
 	childTasks := taskin.Tasks{
-		taskDownload(index, filePath),
+		taskDownload(ctx, index, filePath),
 		taskExtract(index, configDir, filePath),
 		taskDB(index, configDir, filePath, lastUpdated, indexInfo),
 	}
@@ -126,7 +127,7 @@ func syncSingleIndex(index string, configDir string, indexInfo *InfoFile, force 
 	return childTasks
 }
 
-func IndicesSync(indices []string, force bool) error {
+func IndicesSync(ctx context.Context, indices []string, force bool) error {
 	configDir, err := config.IndicesDir()
 	if err != nil {
 		return err
@@ -160,7 +161,7 @@ func IndicesSync(indices []string, force bool) error {
 					t.Title = fmt.Sprintf("Syncing index %s", idx)
 					return nil
 				},
-				Tasks: syncSingleIndex(idx, configDir, &indexInfo, force),
+				Tasks: syncSingleIndex(ctx, idx, configDir, &indexInfo, force),
 			}
 
 			tasks = append(tasks, parentTask)
