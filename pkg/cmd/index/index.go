@@ -2,6 +2,7 @@ package index
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -80,6 +81,7 @@ func joinSuggestions(s []string) string {
 
 type Options struct {
 	Full bool
+	All  bool
 }
 
 func Command() *cobra.Command {
@@ -136,13 +138,41 @@ func Command() *cobra.Command {
 					if validationErr != nil {
 						return validationErr
 					}
-					response, err = client.GetIndex(corrected, queryParameters)
+					index = corrected
+					response, err = client.GetIndex(index, queryParameters)
 					if err != nil {
 						return err
 					}
 				} else {
 					return err
 				}
+			}
+
+			if opts.All {
+				combined := append([]json.RawMessage{}, response.GetData()...)
+				cursor := response.Meta.NextCursor
+				for cursor != "" {
+					params := queryParameters
+					params.Cursor = cursor
+					params.StartCursor = false
+					next, err := client.GetIndex(index, params)
+					if err != nil {
+						return err
+					}
+					combined = append(combined, next.GetData()...)
+					if next.Meta.NextCursor == cursor || len(next.GetData()) == 0 {
+						break
+					}
+					cursor = next.Meta.NextCursor
+				}
+				if opts.Full {
+					// In --full --all mode the data slice carries every page;
+					// keep the last response's meta so consumers can still
+					// inspect pagination state if they want.
+					response.Data = combined
+					return r.JSON(response)
+				}
+				return r.JSON(combined)
 			}
 
 			var payload interface{} = response.GetData()
@@ -219,6 +249,7 @@ func Command() *cobra.Command {
 	}
 
 	cmdList.Flags().BoolVarP(&opts.Full, "full", "f", false, i18n.C.IndexFlagFullResponse)
+	cmdList.Flags().BoolVar(&opts.All, "all", false, "Auto-paginate via next_cursor and emit a single combined data array")
 	cmdBrowse.Flags().BoolVarP(&opts.Full, "full", "f", false, i18n.C.IndexFlagFullResponse)
 
 	cmd.AddCommand(cmdList)

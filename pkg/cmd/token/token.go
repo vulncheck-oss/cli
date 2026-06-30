@@ -87,26 +87,71 @@ func Remove() *cobra.Command {
 }
 
 func List() *cobra.Command {
+	var (
+		limit  int
+		page   int
+		fetch  bool // --all
+	)
+
 	cmd := &cobra.Command{
 		Use:   "list <search>",
 		Short: i18n.C.ListTokensShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			r := output.FromCmd(cmd)
-			response, err := session.ConnectWithContext(cmd.Context(), config.Token()).GetTokens()
+			client := session.ConnectWithContext(cmd.Context(), config.Token())
+
+			tokens, err := fetchTokens(client, limit, page, fetch)
 			if err != nil {
 				return err
 			}
 
 			if r.IsJSON() {
-				return r.JSON(response.GetData())
+				return r.JSON(tokens)
 			}
 
-			r.Info(i18n.C.ListTokensFull, len(response.GetData()))
-			return ui.TokensList(response.GetData())
+			r.Info(i18n.C.ListTokensFull, len(tokens))
+			return ui.TokensList(tokens)
 		},
 	}
 
+	cmd.Flags().IntVar(&limit, "limit", 0, "Page size; 0 uses the server default")
+	cmd.Flags().IntVar(&page, "page", 0, "1-based page number; 0 starts at the first page")
+	cmd.Flags().BoolVar(&fetch, "all", false, "Auto-paginate through every page and emit one combined list")
+
 	return cmd
+}
+
+// fetchTokens consolidates the single-page / all-pages paths so the RunE
+// stays small. When --all is set it loops until TotalPages, otherwise it
+// fetches a single page.
+func fetchTokens(client *sdk.Client, limit, page int, all bool) ([]sdk.TokenData, error) {
+	if !all {
+		resp, err := client.GetTokens(sdk.TokenListParams{Limit: limit, Page: page})
+		if err != nil {
+			return nil, err
+		}
+		return resp.GetData(), nil
+	}
+
+	var combined []sdk.TokenData
+	cur := page
+	if cur <= 0 {
+		cur = 1
+	}
+	for {
+		resp, err := client.GetTokens(sdk.TokenListParams{Limit: limit, Page: cur})
+		if err != nil {
+			return nil, err
+		}
+		combined = append(combined, resp.GetData()...)
+		// Stop when we've fetched the last page or got nothing back (safety
+		// against a server that returns TotalPages=0).
+		if resp.Meta.TotalPages == 0 || cur >= resp.Meta.TotalPages || len(resp.GetData()) == 0 {
+			break
+		}
+		cur++
+	}
+	return combined, nil
 }
 
 func tokenFromId(tokens []sdk.TokenData, tokenId string) *sdk.TokenData {
