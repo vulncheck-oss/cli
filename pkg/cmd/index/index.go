@@ -7,6 +7,7 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/sdk"
@@ -15,16 +16,12 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/utils"
 )
 
-// validateIndex checks whether index exists. If it does not but close matches
-// are found, an interactive select is presented so the user can pick one.
-// Returns the confirmed index name, or an error if the name is unrecognised.
 func validateIndex(index string) (string, error) {
 	indicesResponse, err := session.Connect(config.Token()).GetIndices()
 	if err != nil {
 		return "", err
 	}
 
-	// Create a map of indices to compare against
 	var indexNames []string
 	available := make(map[string]bool)
 	for _, idx := range indicesResponse.GetData() {
@@ -41,8 +38,6 @@ func validateIndex(index string) (string, error) {
 		return "", fmt.Errorf("index '%s' does not exist", index)
 	}
 
-	// If the index is not present in the map but close matches exist, present
-	// an interactive select so the user can choose the intended index
 	options := make([]huh.Option[string], len(suggestions))
 	for i, s := range suggestions {
 		options[i] = huh.NewOption(s, s)
@@ -69,22 +64,17 @@ type Options struct {
 }
 
 func Command() *cobra.Command {
-
-	opts := &Options{
-		Full: false,
-	}
+	opts := &Options{}
 
 	cmd := &cobra.Command{
 		Use:   "index <command>",
 		Short: i18n.C.IndexShort,
 	}
 
-	// Define flags for index commands
 	keys := reflect.TypeOf(sdk.IndexQueryParameters{})
 
-	// Dynamically add flags for index commands (list and browse)
 	for i := 0; i < keys.NumField(); i++ {
-		flag := keys.Field(i).Tag.Get("json") // Get the json tag value which is the correct API field
+		flag := keys.Field(i).Tag.Get("json")
 		name := keys.Field(i).Name
 		cmd.PersistentFlags().String(flag, "", name)
 	}
@@ -93,11 +83,11 @@ func Command() *cobra.Command {
 		Use:   "list <index>",
 		Short: i18n.C.IndexListShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
 			if len(args) != 1 {
 				return ui.Error(i18n.C.IndexErrorRequired)
 			}
 
-			// Create a new IndexQueryParameters struct and set the values from the flags
 			queryParameters := sdk.IndexQueryParameters{}
 			for i := 0; i < keys.NumField(); i++ {
 				flag := keys.Field(i).Tag.Get("json")
@@ -109,7 +99,7 @@ func Command() *cobra.Command {
 					case reflect.Int:
 						intValue, err := strconv.Atoi(cmd.Flag(flag).Value.String())
 						if err != nil {
-							fmt.Println(err)
+							r.Warn("invalid value for --%s: %v", flag, err)
 							continue
 						}
 						field.SetInt(int64(intValue))
@@ -121,9 +111,6 @@ func Command() *cobra.Command {
 			client := session.Connect(config.Token())
 			response, err := client.GetIndex(index, queryParameters)
 
-			// If GetIndex fails due to a HTTP request error fallback
-			// and attempt to validate the index name argument provided if
-			// there was a typo/spelling error it will suggest similar names
 			if err != nil {
 				if _, ok := err.(sdk.ReqError); ok {
 					corrected, validationErr := validateIndex(index)
@@ -139,15 +126,12 @@ func Command() *cobra.Command {
 				}
 			}
 
-			var terminalOutput interface{}
-			terminalOutput = response.GetData()
+			var payload interface{} = response.GetData()
 			if opts.Full {
-				terminalOutput = response
+				payload = response
 			}
 
-			ui.Json(terminalOutput)
-
-			return nil
+			return r.JSON(payload)
 		},
 	}
 
@@ -155,11 +139,11 @@ func Command() *cobra.Command {
 		Use:   "browse <index>",
 		Short: i18n.C.IndexBrowseShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
 			if len(args) != 1 {
 				return ui.Error(i18n.C.IndexErrorRequired)
 			}
 
-			// Create a new IndexQueryParameters struct and set the values from the flags
 			queryParameters := sdk.IndexQueryParameters{}
 			for i := 0; i < keys.NumField(); i++ {
 				flag := keys.Field(i).Tag.Get("json")
@@ -171,7 +155,7 @@ func Command() *cobra.Command {
 					case reflect.Int:
 						intValue, err := strconv.Atoi(cmd.Flag(flag).Value.String())
 						if err != nil {
-							fmt.Println(err)
+							r.Warn("invalid value for --%s: %v", flag, err)
 							continue
 						}
 						field.SetInt(int64(intValue))
@@ -183,9 +167,6 @@ func Command() *cobra.Command {
 			client := session.Connect(config.Token())
 			response, err := client.GetIndex(index, queryParameters)
 
-			// If GetIndex fails due to a HTTP request error fallback
-			// and attempt to validate the index name argument provided if
-			// there was a typo/spelling error it will suggest similar names
 			if err != nil {
 				if _, ok := err.(sdk.ReqError); ok {
 					corrected, validationErr := validateIndex(index)
@@ -202,13 +183,19 @@ func Command() *cobra.Command {
 				}
 			}
 
-			var viewportOutput interface{}
-			viewportOutput = response.GetData()
+			var viewportOutput interface{} = response.GetData()
 			if opts.Full {
 				viewportOutput = response
 			}
-			ui.Viewport(index, viewportOutput)
 
+			// `browse` is interactive — when JSON mode is requested we emit
+			// the payload as JSON and skip the viewport, so the command is
+			// safely scriptable too.
+			if r.IsJSON() {
+				return r.JSON(viewportOutput)
+			}
+
+			ui.Viewport(index, viewportOutput)
 			return nil
 		},
 	}

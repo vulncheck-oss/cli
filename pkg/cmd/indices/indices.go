@@ -1,9 +1,8 @@
 package indices
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/session"
@@ -22,58 +21,48 @@ func Command() *cobra.Command {
 	return cmd
 }
 
-type ListOptions struct {
-	Json bool
-}
-
 func List() *cobra.Command {
-
-	opts := &ListOptions{
-		Json: false,
-	}
-
 	cmd := &cobra.Command{
 		Use:   "list <search>",
 		Short: i18n.C.ListIndicesShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
+
 			response, err := session.Connect(config.Token()).GetIndices()
 			if err != nil {
 				return err
 			}
+
 			if len(args) > 0 && args[0] != "" {
 				indices := response.GetData()
-				ui.Info(fmt.Sprintf(i18n.C.ListIndicesSearch, len(ui.IndicesRows(indices, args[0])), args[0]))
+				rows := ui.IndicesRows(indices, args[0])
+				if r.IsJSON() {
+					return r.JSON(rows)
+				}
+				r.Info(i18n.C.ListIndicesSearch, len(rows), args[0])
 				return ui.IndicesList(indices, args[0])
 			}
 
-			if !opts.Json {
-				ui.Info(fmt.Sprintf(i18n.C.ListIndicesFull, len(response.GetData())))
+			if r.IsJSON() {
+				return r.JSON(response.GetData())
 			}
 
-			if opts.Json {
-				ui.Json(response.GetData())
-				return nil
-			}
-			if err := ui.IndicesList(response.GetData(), ""); err != nil {
-				return err
-			}
-			return nil
+			r.Info(i18n.C.ListIndicesFull, len(response.GetData()))
+			return ui.IndicesList(response.GetData(), "")
 		},
 	}
 
-	cmd.Flags().BoolVarP(&opts.Json, "json", "j", false, "Output as JSON")
 	return cmd
 }
 
 func Browse() *cobra.Command {
-
 	return &cobra.Command{
 		Use:   "browse <search>",
 		Short: i18n.C.BrowseIndicesShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
 
 			response, err := session.Connect(config.Token()).GetIndices()
-
 			if err != nil {
 				return err
 			}
@@ -87,9 +76,9 @@ func Browse() *cobra.Command {
 				ui.ClearScreen()
 
 				if search != "" {
-					ui.Info(fmt.Sprintf(i18n.C.BrowseIndicesSearch, len(ui.IndicesRows(indices, search)), search))
+					r.Info(i18n.C.BrowseIndicesSearch, len(ui.IndicesRows(indices, search)), search)
 				} else {
-					ui.Info(fmt.Sprintf(i18n.C.BrowseIndicesFull, len(ui.IndicesRows(indices, search))))
+					r.Info(i18n.C.BrowseIndicesFull, len(ui.IndicesRows(indices, search)))
 				}
 
 				selectedIndex, err := ui.IndicesBrowse(indices, search)
@@ -99,7 +88,6 @@ func Browse() *cobra.Command {
 				}
 
 				if selectedIndex == "" {
-					// User quit the browse view
 					return nil
 				}
 
@@ -109,8 +97,6 @@ func Browse() *cobra.Command {
 					return err
 				}
 			}
-
 		},
 	}
-
 }

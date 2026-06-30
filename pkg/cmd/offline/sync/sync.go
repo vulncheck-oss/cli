@@ -7,16 +7,24 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
-	"github.com/vulncheck-oss/cli/pkg/ui"
 )
 
 var specialIndices = []string{"cpecve"}
 
-func Command() *cobra.Command {
+// syncResult is the structured summary emitted in JSON mode at the end of
+// a sync. Agents can rely on .selected for the list of indices the command
+// attempted to sync, and .elapsed_seconds for timing.
+type syncResult struct {
+	Action         string   `json:"action"`
+	Selected       []string `json:"selected,omitempty"`
+	ElapsedSeconds float64  `json:"elapsed_seconds,omitempty"`
+}
 
+func Command() *cobra.Command {
 	var addIndices, removeIndices []string
 	var purge bool
 	var force bool
@@ -27,36 +35,34 @@ func Command() *cobra.Command {
 		Long:    "Sync indices for offline use",
 		Example: "vulncheck offline sync",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
 			choose, _ := cmd.Flags().GetBool("choose")
 
 			response, err := session.Connect(config.Token()).GetIndices()
-
 			if err != nil {
 				return err
 			}
 			indices := response.GetData()
 
-			// Create a map of available indices for quick lookup
 			availableIndices := make(map[string]bool)
 			for _, index := range indices {
 				availableIndices[index.Name] = true
 			}
-
-			// Add special indices to availableIndices
 			for _, specialIndex := range specialIndices {
 				availableIndices[specialIndex] = true
 			}
 
-			// Handle purge flag
 			if purge {
 				if err := cache.PurgeIndices(); err != nil {
 					return fmt.Errorf("failed to purge indices: %w", err)
 				}
-				ui.Info("All cached indices have been purged.")
+				if r.IsJSON() {
+					return r.JSON(syncResult{Action: "purge"})
+				}
+				r.Info("All cached indices have been purged.")
 				return nil
 			}
 
-			// Validate addIndices and removeIndices
 			for _, index := range append(addIndices, removeIndices...) {
 				if !availableIndices[index] {
 					return fmt.Errorf("index '%s' does not exist", index)
@@ -73,14 +79,12 @@ func Command() *cobra.Command {
 				selectedIndices = append(selectedIndices, info.Name)
 			}
 
-			// Add indices
 			for _, index := range addIndices {
 				if !slices.Contains(selectedIndices, index) {
 					selectedIndices = append(selectedIndices, index)
 				}
 			}
 
-			// Remove indices
 			for _, index := range removeIndices {
 				selectedIndices = slices.DeleteFunc(selectedIndices, func(s string) bool {
 					return s == index
@@ -88,9 +92,7 @@ func Command() *cobra.Command {
 			}
 
 			if (len(selectedIndices) == 0 && len(removeIndices) == 0) || choose {
-
 				options := make([]huh.Option[string], len(indices))
-
 				for i, index := range indices {
 					options[i] = huh.Option[string]{
 						Value: index.Name,
@@ -115,13 +117,20 @@ func Command() *cobra.Command {
 				}
 			}
 
-			// RECORD START TIME HERE
 			startTime := time.Now()
 			if err := cache.IndicesSync(selectedIndices, force); err != nil {
 				return err
 			}
-			elapsedTime := time.Since(startTime)
-			ui.Info(fmt.Sprintf("Sync completed in: %s", elapsedTime))
+			elapsed := time.Since(startTime)
+
+			if r.IsJSON() {
+				return r.JSON(syncResult{
+					Action:         "sync",
+					Selected:       selectedIndices,
+					ElapsedSeconds: elapsed.Seconds(),
+				})
+			}
+			r.Info("Sync completed in: %s", elapsed)
 
 			return nil
 		},
@@ -139,7 +148,6 @@ func Command() *cobra.Command {
 // EnsureIndexSync checks if the given index is synced, and if not, prompts the user to sync it.
 // It returns true if the index is available (either already synced or newly synced), and false otherwise.
 func EnsureIndexSync(indices cache.InfoFile, indexType string, fail bool) (bool, error) {
-
 	if indices.GetIndex(indexType) != nil {
 		return true, nil
 	}
@@ -167,7 +175,6 @@ func EnsureIndexSync(indices cache.InfoFile, indexType string, fail bool) (bool,
 		return false, fmt.Errorf("failed to sync index: %w", err)
 	}
 
-	// Refresh indices after syncing
 	indices, err := cache.Indices()
 	if err != nil {
 		return false, err

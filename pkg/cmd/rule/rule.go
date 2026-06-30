@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/session"
@@ -12,22 +13,18 @@ import (
 )
 
 type Options struct {
-	Json  bool
 	Table bool
 }
 
 func Command() *cobra.Command {
-
-	opts := &Options{
-		Json:  false,
-		Table: false,
-	}
+	opts := &Options{}
 
 	cmd := &cobra.Command{
 		Use:     "rule <rule>",
 		Short:   i18n.C.RuleShort,
 		Example: fmt.Sprintf(i18n.C.RuleExample, "snort", "suricata"),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
 			if len(args) != 1 {
 				return ui.Error(i18n.C.RuleErrorRuleNameRequired)
 			}
@@ -39,27 +36,19 @@ func Command() *cobra.Command {
 
 			rulesList := strings.Split(response, "\n")
 
-			if opts.Json {
-				ui.Json(rulesList)
-				return nil
+			if r.IsJSON() {
+				return r.JSON(rulesList)
 			}
 
 			if opts.Table {
-				if err := ui.SingleColumnResults(rulesList, "Results"); err != nil {
-					return err
-				}
-
-				return nil
+				return ui.SingleColumnResults(rulesList, "Results")
 			}
 
-			// default output
-			fmt.Println(response)
-
+			r.Println(response)
 			return nil
 		},
 	}
 
-	cmd.Flags().BoolVarP(&opts.Json, "json", "j", false, "Output as JSON")
 	cmd.Flags().BoolVarP(&opts.Table, "table", "t", false, "Output as Table")
 
 	return cmd

@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/sdk"
@@ -30,16 +31,13 @@ func Command() *cobra.Command {
 	return cmd
 }
 
-type ListOptions struct {
-	Json bool
-}
-
 func Create() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <label>",
 		Short: i18n.C.CreateTokenShort,
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
 			if len(args) == 0 {
 				return fmt.Errorf("%s", i18n.C.CreateTokenLabelRequired)
 			}
@@ -48,7 +46,12 @@ func Create() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			ui.Success(fmt.Sprintf(i18n.C.CreateTokenSuccess, args[0], response.Data.Token))
+
+			if r.IsJSON() {
+				return r.JSON(response.Data)
+			}
+
+			r.Success(i18n.C.CreateTokenSuccess, args[0], response.Data.Token)
 			return nil
 		},
 	}
@@ -61,6 +64,7 @@ func Remove() *cobra.Command {
 		Short: i18n.C.RemoveTokenShort,
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
 			if len(args) == 0 {
 				return fmt.Errorf("%s", i18n.C.RemoveTokenIDRequired)
 			}
@@ -69,7 +73,11 @@ func Remove() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			ui.Success(fmt.Sprintf(i18n.C.RemoveTokenSuccess, args[0]))
+
+			if r.IsJSON() {
+				return r.JSON(map[string]any{"id": args[0], "removed": true})
+			}
+			r.Success(i18n.C.RemoveTokenSuccess, args[0])
 			return nil
 		},
 	}
@@ -77,33 +85,25 @@ func Remove() *cobra.Command {
 }
 
 func List() *cobra.Command {
-
-	opts := &ListOptions{
-		Json: false,
-	}
-
 	cmd := &cobra.Command{
 		Use:   "list <search>",
 		Short: i18n.C.ListTokensShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
 			response, err := session.Connect(config.Token()).GetTokens()
 			if err != nil {
 				return err
 			}
-			ui.Info(fmt.Sprintf(i18n.C.ListTokensFull, len(response.GetData())))
-			if opts.Json {
-				ui.Json(response.GetData())
-				return nil
+
+			if r.IsJSON() {
+				return r.JSON(response.GetData())
 			}
 
-			if err := ui.TokensList(response.GetData()); err != nil {
-				return err
-			}
-			return nil
+			r.Info(i18n.C.ListTokensFull, len(response.GetData()))
+			return ui.TokensList(response.GetData())
 		},
 	}
 
-	cmd.Flags().BoolVarP(&opts.Json, "json", "j", false, "Output as JSON")
 	return cmd
 }
 
@@ -121,6 +121,7 @@ func Browse() *cobra.Command {
 		Use:   "browse",
 		Short: i18n.C.BrowseTokensShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
 
 			for {
 				response, err := session.Connect(config.Token()).GetTokens()
@@ -128,7 +129,7 @@ func Browse() *cobra.Command {
 					return err
 				}
 				ui.ClearScreen()
-				ui.Info(fmt.Sprintf(i18n.C.BrowseTokens, len(response.GetData())))
+				r.Info(i18n.C.BrowseTokens, len(response.GetData()))
 				tokens := response.GetData()
 				selectedID, err := ui.TokensBrowse(tokens)
 				if err != nil {
@@ -136,7 +137,6 @@ func Browse() *cobra.Command {
 				}
 
 				if selectedID == "" {
-					// User quit the browse view
 					return nil
 				}
 
@@ -152,12 +152,10 @@ func Browse() *cobra.Command {
 					if err := BrowseActions(*token, tokens); err != nil {
 						return err
 					}
-					// If BrowseActions returns without error, continue the loop to show the token list again
 				} else {
 					return fmt.Errorf("selected token not found")
 				}
 			}
-
 		},
 	}
 
@@ -167,7 +165,6 @@ func Browse() *cobra.Command {
 func BrowseCreate() error {
 	var label string
 
-	// Prompt user for token label
 	form := huh.NewForm(
 		huh.NewGroup(
 			huh.NewInput().
@@ -185,13 +182,11 @@ func BrowseCreate() error {
 		return fmt.Errorf("%s", i18n.C.CreateTokenLabelRequired)
 	}
 
-	// Create the token
 	response, err := session.Connect(config.Token()).CreateToken(label)
 	if err != nil {
 		return err
 	}
 
-	// Display the created token
 	ui.ClearScreen()
 	boxStyle := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder()).
@@ -211,14 +206,12 @@ func BrowseCreate() error {
 
 	fmt.Println(boxStyle.Render(content))
 	fmt.Println("\nPress Enter to continue...")
-	_, _ = fmt.Scanln() // Wait for user to press Enter
+	_, _ = fmt.Scanln()
 
 	return nil
 }
 
 func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
-
-	// Define styles
 	boxStyle := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("#6667ab")).
@@ -249,7 +242,6 @@ func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
 		valueStyle.Render(token.GetHumanUpdatedAt()),
 	)
 
-	// Calculate the widest label for alignment
 	labels := []string{"ID:", "Source:", "Location:", "Last Activity:"}
 	maxLabelWidth := 0
 	for _, label := range labels {
@@ -258,11 +250,9 @@ func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
 		}
 	}
 
-	// Set tab stop for alignment
 	var buf bytes.Buffer
 	tabWriter := tabwriter.NewWriter(&buf, maxLabelWidth, 0, 1, ' ', 0)
 
-	// Write content to tabWriter
 	if _, err := fmt.Fprint(tabWriter, content); err != nil {
 		return fmt.Errorf("failed to write to tabWriter: %w", err)
 	}
@@ -270,10 +260,9 @@ func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
 		return fmt.Errorf("failed to flush tabWriter: %w", err)
 	}
 
-	// Render the box with all content
 	ui.ClearScreen()
 	fmt.Println(boxStyle.Render(buf.String()))
-	fmt.Println() // Add a newline after the box
+	fmt.Println()
 
 	var action string
 	form := huh.NewForm(
@@ -301,7 +290,6 @@ func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
 			return err
 		}
 		if confirmed {
-			// Proceed with token deletion
 			_, err := session.Connect(config.Token()).DeleteToken(token.ID)
 			if err != nil {
 				return err

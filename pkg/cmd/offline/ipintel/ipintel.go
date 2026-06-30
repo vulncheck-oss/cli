@@ -2,21 +2,19 @@ package ipintel
 
 import (
 	"fmt"
+	"slices"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
-	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/db"
-	"github.com/vulncheck-oss/cli/pkg/ui"
 	"github.com/vulncheck-oss/cli/pkg/utils"
-	"slices"
 )
 
 func Command() *cobra.Command {
 	var country, asn, cidr, countryCode, hostname, id string
-
-	var jsonOutput bool
 
 	validTimeframes := []string{"3d", "10d", "30d"}
 
@@ -35,8 +33,8 @@ func Command() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
 
-			// we need to error if zero flags were specified
 			if country == "" && asn == "" && cidr == "" && countryCode == "" && hostname == "" && id == "" {
 				return fmt.Errorf("requires at least one filter flag\n\nUsage:\n  %s", cmd.UseLine())
 			}
@@ -56,19 +54,17 @@ func Command() *cobra.Command {
 			}
 
 			indices, err = cache.Indices()
-
 			if err != nil {
 				return err
 			}
 
 			index := indices.GetIndex(fmt.Sprintf("ipintel-%s", args[0]))
-
 			if index == nil {
 				return fmt.Errorf("index ipintel-%s is required for this command, and is not cached", args[0])
 			}
 
-			if !jsonOutput && !config.IsCI() {
-				ui.Info(fmt.Sprintf("Searching index %s, last updated on %s", index.Name, utils.ParseDate(index.LastUpdated)))
+			if !r.IsJSON() {
+				r.Info("Searching index %s, last updated on %s", index.Name, utils.ParseDate(index.LastUpdated))
 			}
 
 			results, stats, err := db.IPIntelSearch(index.Name, country, asn, cidr, countryCode, hostname, id)
@@ -76,20 +72,19 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			if jsonOutput || config.IsCI() {
-				ui.Json(results)
-				return nil
+			if r.IsJSON() {
+				return r.JSON(results)
 			}
 
-			ui.Stat("Results found", fmt.Sprintf("%d", len(results)))
-			ui.Stat("Search duration", stats.Duration.String())
+			r.Stat("Results found", fmt.Sprintf("%d", len(results)))
+			r.Stat("Search duration", stats.Duration.String())
 
 			for i, result := range results {
 				if i >= 10 {
 					break
 				}
-				ui.Info(fmt.Sprintf("%2d. IP: %-15s Country: %-15s ASN: %-10s ID: %s",
-					i+1, result.IP, result.Country, result.ASN, result.Type.ID))
+				r.Info("%2d. IP: %-15s Country: %-15s ASN: %-10s ID: %s",
+					i+1, result.IP, result.Country, result.ASN, result.Type.ID)
 			}
 
 			return nil
@@ -102,7 +97,6 @@ func Command() *cobra.Command {
 	cmd.Flags().StringVar(&countryCode, "country-code", "", "Filter by country code")
 	cmd.Flags().StringVar(&hostname, "hostname", "", "Filter by hostname")
 	cmd.Flags().StringVar(&id, "id", "", "Filter by ID")
-	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Output results in JSON format")
 
 	return cmd
 }
@@ -129,20 +123,17 @@ func AliasCommands() []*cobra.Command {
 			RunE: func(cmd *cobra.Command, args []string) error {
 				mainCmd := Command()
 
-				// Transfer all flags from the alias command to the main command
 				cmd.Flags().VisitAll(func(f *pflag.Flag) {
 					if f.Changed {
 						_ = mainCmd.Flags().Set(f.Name, f.Value.String())
 					}
 				})
 
-				// Set the timeframe argument
 				mainCmd.SetArgs(append([]string{shortTf}, args...))
 				return mainCmd.Execute()
 			},
 		}
 
-		// Copy flags from the main command
 		mainCmd := Command()
 		aliasCmd.Flags().AddFlagSet(mainCmd.Flags())
 

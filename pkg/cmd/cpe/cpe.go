@@ -4,27 +4,20 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/ui"
 )
 
-type Options struct {
-	Json bool
-}
-
 func Command() *cobra.Command {
-
-	opts := &Options{
-		Json: false,
-	}
-
 	cmd := &cobra.Command{
 		Use:     "cpe <scheme>",
 		Short:   i18n.C.CpeShort,
 		Example: fmt.Sprintf(i18n.C.CpeExample, "cpe:2.3:a:sap:businessobjects_business_intelligence_platform:4.2:-:*"),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
 			if len(args) != 1 {
 				return ui.Error(i18n.C.CpeErrorSchemeRequired)
 			}
@@ -33,25 +26,25 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			if opts.Json {
-				ui.Json(response.GetData())
-				return nil
-			}
 			cves := response.GetData()
+			if r.IsJSON() {
+				return r.JSON(cves)
+			}
+
 			if err := ui.CpeMeta(response.CpeMeta()); err != nil {
 				return err
 			}
 			if len(cves) == 0 {
-				ui.Info(fmt.Sprintf(i18n.C.CpeNoCves, args[0]))
+				r.Info(i18n.C.CpeNoCves, args[0])
 				return nil
 			}
-			ui.Info(fmt.Sprintf(i18n.C.CpeCvesFound, len(cves), args[0]))
-			ui.Json(cves)
-			return nil
+			r.Info(i18n.C.CpeCvesFound, len(cves), args[0])
+			// In text mode the existing UI dumps the CVE list as pretty JSON.
+			// Preserve that behaviour by routing through the renderer's
+			// payload stream so it remains stdout-pure.
+			return r.JSON(cves)
 		},
 	}
-
-	cmd.Flags().BoolVarP(&opts.Json, "json", "j", false, "Output as JSON")
 
 	return cmd
 }

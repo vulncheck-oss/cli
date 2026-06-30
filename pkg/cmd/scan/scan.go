@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/bill"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 
@@ -17,7 +18,6 @@ import (
 )
 
 type Options struct {
-	Json        bool
 	File        bool
 	FileName    string
 	SbomFile    string
@@ -32,15 +32,7 @@ type Options struct {
 
 func Command() *cobra.Command {
 	opts := &Options{
-		Json:        false,
-		File:        false,
-		FileName:    "output.json",
-		SbomFile:    "",
-		SbomInput:   "",
-		SbomOnly:    false,
-		Cpes:        false,
-		DisableUI:   false,
-		WarnOnIndex: false,
+		FileName: "output.json",
 	}
 
 	cmd := &cobra.Command{
@@ -48,6 +40,8 @@ func Command() *cobra.Command {
 		Short:   i18n.C.ScanShort,
 		Example: i18n.C.ScanExample,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
+
 			if opts.SbomInput == "" && len(args) < 1 {
 				return ui.Error(i18n.C.ScanErrorDirectoryRequired)
 			}
@@ -66,7 +60,7 @@ func Command() *cobra.Command {
 			// user how to populate them.
 			metaAvailable := true
 
-			var output models.ScanResult
+			var result models.ScanResult
 
 			startTime := time.Now()
 
@@ -173,19 +167,14 @@ func Command() *cobra.Command {
 								}
 								purlVulns = results
 								t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEndOffline, len(purlVulns), len(purls))
-								// we need to mege vulns and cpeVulns here
 								vulns = append(cpeVulns, purlVulns...)
-								output = models.ScanResult{
+								result = models.ScanResult{
 									Vulnerabilities: vulns,
 								}
 								return nil
 							},
 						},
 					}...)
-					/*
-						1. check if the vulncheck-nvd2 index is cached
-						2. populate vulns with metadata
-					*/
 					if opts.OfflineMeta {
 						tasks = append(tasks, taskin.Tasks{
 							{
@@ -203,7 +192,7 @@ func Command() *cobra.Command {
 									} else {
 										t.Title = i18n.C.ScanVulnOfflineMetaUnavailable
 									}
-									output = models.ScanResult{
+									result = models.ScanResult{
 										Vulnerabilities: vulns,
 									}
 									return nil
@@ -226,7 +215,6 @@ func Command() *cobra.Command {
 								}
 								purlVulns = results
 								t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(purlVulns), len(purls))
-								// we will combine cpeVUlns when cpe online scanning is available
 								vulns = purlVulns
 								return nil
 							},
@@ -240,7 +228,7 @@ func Command() *cobra.Command {
 								}
 								vulns = results
 								t.Title = i18n.C.ScanVulnMetaEnd
-								output = models.ScanResult{
+								result = models.ScanResult{
 									Vulnerabilities: vulns,
 								}
 								return nil
@@ -267,7 +255,7 @@ func Command() *cobra.Command {
 				tasks = append(tasks, taskin.Task{
 					Title: fmt.Sprintf("Saving results to %s", opts.FileName),
 					Task: func(t *taskin.Task) error {
-						if err := ui.JsonFile(output, opts.FileName); err != nil {
+						if err := ui.JsonFile(result, opts.FileName); err != nil {
 							return err
 						}
 						t.Title = fmt.Sprintf("Results saved to %s", opts.FileName)
@@ -276,8 +264,13 @@ func Command() *cobra.Command {
 				})
 			}
 
+			// Progress UI is suppressed in JSON mode (would corrupt stdout)
+			// and whenever the caller explicitly asks for --disable-ui.
+			// Headless detection (non-TTY, NO_COLOR, CI) lands in phase 4.
+			disableUI := opts.DisableUI || r.IsJSON()
+
 			runners := taskin.New(tasks, taskin.Config{
-				DisableUI: opts.DisableUI,
+				DisableUI: disableUI,
 				ProgressOptions: []progress.Option{
 					progress.WithScaledGradient("#6667AB", "#34D399"),
 					progress.WithWidth(20),
@@ -289,45 +282,36 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			// Only display scan results if we're not in SbomOnly mode
-			if !opts.SbomOnly {
-				if vulns != nil {
-					if len(vulns) == 0 {
-						ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
-					}
-					if len(vulns) > 0 {
-						if opts.Json {
-							ui.Json(output)
-							return nil
-						} else {
-							// Hide score columns whenever we don't have nvd2
-							// metadata - either we explicitly skipped it
-							// (--offline without --offline-meta) or the user
-							// asked for it but the index wasn't cached.
-							hideScores := opts.Offline && (!opts.OfflineMeta || !metaAvailable)
-							if err := ui.ScanResults(output.Vulnerabilities, hideScores); err != nil {
-								return err
-							}
-							if opts.OfflineMeta && !metaAvailable {
-								ui.Info(i18n.C.ScanVulnOfflineMetaUnavailable)
-							}
-						}
-					}
-				} else {
-					ui.Info(fmt.Sprintf(i18n.C.ScanNoCvesFound, len(purls)))
+			if opts.SbomOnly {
+				if opts.SbomFile != "" {
+					r.Info("SBOM generation completed successfully")
 				}
-
-				elapsedTime := time.Since(startTime)
-				ui.Info(fmt.Sprintf(i18n.C.ScanBenchmark, elapsedTime))
-			} else if opts.SbomFile != "" {
-				ui.Info("SBOM generation completed successfully")
+				return nil
 			}
 
+			if r.IsJSON() {
+				return r.JSON(result)
+			}
+
+			if len(vulns) == 0 {
+				r.Info(i18n.C.ScanNoCvesFound, len(purls))
+			} else {
+				// Hide score columns whenever we don't have nvd2 metadata
+				// (either explicitly skipped, or the index wasn't cached).
+				hideScores := opts.Offline && (!opts.OfflineMeta || !metaAvailable)
+				if err := ui.ScanResults(result.Vulnerabilities, hideScores); err != nil {
+					return err
+				}
+				if opts.OfflineMeta && !metaAvailable {
+					r.Info("%s", i18n.C.ScanVulnOfflineMetaUnavailable)
+				}
+			}
+
+			r.Info(i18n.C.ScanBenchmark, time.Since(startTime))
 			return nil
 		},
 	}
 
-	cmd.Flags().BoolVarP(&opts.Json, "json", "j", false, i18n.C.FlagOutputJson)
 	cmd.Flags().BoolVarP(&opts.File, "file", "f", false, i18n.C.FlagSaveResults)
 	cmd.Flags().StringVarP(&opts.FileName, "file-name", "n", "output.json", i18n.C.FlagSpecifyFile)
 	cmd.Flags().StringVarP(&opts.SbomFile, "sbom-output-file", "o", "", i18n.C.FlagSpecifySbomFile)
@@ -337,7 +321,7 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVar(&opts.Offline, "offline", false, "Use offline mode to find CVEs - requires indices to be cached")
 	cmd.Flags().BoolVar(&opts.OfflineMeta, "offline-meta", false, "Use with offline mode to populate CVE metadata - requires the vulncheck-nvd2 index to be cached")
 	cmd.Flags().BoolVar(&opts.WarnOnIndex, "warn-on-index", false, "When an index is not present locally, show a warning instead of shutting down")
-	cmd.Flags().BoolVar(&opts.DisableUI, "disable-ui", false, "Disable interactive UI elements")
+	cmd.Flags().BoolVar(&opts.DisableUI, "disable-ui", false, "Disable interactive UI elements (progress bars, spinners)")
 
 	return cmd
 }

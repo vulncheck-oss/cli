@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/cmd/upgrade"
 
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline"
@@ -49,16 +50,26 @@ func NewCmdRoot() *cobra.Command {
 		Short: "VulnCheck CLI.",
 		Long:  i18n.C.RootLong,
 		Example: heredoc.Doc(`
-		$ vulncheck indices list
-		$ vulncheck index abb
-		$ vulncheck backup abb
-	`),
+			$ vulncheck indices list
+			$ vulncheck index abb
+			$ vulncheck backup abb
+		`),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			environment.Init()
 			config.Init()
 
+			// Build the Renderer from global flags and stash it on the
+			// command's context so every subcommand can pick it up via
+			// output.FromCmd(cmd).
+			r := rendererFromCmd(cmd)
+			cmd.SetContext(output.WithContext(cmd.Context(), r))
+
 			if session.IsAuthCheckEnabled(cmd) && cmd.Parent().Name() != "completion" && !session.CheckAuth() {
-				fmt.Println(authHelp())
+				// Auth help is human guidance, not payload — route to stderr
+				// (or suppress when --json so callers see only the JSON error).
+				if !r.IsJSON() {
+					fmt.Fprintln(r.Stderr(), authHelp())
+				}
 				return ui.Error(i18n.C.ErrorNoToken)
 			}
 
@@ -70,6 +81,9 @@ func NewCmdRoot() *cobra.Command {
 	cmd.SilenceErrors = true
 
 	cmd.PersistentFlags().Bool("help", false, "Show help for command")
+	cmd.PersistentFlags().Bool("json", false, "Emit output as JSON on stdout; info/progress are routed to stderr")
+	cmd.PersistentFlags().Bool("quiet", false, "Suppress informational output (errors and payloads still render)")
+	cmd.PersistentFlags().Bool("no-color", false, "Disable ANSI colour output (also honours NO_COLOR env)")
 
 	cmd.AddGroup(&cobra.Group{
 		ID:    "core",
@@ -95,14 +109,66 @@ func NewCmdRoot() *cobra.Command {
 	return cmd
 }
 
-func Execute() {
-	if err := NewCmdRoot().Execute(); err != nil {
-		if errors.Is(err, sdk.ErrorUnauthorized) {
-			fmt.Println(ui.Danger(i18n.C.ErrorUnauthorized))
-		} else {
-			fmt.Println(ui.Danger(err.Error()))
-		}
+// rendererFromCmd resolves the Renderer to use for a given command
+// invocation. It consults the persistent flags (--json / --quiet / --no-color)
+// and falls back to environment-derived defaults (NO_COLOR, TERM=dumb,
+// TTY detection on stdout).
+func rendererFromCmd(cmd *cobra.Command) *output.Renderer {
+	jsonOut, _ := cmd.Flags().GetBool("json")
+	quiet, _ := cmd.Flags().GetBool("quiet")
+	noColor, _ := cmd.Flags().GetBool("no-color")
 
-		os.Exit(1)
+	mode := output.ModeText
+	if jsonOut {
+		mode = output.ModeJSON
 	}
+
+	color := output.ColorEnabled()
+	if noColor {
+		color = false
+	}
+
+	return output.New(output.Options{
+		Mode:  mode,
+		Color: color,
+		Quiet: quiet,
+	})
+}
+
+// errorEnvelope is the structured error shape emitted in JSON mode.
+// Phase 3 will expand this with stable error codes; for now the shape is
+// fixed so agents can already key off `.error.message`.
+type errorEnvelope struct {
+	Error errorBody `json:"error"`
+}
+
+type errorBody struct {
+	Message string `json:"message"`
+}
+
+func Execute() {
+	root := NewCmdRoot()
+	err := root.Execute()
+	if err == nil {
+		return
+	}
+
+	// Flags have been parsed by now even on error paths — rebuild a Renderer
+	// from the root's persistent flags so we render the error in the right
+	// shape. (PersistentPreRunE may not have run for every error path, e.g.
+	// flag-parsing failures, so we don't rely on context.)
+	r := rendererFromCmd(root)
+
+	msg := err.Error()
+	if errors.Is(err, sdk.ErrorUnauthorized) {
+		msg = i18n.C.ErrorUnauthorized
+	}
+
+	if r.IsJSON() {
+		_ = r.JSON(errorEnvelope{Error: errorBody{Message: msg}})
+	} else {
+		fmt.Fprintln(r.Stderr(), ui.Danger(msg).Error())
+	}
+
+	os.Exit(1)
 }

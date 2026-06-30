@@ -5,10 +5,10 @@ import (
 
 	"github.com/package-url/packageurl-go"
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/packages"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
-	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/db"
 	"github.com/vulncheck-oss/cli/pkg/sdk"
 	"github.com/vulncheck-oss/cli/pkg/ui"
@@ -16,9 +16,6 @@ import (
 )
 
 func Command() *cobra.Command {
-
-	var jsonOutput bool
-
 	cmd := &cobra.Command{
 		Use:     "purl <scheme>",
 		Short:   "Offline PURL lookup",
@@ -26,9 +23,9 @@ func Command() *cobra.Command {
 		Example: "vulncheck offline purl \"pkg:hackage/aeson@0.3.2.8\"",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
 
 			instance, err := packageurl.FromString(args[0])
-
 			if err != nil {
 				return err
 			}
@@ -36,12 +33,6 @@ func Command() *cobra.Command {
 			if packages.IsOS(instance) {
 				return fmt.Errorf("offline PURL lookups for this operating system are not supported yet - please contact support@vulncheck.com")
 			}
-
-			/*
-				if !packages.ISOSSupported(instance) {
-					return fmt.Errorf("offline PURL lookups for this operating system is not supported yet")
-				}
-			*/
 
 			indices, err := cache.Indices()
 			if err != nil {
@@ -60,18 +51,17 @@ func Command() *cobra.Command {
 			}
 
 			indices, err = cache.Indices()
-
 			if err != nil {
 				return err
 			}
 
 			index := indices.GetIndex(indexName)
 
-			if !jsonOutput && !config.IsCI() {
+			if !r.IsJSON() {
 				if err := ui.PurlInstance(instance); err != nil {
 					return err
 				}
-				ui.Info(fmt.Sprintf("Searching index %s, last updated on %s", index.Name, utils.ParseDate(index.LastUpdated)))
+				r.Info("Searching index %s, last updated on %s", index.Name, utils.ParseDate(index.LastUpdated))
 			}
 
 			results, stats, err := db.PURLSearch(index.Name, instance)
@@ -79,22 +69,17 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			if jsonOutput || config.IsCI() {
-
-				// Create a combined structure for JSON output
+			if r.IsJSON() {
 				combinedOutput := struct {
 					Instance        packageurl.PackageURL   `json:"instance"`
 					Vulnerabilities []sdk.PurlVulnerability `json:"vulnerabilities"`
 				}{
 					Instance: instance,
 				}
-
-				// Collect all vulnerabilities
 				for _, result := range results {
 					combinedOutput.Vulnerabilities = append(combinedOutput.Vulnerabilities, result.Vulnerabilities...)
 				}
-				ui.Json(combinedOutput)
-				return nil
+				return r.JSON(combinedOutput)
 			}
 
 			vulnsFound := 0
@@ -102,12 +87,11 @@ func Command() *cobra.Command {
 				vulnsFound += len(result.Vulnerabilities)
 			}
 
-			ui.Stat("Results found", fmt.Sprintf("%d", len(results)))
-			ui.Stat("Vulnerabilities found", fmt.Sprintf("%d", vulnsFound))
-			ui.Stat("Search duration", stats.Duration.String())
+			r.Stat("Results found", fmt.Sprintf("%d", len(results)))
+			r.Stat("Vulnerabilities found", fmt.Sprintf("%d", vulnsFound))
+			r.Stat("Search duration", stats.Duration.String())
 
 			for _, result := range results {
-
 				if err := ui.PurlVulns(result.Vulnerabilities); err != nil {
 					return err
 				}
@@ -116,8 +100,6 @@ func Command() *cobra.Command {
 			return nil
 		},
 	}
-
-	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Output results in JSON format")
 
 	return cmd
 }

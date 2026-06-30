@@ -5,6 +5,7 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/sdk"
@@ -22,7 +23,6 @@ func validateIndex(index string) (string, error) {
 		return "", err
 	}
 
-	// Create a map of indices to compare against
 	var indexNames []string
 	available := make(map[string]bool)
 	for _, idx := range indicesResponse.GetData() {
@@ -39,8 +39,6 @@ func validateIndex(index string) (string, error) {
 		return "", fmt.Errorf("index '%s' does not exist", index)
 	}
 
-	// If the index is not present in the map but close matches exist, present
-	// an interactive select so the user can choose the intended index
 	options := make([]huh.Option[string], len(suggestions))
 	for i, s := range suggestions {
 		options[i] = huh.NewOption(s, s)
@@ -62,25 +60,17 @@ func validateIndex(index string) (string, error) {
 	return selected, nil
 }
 
-type UrlOptions struct {
-	Json bool
-}
-
 func Command() *cobra.Command {
-
 	cmd := &cobra.Command{
 		Use:   "backup <command>",
 		Short: i18n.C.BackupShort,
-	}
-
-	opts := &UrlOptions{
-		Json: false,
 	}
 
 	cmdUrl := &cobra.Command{
 		Use:   "url <index>",
 		Short: i18n.C.BackupUrlShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
 			if len(args) != 1 {
 				return ui.Error("index name is required")
 			}
@@ -89,9 +79,6 @@ func Command() *cobra.Command {
 			client := session.Connect(config.Token())
 			response, err := client.GetIndexBackup(index)
 
-			// If GetIndexBackup fails due to a HTTP request error fallback
-			// and attempt to validate the index name argument provided if
-			// there was a typo/spelling error it will suggest similar names
 			if err != nil {
 				if _, ok := err.(sdk.ReqError); ok {
 					corrected, validationErr := validateIndex(index)
@@ -107,24 +94,24 @@ func Command() *cobra.Command {
 				}
 			}
 
-			if opts.Json {
-				ui.Json(response.GetData()[0])
-				return nil
+			data := response.GetData()[0]
+			if r.IsJSON() {
+				return r.JSON(data)
 			}
 
-			ui.Stat("Filename", response.GetData()[0].Filename)
-			ui.Stat("SHA256", response.GetData()[0].Sha256)
-			ui.Stat("Date Added", response.GetData()[0].DateAdded)
-			ui.Stat("URL", response.GetData()[0].URL)
+			r.Stat("Filename", data.Filename)
+			r.Stat("SHA256", data.Sha256)
+			r.Stat("Date Added", data.DateAdded)
+			r.Stat("URL", data.URL)
 			return nil
 		},
 	}
-	cmdUrl.Flags().BoolVarP(&opts.Json, "json", "j", false, "Output as JSON")
 
 	cmdDownload := &cobra.Command{
 		Use:   "download <index>",
 		Short: i18n.C.BackupDownloadShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
 			if len(args) != 1 {
 				return ui.Error(i18n.C.IndexErrorRequired)
 			}
@@ -133,9 +120,6 @@ func Command() *cobra.Command {
 			client := session.Connect(config.Token())
 			response, err := client.GetIndexBackup(index)
 
-			// If GetIndexBackup fails due to a HTTP request error fallback
-			// and attempt to validate the index name argument provided if
-			// there was a typo/spelling error it will suggest similar names
 			if err != nil {
 				if _, ok := err.(sdk.ReqError); ok {
 					corrected, validationErr := validateIndex(index)
@@ -159,12 +143,20 @@ func Command() *cobra.Command {
 
 			date := utils.ParseDate(response.GetData()[0].DateAdded)
 
-			ui.Info(fmt.Sprintf(i18n.C.BackupDownloadInfo, index, date))
-			ui.Info(fmt.Sprintf(i18n.C.BackupDownloadProgress, file))
+			r.Info(i18n.C.BackupDownloadInfo, index, date)
+			r.Info(i18n.C.BackupDownloadProgress, file)
 			if err := ui.Download(response.GetData()[0].URL, file); err != nil {
 				return err
 			}
-			ui.Success(i18n.C.BackupDownloadComplete)
+			if r.IsJSON() {
+				return r.JSON(map[string]any{
+					"index":    index,
+					"file":     file,
+					"sha256":   response.GetData()[0].Sha256,
+					"complete": true,
+				})
+			}
+			r.Success("%s", i18n.C.BackupDownloadComplete)
 			return nil
 		},
 	}
