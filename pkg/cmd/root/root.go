@@ -82,7 +82,7 @@ func NewCmdRoot() *cobra.Command {
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
 
-	cmd.PersistentFlags().Bool("help", false, "Show help for command")
+	cmd.PersistentFlags().BoolP("help", "h", false, "Show help for command")
 	cmd.PersistentFlags().Bool("json", false, "Emit output as JSON on stdout; info/progress are routed to stderr")
 	cmd.PersistentFlags().Bool("quiet", false, "Suppress informational output (errors and payloads still render)")
 	cmd.PersistentFlags().BoolP("verbose", "v", false, "Emit extra debug output to stderr")

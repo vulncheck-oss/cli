@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/vulncheck-oss/cli/internal/output"
+	"github.com/vulncheck-oss/cli/internal/tasks"
 	"github.com/vulncheck-oss/cli/pkg/bill"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 
@@ -65,10 +66,10 @@ func Command() *cobra.Command {
 
 			startTime := time.Now()
 
-			tasks := taskin.Tasks{}
+			scanTasks := taskin.Tasks{}
 
 			if opts.SbomInput != "" {
-				tasks = append(tasks, taskin.Task{
+				scanTasks = append(scanTasks, taskin.Task{
 					Title: fmt.Sprintf("Loading SBOM from %s", opts.SbomInput),
 					Task: func(t *taskin.Task) error {
 						var err error
@@ -81,7 +82,7 @@ func Command() *cobra.Command {
 					},
 				})
 			} else {
-				tasks = append(tasks, taskin.Task{
+				scanTasks = append(scanTasks, taskin.Task{
 					Title: i18n.C.ScanSbomStart,
 					Task: func(t *taskin.Task) error {
 						var err error
@@ -96,7 +97,7 @@ func Command() *cobra.Command {
 			}
 
 			if !opts.SbomOnly {
-				tasks = append(tasks, taskin.Tasks{
+				scanTasks = append(scanTasks, taskin.Tasks{
 					{
 						Title: i18n.C.ScanExtractPurlStart,
 						Task: func(t *taskin.Task) error {
@@ -112,7 +113,7 @@ func Command() *cobra.Command {
 				}
 
 				if opts.Cpes {
-					tasks = append(tasks, taskin.Tasks{
+					scanTasks = append(scanTasks, taskin.Tasks{
 						{
 							Title: i18n.C.ScanExtractCpeStart,
 							Task: func(t *taskin.Task) error {
@@ -126,7 +127,7 @@ func Command() *cobra.Command {
 
 				if opts.Offline {
 					if opts.Cpes {
-						tasks = append(tasks, taskin.Tasks{
+						scanTasks = append(scanTasks, taskin.Tasks{
 							{
 								Title: i18n.C.ScanScanCpeStartOffline,
 								Task: func(t *taskin.Task) error {
@@ -149,7 +150,7 @@ func Command() *cobra.Command {
 							},
 						}...)
 					}
-					tasks = append(tasks, taskin.Tasks{
+					scanTasks = append(scanTasks, taskin.Tasks{
 						{
 							Title: i18n.C.ScanScanPurlStartOffline,
 							Task: func(t *taskin.Task) error {
@@ -177,7 +178,7 @@ func Command() *cobra.Command {
 						},
 					}...)
 					if opts.OfflineMeta {
-						tasks = append(tasks, taskin.Tasks{
+						scanTasks = append(scanTasks, taskin.Tasks{
 							{
 								Title: i18n.C.ScanVulnOfflineMetaStart,
 								Task: func(t *taskin.Task) error {
@@ -202,7 +203,7 @@ func Command() *cobra.Command {
 						}...)
 					}
 				} else {
-					tasks = append(tasks, taskin.Tasks{
+					scanTasks = append(scanTasks, taskin.Tasks{
 						{
 							Title: i18n.C.ScanScanPurlStart,
 							Task: func(t *taskin.Task) error {
@@ -240,7 +241,7 @@ func Command() *cobra.Command {
 			}
 
 			if opts.SbomFile != "" {
-				tasks = append(tasks, taskin.Task{
+				scanTasks = append(scanTasks, taskin.Task{
 					Title: fmt.Sprintf("Saving SBOM to %s", opts.SbomFile),
 					Task: func(t *taskin.Task) error {
 						if err := bill.SaveSBOM(sbm, opts.SbomFile); err != nil {
@@ -253,7 +254,7 @@ func Command() *cobra.Command {
 			}
 
 			if !opts.SbomOnly && opts.File {
-				tasks = append(tasks, taskin.Task{
+				scanTasks = append(scanTasks, taskin.Task{
 					Title: fmt.Sprintf("Saving results to %s", opts.FileName),
 					Task: func(t *taskin.Task) error {
 						if err := ui.JsonFile(result, opts.FileName); err != nil {
@@ -267,20 +268,25 @@ func Command() *cobra.Command {
 
 			// Progress UI is suppressed in JSON mode (would corrupt stdout)
 			// and whenever the caller explicitly asks for --disable-ui.
-			// Headless detection (non-TTY, NO_COLOR, CI) lands in phase 4.
-			disableUI := opts.DisableUI || r.IsJSON()
+			// taskin's own DisableUI still writes status to stdout, so we
+			// bypass its runner entirely in headless mode (see internal/tasks).
+			disableUI := opts.DisableUI || r.IsJSON() || !r.Interactive()
 
-			runners := taskin.New(tasks, taskin.Config{
-				DisableUI: disableUI,
-				ProgressOptions: []progress.Option{
-					progress.WithScaledGradient("#6667AB", "#34D399"),
-					progress.WithWidth(20),
-					progress.WithoutPercentage(),
-				},
-			})
-
-			if err := runners.Run(); err != nil {
-				return err
+			if disableUI {
+				if err := tasks.RunHeadless(scanTasks, nil); err != nil {
+					return err
+				}
+			} else {
+				runners := taskin.New(scanTasks, taskin.Config{
+					ProgressOptions: []progress.Option{
+						progress.WithScaledGradient("#6667AB", "#34D399"),
+						progress.WithWidth(20),
+						progress.WithoutPercentage(),
+					},
+				})
+				if err := runners.Run(); err != nil {
+					return err
+				}
 			}
 
 			if opts.SbomOnly {

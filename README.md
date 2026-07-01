@@ -177,152 +177,185 @@ This means `vulncheck <cmd> --json | jq` always works — no `tail`/`sed` cleanu
 
 ## Available commands
 
-- [Browse/list indices](#browselist-indices)
-- [Browse/list an index](#browselist-an-index)
-- [Download a backup](#download-a-backup)
-- [Request vulnerabilities related to a CPE](#request-vulnerabilities-related-to-a-cpe)
-- [Request vulnerabilities related to a PURL](#request-vulnerabilities-related-to-a-purl)
-- [Scan a repository for vulnerabilities](#scan-a-repository-for-vulnerabilities)
-- [Upgrade the VulnCheck CLI](#upgrade-the-vulncheck-cli)
+Every command below accepts the [global flags](#global-flags) (`--json`, `--quiet`, `--verbose`/`-v`, `--no-color`, `--no-interactive`, `--help`/`-h`). Per-command flag tables list only what is specific to that command.
+
+- [`auth`](#auth) — log in / out, check status
+- [`token`](#token) — API token management
+- [`indices`](#indices) — list or browse the catalogue of indices
+- [`index`](#index) — query one index
+- [`backup`](#backup) — download or fetch a signed URL for an index backup
+- [`cpe`](#cpe) — look up CVEs for a CPE (single or batch)
+- [`purl`](#purl) — look up CVEs for a PURL (single or batch)
+- [`tag`](#tag) — look up IP-intelligence tag membership
+- [`pdns`](#pdns) — look up passive-DNS list membership
+- [`rule`](#rule) — look up initial-access-intelligence rules
+- [`scan`](#scan) — scan a directory (SBOM + vulnerability lookup)
+- [`offline`](#offline) — sync indices locally and query them without hitting the API
+- [`version`](#version) — print the CLI version
+- [`upgrade`](#upgrade) — update the CLI in place
 
 
-### Browse/list indices
-You can browse all available indices interactively or output them as a list
-
-```
-vulncheck indices browse|list <search> [flags]
-```
-
-You can search for a specific index by passing a search term.
-
-> [!TIP]
-> Pressing `[Enter]` on an index while browsing will begin browsing that particular index
-
-#### Flags (list only)
-
-| Flag   | Description                                |
-|--------|--------------------------------------------|
-| --json | Output the list of indices in JSON format. |
-
-
-
-### Browse/list an index
-
-You can browse the contents of any index interactively or output some as JSON
+### auth
 
 ```
-vulncheck index browse|list <index> [flags]
+vulncheck auth login
+vulncheck auth logout
+vulncheck auth status [--json]
 ```
 
-#### Flags
- 
-| Flag                   | Type   | Description           |
-|------------------------|--------|-----------------------|
-| --alias                | string | Alias                 |
-| --asn                  | string | Asn                   |
-| --botnet               | string | Botnet                |
-| --cidr                 | string | Cidr                  |
-| --country              | string | Country               |
-| --country_code         | string | CountryCode           |
-| --cursor               | string | Cursor                |
-| --cve                  | string | Cve                   |
-| --hostname             | string | Hostname              |
-| --iava                 | string | Iava                  |
-| --id                   | string | ID                    |
-| --ilvn                 | string | Ilvn                  |
-| --jvndb                | string | Jvndb                 |
-| --kind                 | string | Kind                  |
-| --lastModEndDate       | string | LastModEndDate        |
-| --lastModStartDate     | string | LastModStartDate      |
-| --limit                | string | Limit                 |
-| --misp_id              | string | MispId                |
-| --mitre_id             | string | MitreId               |
-| --order                | string | Order                 |
-| --page                 | string | Page                  |
-| --pubEndDate           | string | PubEndDate            |
-| --pubStartDate         | string | PubStartDate          |
-| --ransomware           | string | Ransomware            |
-| --sort                 | string | Sort                  |
-| --start_cursor         | string | StartCursor           |
-| --threat_actor         | string | ThreatActor           |
-| --updatedAtEndDate     | string | UpdatedAtEndDate      |
-| --updatedAtStartDate   | string | UpdatedAtStartDate    |
-| --date                 | string | Date                  |
-| --src_country          | string | SrcCountry            |
-| --dst_country          | string | DstCountry            |
-| --src_ip               | string | SrcIp                 |
-| --src_asn              | string | SrcASN                |
-| --help                 |        | Show help for command |
+`login` walks you through a browser or paste-token flow — refuses when `--no-interactive`. `status --json` calls `/me` to actually verify the token; the payload always has `.authenticated: bool` and exits `0` regardless (see [Probe commands](#probe-commands)).
 
 
-### Download a backup 
-
-Download a backup of a specified index either interactively or retrieve a signed temporary URL
+### token
 
 ```
-vulncheck backup download|url <index>
+vulncheck token list [--limit N] [--page N] [--all]
+vulncheck token create <label>
+vulncheck token remove <id>
+vulncheck token browse
 ```
 
-#### Flags (url only)
-
-| Flag   | Description                             |
-|--------|-----------------------------------------|
-| --json | Output the download URL in JSON format. |
+`list --json --all` auto-paginates and returns one combined JSON array. `create --json` returns `{id, label, token}`. `browse` is interactive; it refuses with exit `2` under `--no-interactive`.
 
 
+### indices
+
+```
+vulncheck indices list [<search>]
+vulncheck indices browse [<search>]
+```
+
+Lists (or interactively browses) the catalogue of available indices. `list` accepts a fuzzy search term.
 
 
-### Request vulnerabilities related to a CPE
+### index
 
-Based on the specified CPE (Common Platform Enumeration) URI string, this endpoint will return a list of vulnerabilities that are related to the package. We support v2.2 and v2.3
+```
+vulncheck index list <index> [--full] [--all] [query flags]
+vulncheck index browse <index> [query flags]
+```
+
+`list --all` walks `next_cursor` end-to-end and emits one combined array. `browse` runs an interactive viewport; under `--json` (or `--no-interactive`) it falls back to `list` output. Query flags come from the index's schema (`--cve`, `--alias`, `--limit`, `--cursor`, etc.); see the [API docs](https://docs.vulncheck.com/api/indice) for the full set.
+
+
+### backup
+
+```
+vulncheck backup url <index>       # signed temporary URL only
+vulncheck backup download <index>  # download the archive
+```
+
+`download` picks the bubbletea progress bar for TTYs and a plain SIGINT-safe streaming download (writing to `<name>.part` and renaming on success) for headless callers. `url --json` returns `{filename, sha256, date_added, url}`.
+
+
+### cpe
 
 ```
 vulncheck cpe <cpe>
+vulncheck cpe --from-file cpes.txt --json
+echo cpe:2.3:… | vulncheck cpe --json
 ```
 
+Batch mode (multiple positional args, `--from-file`, or piped stdin) requires `--json` and returns the [stable batch envelope](#batch-input).
 
-### Request vulnerabilities related to a PURL
 
-Based on the specified PURL, this command will return a list of vulnerabilities that are related to the package.
-You can find a list of supported package managers [here](https://docs.vulncheck.com/products/exploit-and-vulnerability-intelligence/package-manager-support)
+### purl
 
 ```
 vulncheck purl <purl>
+vulncheck purl --from-file purls.txt --json
 ```
 
+Same batch semantics as `cpe`. Batch requests are sent as a single `/v3/purls` POST rather than N GETs.
 
-### Scan a repository for vulnerabilities
-This command will scan a directory for traces of packages via generating an SBOM and then check for vulnerabilities.
+
+### tag
+
+```
+vulncheck tag <tag-name>
+vulncheck tag --from-file tags.txt --json
+```
+
+Returns the newline-split list of matches for the given IP-intelligence tag. Batch input supported.
+
+
+### pdns
+
+```
+vulncheck pdns <list-name>
+vulncheck pdns --from-file lists.txt --json
+```
+
+Passive-DNS list membership. Batch input supported.
+
+
+### rule
+
+```
+vulncheck rule <rule-name> [--table]
+```
+
+Look up an initial-access-intelligence rule. `--table` renders single-column table output; `--json` (global) supersedes.
+
+
+### scan
 
 ```
 vulncheck scan <path> [flags]
+vulncheck scan --sbom-input-file <file> --json
 ```
 
-#### Flags
-| Flag | Description                        |
-|------|------------------------------------|
-| -f   | Save scan results to `output.json` |
+Generates an SBOM for `<path>`, extracts PURLs, then either calls the vulncheck API (default) or queries local offline indices.
+
+| Flag | Description |
+|------|-------------|
+| `-f`, `--file` | Save results to a file. |
+| `-n`, `--file-name` | Custom output filename (default `output.json`). |
+| `-o`, `--sbom-output-file` | Save the generated SBOM to a file. |
+| `-i`, `--sbom-input-file` | Load an existing SBOM instead of generating one. |
+| `-s`, `--sbom-only` | Generate the SBOM without running the vuln lookup. |
+| `-c`, `--include-cpes` | Extract CPEs as well as PURLs (offline mode only, for now). |
+| `--offline` | Use locally-synced indices instead of the API. |
+| `--offline-meta` | Populate metadata (CVSS, KEV, description) from `vulncheck-nvd2` in offline mode. |
+| `--warn-on-index` | Warn instead of failing when a required offline index isn't cached. |
+| `--disable-ui` | Alias for `--no-interactive` (kept for backwards compatibility). |
+
+The progress TUI is auto-suppressed whenever the renderer can't safely draw it (`--json`, `--no-interactive`, non-TTY, CI).
 
 
-### Upgrade the VulnCheck CLI
-To check for updates and upgrade to the latest version of the VulnCheck CLI, use the following commands:
+### offline
+
+```
+vulncheck offline sync   [--add <name>|--remove <name>|--purge|--force|--choose] [--json]
+vulncheck offline status [--json]
+vulncheck offline purl   <purl> [--json]
+vulncheck offline cpe    <cpe>  [--json] [--stats]
+vulncheck offline ipintel <3d|10d|30d> [--country=...] [--asn=...] [--cidr=...] [--json]
+```
+
+Local queries against synced indices. `sync --json` returns `{schema_version, action, selected, elapsed_seconds}`; `status --json` returns the cached-index array. Under `--no-interactive` the sync command refuses without an explicit `--add` / `--remove` / `--purge` (no picker prompt).
+
+
+### version
+
+```
+vulncheck version [--json]
+```
+
+`--json` returns `{schema_version, version, build_date, changelog_url}` — the canonical probe for agents.
+
+
+### upgrade
+
 ```
 vulncheck upgrade status
-vulncheck upgrade latest
+vulncheck upgrade latest [--force]
 vulncheck upgrade --version X.X.X
 ```
 
-To see if a new version is available, run `vulncheck upgrade status`. If an update is available, you can upgrade to the latest version by running `vulncheck upgrade latest`. 
-
-You can use the `--force` flag with the `latest` command to reinstall the current version if needed.
-
-If you want to install a specific version, you can use the `--version` flag followed by the desired version number.
-
-* `vulncheck upgrade` - Shows help
-* `vulncheck upgrade --version X.X.X` - Upgrades to specific version
-* `vulncheck upgrade latest` - Upgrades to latest version
-* `vulncheck upgrade latest --force` - Force upgrade to latest version
-* `vulncheck upgrade status` - Check upgrade status
+- `upgrade status` — check whether a newer release is available.
+- `upgrade latest` — install the newest release. `--force` reinstalls the current version.
+- `upgrade --version X.X.X` — install a specific version.
 
 
 > [!TIP]

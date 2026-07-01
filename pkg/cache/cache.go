@@ -10,6 +10,7 @@ import (
 	"slices"
 
 	"github.com/fumeapp/taskin"
+	"github.com/vulncheck-oss/cli/internal/tasks"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/utils"
@@ -127,7 +128,11 @@ func syncSingleIndex(ctx context.Context, index string, configDir string, indexI
 	return childTasks
 }
 
-func IndicesSync(ctx context.Context, indices []string, force bool) error {
+// IndicesSync runs the sync-download-extract-catalog pipeline for the
+// requested indices. Pass disableUI=true to suppress the taskin progress
+// bar — required whenever stdout must stay parseable (--json mode) or
+// when there is no TTY to render into.
+func IndicesSync(ctx context.Context, indices []string, force bool, disableUI bool) error {
 	configDir, err := config.IndicesDir()
 	if err != nil {
 		return err
@@ -151,7 +156,7 @@ func IndicesSync(ctx context.Context, indices []string, force bool) error {
 
 	// If there are indices to sync, run the sync tasks
 	if len(indices) > 0 {
-		tasks := taskin.Tasks{}
+		taskList := taskin.Tasks{}
 
 		for _, index := range indices {
 			idx := index
@@ -164,12 +169,22 @@ func IndicesSync(ctx context.Context, indices []string, force bool) error {
 				Tasks: syncSingleIndex(ctx, idx, configDir, &indexInfo, force),
 			}
 
-			tasks = append(tasks, parentTask)
+			taskList = append(taskList, parentTask)
 		}
 
-		runner := taskin.New(tasks, taskin.Defaults)
-		if err := runner.Run(); err != nil {
-			return err
+		// taskin always writes to os.Stdout — DisableUI only strips ANSI
+		// escapes rather than redirecting output. To keep --json output
+		// parseable we bypass the taskin runner entirely in headless mode
+		// and just execute the task tree in order.
+		if disableUI {
+			if err := tasks.RunHeadless(taskList, nil); err != nil {
+				return err
+			}
+		} else {
+			runner := taskin.New(taskList, taskin.Defaults)
+			if err := runner.Run(); err != nil {
+				return err
+			}
 		}
 	}
 

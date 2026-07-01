@@ -123,7 +123,12 @@ func Command() *cobra.Command {
 			}
 
 			startTime := time.Now()
-			if err := cache.IndicesSync(cmd.Context(), selectedIndices, force); err != nil {
+			// Suppress the taskin TUI when we can't render into a real TTY
+			// (--json, --no-interactive, CI, non-tty stdout). Any info about
+			// per-index progress is out of scope in those modes — the final
+			// JSON syncResult is the source of truth.
+			disableUI := r.IsJSON() || !r.Interactive()
+			if err := cache.IndicesSync(cmd.Context(), selectedIndices, force, disableUI); err != nil {
 				return err
 			}
 			elapsed := time.Since(startTime)
