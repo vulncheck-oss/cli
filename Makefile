@@ -27,11 +27,11 @@ manpages: script/build$(EXE)
 	@$< $@
 
 .PHONY: completions
-completions: bin/gh$(EXE)
+completions: bin/vulncheck$(EXE)
 	mkdir -p ./share/bash-completion/completions ./share/fish/vendor_completions.d ./share/zsh/site-functions
-	bin/gh$(EXE) completion -s bash > ./share/bash-completion/completions/gh
-	bin/gh$(EXE) completion -s fish > ./share/fish/vendor_completions.d/gh.fish
-	bin/gh$(EXE) completion -s zsh > ./share/zsh/site-functions/_gh
+	bin/vulncheck$(EXE) completion bash > ./share/bash-completion/completions/vulncheck
+	bin/vulncheck$(EXE) completion fish > ./share/fish/vendor_completions.d/vulncheck.fish
+	bin/vulncheck$(EXE) completion zsh  > ./share/zsh/site-functions/_vulncheck
 
 # just a convenience task around `go test`
 .PHONY: test
