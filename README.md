@@ -77,7 +77,6 @@ The CLI is designed to be safe to drive from scripts and AI agents. This section
 |---------------------|--------|
 | `--json`            | Emit JSON on stdout; route info/progress lines to stderr; errors emitted as a structured envelope. |
 | `--quiet`           | Suppress informational output. Errors and payloads still render. |
-| `--verbose` / `-v`  | Extra detail on stderr (debug-level). |
 | `--no-color`        | Disable ANSI styling. Also honours the `NO_COLOR` env var. |
 | `--no-interactive` | Refuse to block on TUI prompts; commands that need a prompt return an error instead. Implied by `--json`, non-TTY stdin/stdout, and any of the `CI` / `BUILD_NUMBER` / `RUN_ID` env vars. |
 
@@ -177,7 +176,7 @@ This means `vulncheck <cmd> --json | jq` always works — no `tail`/`sed` cleanu
 
 ## Available commands
 
-Every command below accepts the [global flags](#global-flags) (`--json`, `--quiet`, `--verbose`/`-v`, `--no-color`, `--no-interactive`, `--help`/`-h`). Per-command flag tables list only what is specific to that command.
+Every command below accepts the [global flags](#global-flags) (`--json`, `--quiet`, `--no-color`, `--no-interactive`, `--help`/`-h`). Per-command flag tables list only what is specific to that command.
 
 - [`auth`](#auth) — log in / out, check status
 - [`token`](#token) — API token management

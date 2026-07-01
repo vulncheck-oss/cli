@@ -18,6 +18,18 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/ui"
 )
 
+// scanEnvelope is the JSON payload emitted by `vulncheck scan --json`.
+// SchemaVersion identifies the CLI's wire shape (see internal/output).
+// SbomOnly / SbomOutputFile are populated when the caller passed
+// --sbom-only, so agents can tell a "successful no-vuln-lookup" run
+// apart from a normal empty-result run.
+type scanEnvelope struct {
+	SchemaVersion   int                                 `json:"schema_version"`
+	Vulnerabilities []models.ScanResultVulnerabilities  `json:"vulnerabilities,omitempty"`
+	SbomOnly        bool                                `json:"sbom_only,omitempty"`
+	SbomOutputFile  string                              `json:"sbom_output_file,omitempty"`
+}
+
 type Options struct {
 	File        bool
 	FileName    string
@@ -290,6 +302,16 @@ func Command() *cobra.Command {
 			}
 
 			if opts.SbomOnly {
+				if r.IsJSON() {
+					// Give agents a positive completion signal even when no
+					// vulnerability lookup ran; keeps `scan --sbom-only --json`
+					// from emitting nothing on stdout.
+					return r.JSON(scanEnvelope{
+						SchemaVersion:  output.SchemaVersion,
+						SbomOnly:       true,
+						SbomOutputFile: opts.SbomFile,
+					})
+				}
 				if opts.SbomFile != "" {
 					r.Info("SBOM generation completed successfully")
 				}
@@ -297,7 +319,10 @@ func Command() *cobra.Command {
 			}
 
 			if r.IsJSON() {
-				return r.JSON(result)
+				return r.JSON(scanEnvelope{
+					SchemaVersion:   output.SchemaVersion,
+					Vulnerabilities: result.Vulnerabilities,
+				})
 			}
 
 			if len(vulns) == 0 {

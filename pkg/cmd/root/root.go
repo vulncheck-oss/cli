@@ -85,7 +85,6 @@ func NewCmdRoot() *cobra.Command {
 	cmd.PersistentFlags().BoolP("help", "h", false, "Show help for command")
 	cmd.PersistentFlags().Bool("json", false, "Emit output as JSON on stdout; info/progress are routed to stderr")
 	cmd.PersistentFlags().Bool("quiet", false, "Suppress informational output (errors and payloads still render)")
-	cmd.PersistentFlags().BoolP("verbose", "v", false, "Emit extra debug output to stderr")
 	cmd.PersistentFlags().Bool("no-color", false, "Disable ANSI colour output (also honours NO_COLOR env)")
 	cmd.PersistentFlags().Bool("no-interactive", false, "Disable TUI prompts and confirmations; required for headless / CI use")
 
@@ -115,12 +114,11 @@ func NewCmdRoot() *cobra.Command {
 
 // rendererFromCmd resolves the Renderer to use for a given command
 // invocation. It consults the persistent flags (--json / --quiet /
-// --verbose / --no-color / --no-interactive) and layers them on top of
-// environment-derived defaults (NO_COLOR, TERM=dumb, TTY detection, CI=1).
+// --no-color / --no-interactive) and layers them on top of environment-
+// derived defaults (NO_COLOR, TERM=dumb, TTY detection, CI=1).
 func rendererFromCmd(cmd *cobra.Command) *output.Renderer {
 	jsonOut, _ := cmd.Flags().GetBool("json")
 	quiet, _ := cmd.Flags().GetBool("quiet")
-	verbose, _ := cmd.Flags().GetBool("verbose")
 	noColor, _ := cmd.Flags().GetBool("no-color")
 	noInteractive, _ := cmd.Flags().GetBool("no-interactive")
 
@@ -142,7 +140,6 @@ func rendererFromCmd(cmd *cobra.Command) *output.Renderer {
 		Mode:        mode,
 		Color:       color,
 		Quiet:       quiet,
-		Verbose:     verbose,
 		Interactive: interactive,
 	})
 }

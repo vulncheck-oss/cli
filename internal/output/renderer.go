@@ -62,7 +62,6 @@ type Renderer struct {
 	mode        Mode
 	color       bool
 	interactive bool
-	verbose     bool
 
 	stdout io.Writer
 	stderr io.Writer
@@ -77,7 +76,6 @@ type Options struct {
 	Mode        Mode
 	Color       bool // when false, callers should render without ANSI sequences
 	Quiet       bool
-	Verbose     bool
 	Interactive bool      // when false, commands MUST NOT block on prompts
 	Stdout      io.Writer // defaults to os.Stdout
 	Stderr      io.Writer // defaults to os.Stderr
@@ -90,7 +88,6 @@ func New(opts Options) *Renderer {
 		mode:        opts.Mode,
 		color:       opts.Color,
 		quiet:       opts.Quiet,
-		verbose:     opts.Verbose,
 		interactive: opts.Interactive,
 		stdout:      opts.Stdout,
 		stderr:      opts.Stderr,
@@ -128,10 +125,6 @@ func (r *Renderer) Color() bool { return r.color }
 
 // Quiet reports whether informational output is suppressed.
 func (r *Renderer) Quiet() bool { return r.quiet }
-
-// Verbose reports whether the user asked for extra detail (e.g. debug logs).
-// Commands that have nothing extra to print can ignore this.
-func (r *Renderer) Verbose() bool { return r.verbose }
 
 // Interactive reports whether commands may block on TUI prompts (huh
 // forms, bubbletea screens). Returns false under CI, --no-interactive,

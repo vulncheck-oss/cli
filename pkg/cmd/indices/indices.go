@@ -2,7 +2,6 @@ package indices
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/vulncheck-oss/cli/internal/errs"
 	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
@@ -62,13 +61,25 @@ func Browse() *cobra.Command {
 		Short: i18n.C.BrowseIndicesShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			r := output.FromCmd(cmd)
-			if !r.Interactive() {
-				return errs.Validation("indices browse requires an interactive terminal; use `vulncheck indices list --json` instead")
-			}
 
 			response, err := session.ConnectWithContext(cmd.Context(), config.Token()).GetIndices()
 			if err != nil {
 				return err
+			}
+
+			// Fall back to JSON list output when we can't render the TUI:
+			// symmetric with `vulncheck index browse --json`. Agents get
+			// a usable result instead of a validation error.
+			if !r.Interactive() {
+				search := ""
+				if len(args) > 0 {
+					search = args[0]
+				}
+				indices := response.GetData()
+				if search != "" {
+					return r.JSON(ui.IndicesRows(indices, search))
+				}
+				return r.JSON(indices)
 			}
 			search := ""
 			if len(args) > 0 && args[0] != "" {
