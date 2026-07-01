@@ -7,7 +7,43 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
+
+// defaultHTTPTimeout guards every SDK request against a stuck / slow-read
+// peer. Long enough for legitimate large-index metadata calls, short
+// enough that a stalled connection can't hang the CLI indefinitely.
+const defaultHTTPTimeout = 5 * time.Minute
+
+// maxResponseBytes caps the size of any API response body the SDK will
+// buffer into memory. Prevents a malicious or misbehaving upstream from
+// OOM-killing the CLI by streaming a multi-GB response. Genuinely large
+// payloads (backup archives) are downloaded via streamed io.Copy, not
+// through this path — see pkg/cache/tasks.go and pkg/ui/download.go.
+const maxResponseBytes = 512 * 1024 * 1024 // 512 MiB
+
+// LimitedBody wraps resp.Body with an io.LimitReader honouring the
+// maxResponseBytes ceiling. SDK methods use this before json-decoding.
+func LimitedBody(body io.Reader) io.Reader {
+	return io.LimitReader(body, maxResponseBytes)
+}
+
+// newHTTPClient builds an http.Client with the SDK's hardening defaults:
+// explicit timeout so a slow peer cannot hang forever, and Go's default
+// TLS verification (never disabled anywhere in the codebase).
+func newHTTPClient() *http.Client {
+	return &http.Client{Timeout: defaultHTTPTimeout}
+}
+
+// ResetQuery clears any accumulated query / form params from prior calls.
+// SDK methods that build up state via c.Query / c.Form must call this
+// first so a Client reused across multiple requests (e.g. inside a batch
+// loop) doesn't leak params from earlier iterations into later ones.
+func (c *Client) ResetQuery() *Client {
+	c.Values = nil
+	c.FormValues = nil
+	return c
+}
 
 type Client struct {
 	Url         string
@@ -84,7 +120,7 @@ func (c *Client) SetAuthHeader(req *http.Request) *Client {
 
 func (c *Client) Request(method string, url string) (*http.Response, error) {
 	if c.HttpClient == nil {
-		c.HttpClient = &http.Client{}
+		c.HttpClient = newHTTPClient()
 	}
 	var err error
 	if c.FormValues != nil {
@@ -132,7 +168,7 @@ func (c *Client) PostRequestWithBody(url string, body io.Reader) (*http.Response
 	}
 
 	if c.HttpClient == nil {
-		c.HttpClient = &http.Client{}
+		c.HttpClient = newHTTPClient()
 	}
 	c.SetAuthHeader(req)
 

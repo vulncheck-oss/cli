@@ -53,12 +53,14 @@ type PurlsResponse struct {
 
 // GetPurl https://docs.vulncheck.com/api/purl
 func (c *Client) GetPurl(purl string) (responseJSON *PurlResponse, err error) {
-	resp, err := c.Query("purl", purl).Request("GET", "/v3/purl")
+	// See GetCpe — reset before adding this call's query param so batch
+	// callers don't accumulate stale `purl` values across iterations.
+	resp, err := c.ResetQuery().Query("purl", purl).Request("GET", "/v3/purl")
 	if err != nil {
 		return nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 	return responseJSON, nil
 }
 
@@ -73,7 +75,7 @@ func (c *Client) GetPurls(purls []string) (responseJSON *PurlsResponse, err erro
 		return nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 	return responseJSON, nil
 }
 

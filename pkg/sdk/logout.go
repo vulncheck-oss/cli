@@ -21,7 +21,7 @@ func (c *Client) Logout() (responseJSON *Response, err error) {
 		return nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }

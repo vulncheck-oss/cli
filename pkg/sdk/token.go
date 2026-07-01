@@ -87,7 +87,7 @@ func (c *Client) GetTokens(params ...TokenListParams) (responseJSON *TokenResult
 	}
 
 	defer func() { _ = resp.Body.Close() }()
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 	return responseJSON, nil
 }
 
@@ -98,7 +98,7 @@ func (c *Client) CreateToken(label string) (responseJSON *TokenResponse, err err
 	}
 
 	defer func() { _ = resp.Body.Close() }()
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 	return responseJSON, nil
 }
 
@@ -108,7 +108,7 @@ func (c *Client) DeleteToken(ID string) (responseJSON *TokenResponse, err error)
 		return nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 	return responseJSON, nil
 }
 

@@ -204,7 +204,7 @@ func (c *Client) GetIndex(index string, queryParameters ...IndexQueryParameters)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 	return responseJSON, nil
 }
 

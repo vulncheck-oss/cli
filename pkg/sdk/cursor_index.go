@@ -55,7 +55,7 @@ func (c *Client) GetCursorIndex(index string, cursor string, queryParameters ...
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
