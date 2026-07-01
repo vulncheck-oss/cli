@@ -13,6 +13,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/db"
 	"github.com/vulncheck-oss/cli/pkg/session"
+	"github.com/vulncheck-oss/cli/pkg/sdk"
 	"github.com/vulncheck-oss/cli/pkg/utils"
 )
 
@@ -34,6 +35,9 @@ func taskDownload(ctx context.Context, index string, filename string) taskin.Tas
 			}
 
 			url := response.GetData()[0].URL
+			if err := sdk.EnforceHTTPS(url); err != nil {
+				return err
+			}
 
 			eta := utils.NewETACalculator()
 			req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)

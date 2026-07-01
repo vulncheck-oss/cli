@@ -74,6 +74,11 @@ func SaveSBOM(sbm *sbom.SBOM, file string) error {
 	return nil
 }
 
+// maxSBOMBytes caps the in-memory read of a user-supplied SBOM file. 1 GiB
+// is well above any realistic real-world SBOM but bounded enough that a
+// pathological (or malicious) input can't OOM-kill the scan.
+const maxSBOMBytes = 1 << 30 // 1 GiB
+
 func LoadSBOM(inputFile string) (*sbom.SBOM, []InputSbomRef, error) {
 	file, err := os.Open(inputFile)
 	if err != nil {
@@ -85,10 +90,15 @@ func LoadSBOM(inputFile string) (*sbom.SBOM, []InputSbomRef, error) {
 		}
 	}()
 
-	// Read the entire file content
-	content, err := io.ReadAll(file)
+	// Bounded read so a runaway or hostile SBOM (e.g. /dev/zero, a
+	// symlinked infinite stream, or a genuine multi-GB file) can't
+	// exhaust memory. Anything beyond maxSBOMBytes gets a clear error.
+	content, err := io.ReadAll(io.LimitReader(file, maxSBOMBytes+1))
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to read SBOM file %s: %w", inputFile, err)
+	}
+	if int64(len(content)) > maxSBOMBytes {
+		return nil, nil, fmt.Errorf("SBOM file %s exceeds %d-byte size cap; refusing to load", inputFile, maxSBOMBytes)
 	}
 
 	// Parse JSON to extract bom-ref and purl

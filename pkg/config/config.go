@@ -66,10 +66,18 @@ func Dir() (string, error) {
 		return "", nil
 	}
 	dir := fmt.Sprintf("%s/.config/vulncheck", homeDir)
+	// 0700: the directory holds the API token (in vulncheck.yaml, itself
+	// 0600). On shared / multi-user systems any other-readable bit on the
+	// parent dir lets a colocated user enumerate / race the file.
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0700); err != nil {
 			return "", err
 		}
+	} else if err == nil {
+		// Existing dir might have been created with the old 0755 mode
+		// (or by an unrelated tool). Best-effort tighten; ignore errors
+		// because we don't own the dir necessarily.
+		_ = os.Chmod(dir, 0700)
 	}
 	return dir, nil
 }

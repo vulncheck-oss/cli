@@ -12,6 +12,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/vulncheck-oss/cli/pkg/sdk"
 )
 
 var p *tea.Program
@@ -41,6 +42,9 @@ func (pw *progressWriter) Write(p []byte) (int, error) {
 }
 
 func getResponse(url string) (*http.Response, error) {
+	if err := sdk.EnforceHTTPS(url); err != nil {
+		return nil, err
+	}
 	resp, err := http.Get(url) // nolint:gosec
 	if err != nil {
 		log.Fatal(err)
@@ -57,6 +61,9 @@ func getResponse(url string) (*http.Response, error) {
 // requirement, no panic on missing content length. Use when --json,
 // --no-interactive, or a non-TTY stdout makes the bubbletea path unsafe.
 func DownloadHeadless(ctx context.Context, url, filename string, progressOut io.Writer) error {
+	if err := sdk.EnforceHTTPS(url); err != nil {
+		return err
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return fmt.Errorf("build request: %w", err)
