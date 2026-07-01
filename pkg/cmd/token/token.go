@@ -33,7 +33,24 @@ func Command() *cobra.Command {
 	return cmd
 }
 
+// tokenCreateEnvelope is the JSON payload for `token create --json`.
+// By default `Token` is empty and the secret is written to stderr —
+// pipes and log capture use stdout, so this makes accidental leakage
+// impossible without the caller explicitly opting in.
+type tokenCreateEnvelope struct {
+	SchemaVersion int    `json:"schema_version"`
+	ID            string `json:"id"`
+	Label         string `json:"label"`
+	// Token is populated in stdout JSON only when the caller passes
+	// --allow-token-on-stdout. Otherwise it is empty and the actual
+	// secret is written to stderr on a line of its own.
+	Token           string `json:"token,omitempty"`
+	TokenOnStderr   bool   `json:"token_on_stderr,omitempty"`
+}
+
 func Create() *cobra.Command {
+	var allowTokenOnStdout bool
+
 	cmd := &cobra.Command{
 		Use:   "create <label>",
 		Short: i18n.C.CreateTokenShort,
@@ -50,13 +67,28 @@ func Create() *cobra.Command {
 			}
 
 			if r.IsJSON() {
-				return r.JSON(response.Data)
+				env := tokenCreateEnvelope{
+					SchemaVersion: output.SchemaVersion,
+					ID:            response.Data.ID,
+					Label:         args[0],
+				}
+				if allowTokenOnStdout {
+					env.Token = response.Data.Token
+				} else {
+					env.TokenOnStderr = true
+					// Print the secret on stderr so callers who did NOT opt in
+					// can still capture it — separately from the JSON payload.
+					fmt.Fprintln(r.Stderr(), response.Data.Token)
+				}
+				return r.JSON(env)
 			}
 
 			r.Success(i18n.C.CreateTokenSuccess, args[0], response.Data.Token)
 			return nil
 		},
 	}
+	cmd.Flags().BoolVar(&allowTokenOnStdout, "allow-token-on-stdout", false,
+		"Include the newly-created token in the stdout JSON. Off by default: the token is written to stderr on its own line, so `> file.json` capture never contains the secret.")
 	return cmd
 }
 

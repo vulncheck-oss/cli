@@ -214,7 +214,11 @@ vulncheck token remove <id>
 vulncheck token browse
 ```
 
-`list --json --all` auto-paginates and returns one combined JSON array. `create --json` returns `{id, label, token}`. `browse` is interactive; it refuses with exit `2` under `--no-interactive`.
+`list --json --all` auto-paginates and returns one combined JSON array.
+
+`create --json` returns `{schema_version, id, label, token_on_stderr: true}` and prints the actual secret on a single line to **stderr**. That way a pipeline like `vulncheck token create ci-runner --json > token.json` never captures the secret in the JSON file. Pass `--allow-token-on-stdout` if you want the token embedded in the JSON payload instead (`{... "token": "vc_..."}`) — you're taking responsibility for the redirection.
+
+`browse` is interactive; it refuses with exit `2` under `--no-interactive`.
 
 
 ### indices
