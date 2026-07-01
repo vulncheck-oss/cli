@@ -55,7 +55,7 @@ func TestIsTTYDevNull(t *testing.T) {
 	if err != nil {
 		t.Fatalf("open /dev/null: %v", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	if IsTTY(f) {
 		t.Fatal("/dev/null is not a TTY")
 	}

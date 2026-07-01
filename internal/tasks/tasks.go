@@ -29,7 +29,7 @@ func RunHeadless(tasks taskin.Tasks, progressOut io.Writer) error {
 				return err
 			}
 			if progressOut != nil {
-				fmt.Fprintln(progressOut, task.Title)
+				_, _ = fmt.Fprintln(progressOut, task.Title)
 			}
 		}
 		if len(task.Tasks) > 0 {

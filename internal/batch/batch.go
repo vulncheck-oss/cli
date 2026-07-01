@@ -38,7 +38,7 @@ func CollectInputs(args []string, fromFile string, stdin io.Reader) ([]string, e
 		if err != nil {
 			return nil, fmt.Errorf("--from-file: %w", err)
 		}
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 		return readLines(f), nil
 	}
 	if len(args) > 0 {

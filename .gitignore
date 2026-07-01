@@ -31,3 +31,7 @@ vendor/
 
 ## output
 output.json
+
+# coverage profiles
+cover.out
+*.coverprofile

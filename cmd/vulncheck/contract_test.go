@@ -23,7 +23,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err)
 	}
-	defer os.RemoveAll(tmp)
+	defer func() { _ = os.RemoveAll(tmp) }()
 
 	binPath = filepath.Join(tmp, "vulncheck")
 	build := exec.Command("go", "build", "-o", binPath, ".")

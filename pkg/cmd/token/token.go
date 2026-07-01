@@ -78,7 +78,7 @@ func Create() *cobra.Command {
 					env.TokenOnStderr = true
 					// Print the secret on stderr so callers who did NOT opt in
 					// can still capture it — separately from the JSON payload.
-					fmt.Fprintln(r.Stderr(), response.Data.Token)
+					_, _ = fmt.Fprintln(r.Stderr(), response.Data.Token)
 				}
 				return r.JSON(env)
 			}

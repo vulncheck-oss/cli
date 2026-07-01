@@ -181,7 +181,7 @@ func (r *Renderer) Println(args ...any) {
 	if r.mode == ModeJSON {
 		return
 	}
-	fmt.Fprintln(r.stdout, args...)
+	_, _ = fmt.Fprintln(r.stdout, args...)
 }
 
 // Printf writes a plain text fragment to the payload stream.
@@ -190,7 +190,7 @@ func (r *Renderer) Printf(format string, args ...any) {
 	if r.mode == ModeJSON {
 		return
 	}
-	fmt.Fprintf(r.stdout, format, args...)
+	_, _ = fmt.Fprintf(r.stdout, format, args...)
 }
 
 // Info writes an informational status line. Routed to stderr in JSON mode
@@ -199,7 +199,7 @@ func (r *Renderer) Info(format string, args ...any) {
 	if r.quiet {
 		return
 	}
-	fmt.Fprintln(r.InfoStream(), format2(format, args...))
+	_, _ = fmt.Fprintln(r.InfoStream(), format2(format, args...))
 }
 
 // Success writes a positive status line. Same routing as Info.
@@ -207,7 +207,7 @@ func (r *Renderer) Success(format string, args ...any) {
 	if r.quiet {
 		return
 	}
-	fmt.Fprintln(r.InfoStream(), format2(format, args...))
+	_, _ = fmt.Fprintln(r.InfoStream(), format2(format, args...))
 }
 
 // Stat writes a "label: value" pair. Same routing as Info.
@@ -215,14 +215,14 @@ func (r *Renderer) Stat(label, value string) {
 	if r.quiet {
 		return
 	}
-	fmt.Fprintf(r.InfoStream(), "%s: %s\n", label, value)
+	_, _ = fmt.Fprintf(r.InfoStream(), "%s: %s\n", label, value)
 }
 
 // Warn writes a warning line. Always emitted (even when quiet), since a
 // warning that the user doesn't see is rarely the right call.
 // Routed to stderr regardless of mode.
 func (r *Renderer) Warn(format string, args ...any) {
-	fmt.Fprintln(r.stderr, format2(format, args...))
+	_, _ = fmt.Fprintln(r.stderr, format2(format, args...))
 }
 
 // format2 lets callers pass either a preformatted string or a

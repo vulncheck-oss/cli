@@ -71,7 +71,7 @@ func NewCmdRoot() *cobra.Command {
 				// Auth help is human guidance, not payload — route to stderr
 				// (or suppress when --json so callers see only the JSON error).
 				if !r.IsJSON() {
-					fmt.Fprintln(r.Stderr(), authHelp())
+					_, _ = fmt.Fprintln(r.Stderr(), authHelp())
 				}
 				return errs.AuthRequired(i18n.C.ErrorNoToken)
 			}
@@ -202,7 +202,7 @@ func Execute() {
 			},
 		})
 	} else {
-		fmt.Fprintln(r.Stderr(), ui.Danger(classified.Message).Error())
+		_, _ = fmt.Fprintln(r.Stderr(), ui.Danger(classified.Message).Error())
 	}
 
 	os.Exit(classified.ExitCode())

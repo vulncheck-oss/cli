@@ -114,9 +114,9 @@ func DownloadHeadless(ctx context.Context, url, filename string, progressOut io.
 		}
 		if progressOut != nil && time.Since(lastReport) > 500*time.Millisecond {
 			if total > 0 {
-				fmt.Fprintf(progressOut, "downloading %s: %d/%d bytes\n", filepath.Base(filename), written, total)
+				_, _ = fmt.Fprintf(progressOut, "downloading %s: %d/%d bytes\n", filepath.Base(filename), written, total)
 			} else {
-				fmt.Fprintf(progressOut, "downloading %s: %d bytes\n", filepath.Base(filename), written)
+				_, _ = fmt.Fprintf(progressOut, "downloading %s: %d bytes\n", filepath.Base(filename), written)
 			}
 			lastReport = time.Now()
 		}
