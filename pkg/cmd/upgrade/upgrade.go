@@ -36,7 +36,9 @@ func Command() *cobra.Command {
 	cmd.AddCommand(StatusCommand())
 	cmd.AddCommand(LatestCommand())
 
-	cmd.Flags().StringVarP(&version, "version", "v", "", "Upgrade to a specific version (e.g., 1.0.0)")
+	// -v shorthand is reserved for the global --verbose flag; --version
+	// stays long-form only for this rarely-invoked command.
+	cmd.Flags().StringVar(&version, "version", "", "Upgrade to a specific version (e.g., 1.0.0)")
 
 	session.DisableAuthCheck(cmd)
 

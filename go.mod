@@ -30,8 +30,10 @@ require (
 )
 
 require (
+	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/piprate/json-gold v0.7.0 // indirect
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/tailscale/hujson v0.0.0-20260302212456-ecc657c15afd // indirect
 )
 
