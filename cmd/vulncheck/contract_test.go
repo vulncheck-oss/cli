@@ -264,3 +264,32 @@ func jsonRoundtrip(s string) (any, error) {
 	err := json.Unmarshal([]byte(s), &v)
 	return v, err
 }
+
+// ----- scan --sbom-only --json (closes vulncheck-oss/cli#208) -----
+
+// TestContractScanSbomOnlyJSON locks in the envelope shape emitted by
+// scan when --sbom-only is set. This path does not hit the API, so we
+// can drive it against a synthetic project directory without network.
+func TestContractScanSbomOnlyJSON(t *testing.T) {
+	proj := t.TempDir()
+	if err := os.WriteFile(filepath.Join(proj, "go.mod"), []byte("module example.com/x\ngo 1.21\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	stdout, stderr, exit := runCLIAuthed(t, "scan", proj, "--sbom-only", "--json")
+	if exit != 0 {
+		t.Fatalf("exit = %d, want 0\nstderr: %s", exit, stderr)
+	}
+	m := mustJSON(t, stdout)
+	if sv, _ := m["schema_version"].(float64); sv != 1 {
+		t.Errorf("schema_version = %v, want 1", m["schema_version"])
+	}
+	if v, _ := m["sbom_only"].(bool); !v {
+		t.Errorf("sbom_only = %v, want true", m["sbom_only"])
+	}
+	// Nothing else should appear on stdout — no vulnerabilities key when
+	// the scan explicitly skipped the vuln lookup.
+	if _, present := m["vulnerabilities"]; present {
+		t.Errorf("sbom-only response should not include a vulnerabilities key; got %v", m)
+	}
+}
