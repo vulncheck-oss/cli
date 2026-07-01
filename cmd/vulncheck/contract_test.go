@@ -1,0 +1,266 @@
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+// binPath points at a freshly-built vulncheck binary for the duration
+// of this test package's runtime. See TestMain.
+var binPath string
+
+// isolatedHome is a temp dir set as $HOME + $XDG_CONFIG_HOME while tests
+// run, so the binary never sees the developer's real ~/.config/vulncheck.
+var isolatedHome string
+
+func TestMain(m *testing.M) {
+	tmp, err := os.MkdirTemp("", "vulncheck-contract-*")
+	if err != nil {
+		panic(err)
+	}
+	defer os.RemoveAll(tmp)
+
+	binPath = filepath.Join(tmp, "vulncheck")
+	build := exec.Command("go", "build", "-o", binPath, ".")
+	build.Stderr = os.Stderr
+	if err := build.Run(); err != nil {
+		panic("failed to build binary for contract tests: " + err.Error())
+	}
+
+	isolatedHome = filepath.Join(tmp, "home")
+	if err := os.MkdirAll(isolatedHome, 0o755); err != nil {
+		panic(err)
+	}
+
+	os.Exit(m.Run())
+}
+
+// runCLI shells out to the built binary with the given args and returns
+// stdout, stderr, and the process exit code. VC_TOKEN is force-cleared
+// so tests that assert auth-required paths behave consistently.
+func runCLI(t *testing.T, args ...string) (stdout, stderr string, exitCode int) {
+	return runCLIEnv(t, "", args...)
+}
+
+// runCLIAuthed sets a syntactically valid VC_TOKEN so PersistentPreRunE's
+// auth gate passes; use this for tests that want to reach a command's
+// own validation logic (which fires AFTER the auth check).
+func runCLIAuthed(t *testing.T, args ...string) (stdout, stderr string, exitCode int) {
+	return runCLIEnv(t, "test-token-not-real", args...)
+}
+
+func runCLIEnv(t *testing.T, token string, args ...string) (stdout, stderr string, exitCode int) {
+	t.Helper()
+	cmd := exec.Command(binPath, args...)
+	var outBuf, errBuf bytes.Buffer
+	cmd.Stdout = &outBuf
+	cmd.Stderr = &errBuf
+	cmd.Env = append(os.Environ(),
+		"HOME="+isolatedHome,
+		"XDG_CONFIG_HOME="+isolatedHome,
+		"VC_TOKEN="+token,
+		"NO_COLOR=1",
+		// Clear CI so Interactive() logic isn't skewed by the outer test env.
+		"CI=",
+		"BUILD_NUMBER=",
+		"RUN_ID=",
+	)
+	_ = cmd.Run()
+	return outBuf.String(), errBuf.String(), cmd.ProcessState.ExitCode()
+}
+
+// mustJSON parses stdout as JSON and fails the test if it isn't valid.
+func mustJSON(t *testing.T, out string) map[string]any {
+	t.Helper()
+	var m map[string]any
+	if err := json.Unmarshal([]byte(out), &m); err != nil {
+		t.Fatalf("stdout was not valid JSON: %v\nstdout: %q", err, out)
+	}
+	return m
+}
+
+// ----- version -----
+
+func TestContractVersionJSONShape(t *testing.T) {
+	stdout, _, exit := runCLI(t, "version", "--json")
+	if exit != 0 {
+		t.Fatalf("exit = %d, want 0", exit)
+	}
+	m := mustJSON(t, stdout)
+	if sv, ok := m["schema_version"].(float64); !ok || sv != 1 {
+		t.Errorf("schema_version = %v, want 1", m["schema_version"])
+	}
+	for _, key := range []string{"version", "changelog_url"} {
+		if _, ok := m[key]; !ok {
+			t.Errorf("version payload missing %q", key)
+		}
+	}
+}
+
+// ----- commands (capability discovery) -----
+
+func TestContractCommandsDumpIsUsableAndStable(t *testing.T) {
+	stdout, _, exit := runCLI(t, "commands")
+	if exit != 0 {
+		t.Fatalf("exit = %d, want 0", exit)
+	}
+	m := mustJSON(t, stdout)
+	if sv, ok := m["schema_version"].(float64); !ok || sv != 1 {
+		t.Fatalf("schema_version = %v, want 1", m["schema_version"])
+	}
+	root, ok := m["root"].(map[string]any)
+	if !ok {
+		t.Fatal("root object missing")
+	}
+	if root["name"] != "vulncheck" {
+		t.Errorf("root.name = %v, want vulncheck", root["name"])
+	}
+
+	// Root's inherited flags must expose the global agentic surface.
+	inherited, _ := root["inherited_flags"].([]any)
+	got := map[string]bool{}
+	for _, f := range inherited {
+		if fm, ok := f.(map[string]any); ok {
+			got[fm["name"].(string)] = true
+		}
+	}
+	for _, name := range []string{"json", "quiet", "no-color", "no-interactive", "help"} {
+		if !got[name] {
+			t.Errorf("root.inherited_flags missing %q; got %v", name, got)
+		}
+	}
+
+	// Every top-level command we care about is present.
+	subs, _ := root["subcommands"].([]any)
+	names := map[string]bool{}
+	for _, s := range subs {
+		if sm, ok := s.(map[string]any); ok {
+			names[sm["name"].(string)] = true
+		}
+	}
+	for _, want := range []string{"scan", "cpe", "purl", "auth", "token", "indices", "index", "offline", "backup", "version"} {
+		if !names[want] {
+			t.Errorf("commands dump missing top-level %q; got %v", want, names)
+		}
+	}
+}
+
+// ----- auth status (no token, exit 0 with JSON body) -----
+
+func TestContractAuthStatusJSONNoToken(t *testing.T) {
+	stdout, _, exit := runCLI(t, "auth", "status", "--json")
+	if exit != 0 {
+		t.Fatalf("exit = %d, want 0 (agents dispatch on .authenticated)", exit)
+	}
+	m := mustJSON(t, stdout)
+	if sv, _ := m["schema_version"].(float64); sv != 1 {
+		t.Errorf("schema_version = %v, want 1", m["schema_version"])
+	}
+	if v, ok := m["authenticated"].(bool); !ok || v {
+		t.Errorf("authenticated = %v, want false", m["authenticated"])
+	}
+	if _, ok := m["reason"].(string); !ok {
+		t.Error("expected .reason to explain why not authenticated")
+	}
+}
+
+// ----- error envelope: auth_required -----
+
+func TestContractAuthRequiredErrorEnvelope(t *testing.T) {
+	stdout, stderr, exit := runCLI(t, "token", "list", "--json")
+	if exit != 3 {
+		t.Fatalf("exit = %d, want 3 (auth_required)\nstderr: %s", exit, stderr)
+	}
+	m := mustJSON(t, stdout)
+	if sv, _ := m["schema_version"].(float64); sv != 1 {
+		t.Errorf("schema_version = %v, want 1", m["schema_version"])
+	}
+	err, ok := m["error"].(map[string]any)
+	if !ok {
+		t.Fatal("expected .error object")
+	}
+	if err["code"] != "auth_required" {
+		t.Errorf("error.code = %v, want auth_required", err["code"])
+	}
+	if _, ok := err["message"].(string); !ok {
+		t.Error("error.message should be a string")
+	}
+}
+
+// ----- error envelope: validation -----
+
+func TestContractValidationErrorEnvelope(t *testing.T) {
+	// cpe requires a positional arg; the auth check runs first so we
+	// need to satisfy it with a syntactically valid token before we
+	// reach the arg validation.
+	stdout, _, exit := runCLIAuthed(t, "cpe", "--json")
+	if exit != 2 {
+		t.Fatalf("exit = %d, want 2 (validation)", exit)
+	}
+	m := mustJSON(t, stdout)
+	if sv, _ := m["schema_version"].(float64); sv != 1 {
+		t.Errorf("schema_version = %v, want 1", m["schema_version"])
+	}
+	err, _ := m["error"].(map[string]any)
+	if err == nil || err["code"] != "validation" {
+		t.Errorf("error.code = %v, want validation", err)
+	}
+}
+
+// ----- stdout / stderr discipline: nothing but JSON on stdout in --json mode -----
+
+func TestContractJSONModeStdoutIsPureJSON(t *testing.T) {
+	// Trigger the auth_required path — this exercises PersistentPreRunE's
+	// auth check + the error envelope render.
+	stdout, _, _ := runCLI(t, "token", "list", "--json")
+	if !strings.HasPrefix(stdout, "{") {
+		t.Fatalf("stdout should be pure JSON, got: %q", stdout)
+	}
+	if _, err := jsonRoundtrip(stdout); err != nil {
+		t.Fatalf("stdout should parse as a single JSON document: %v\nstdout: %q", err, stdout)
+	}
+}
+
+// ----- -h shorthand works at root AND subcommand level -----
+
+func TestContractShortHelpFlag(t *testing.T) {
+	for _, args := range [][]string{
+		{"-h"},
+		{"scan", "-h"},
+		{"token", "list", "-h"},
+	} {
+		stdout, stderr, exit := runCLI(t, args...)
+		if exit != 0 {
+			t.Fatalf("%v: exit = %d, want 0", args, exit)
+		}
+		out := stdout + stderr
+		if !strings.Contains(out, "Usage:") {
+			t.Errorf("%v: expected usage output, got: %q", args, out)
+		}
+	}
+}
+
+// ----- --no-interactive gates interactive commands cleanly -----
+
+func TestContractNoInteractiveRefusesTokenBrowse(t *testing.T) {
+	stdout, _, exit := runCLIAuthed(t, "token", "browse", "--no-interactive", "--json")
+	if exit != 2 {
+		t.Fatalf("exit = %d, want 2 (validation)", exit)
+	}
+	m := mustJSON(t, stdout)
+	err, _ := m["error"].(map[string]any)
+	if err == nil || err["code"] != "validation" {
+		t.Errorf("error.code = %v, want validation", err)
+	}
+}
+
+func jsonRoundtrip(s string) (any, error) {
+	var v any
+	err := json.Unmarshal([]byte(s), &v)
+	return v, err
+}
