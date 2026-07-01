@@ -16,6 +16,7 @@
 package output
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -163,15 +164,19 @@ func (r *Renderer) InfoStream() io.Writer {
 }
 
 // JSON marshals payload as indented JSON and writes it, followed by a
-// newline, to stdout. Returns the marshal error so callers can decide
-// whether to surface it (typically they should — a marshal failure is
-// a programmer error worth seeing).
+// newline, to stdout. HTML-escaping (< > &) is disabled: the CLI's
+// stdout is not an HTML embedding, so escaping "<name>" to "<name>"
+// just makes example strings and validation messages unreadable.
 func (r *Renderer) JSON(payload any) error {
-	buf, err := json.MarshalIndent(payload, "", "  ")
-	if err != nil {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetIndent("", "  ")
+	enc.SetEscapeHTML(false)
+	if err := enc.Encode(payload); err != nil {
 		return fmt.Errorf("output: marshal json: %w", err)
 	}
-	if _, err := fmt.Fprintln(r.stdout, string(buf)); err != nil {
+	// Encoder.Encode already writes a trailing newline.
+	if _, err := r.stdout.Write(buf.Bytes()); err != nil {
 		return fmt.Errorf("output: write stdout: %w", err)
 	}
 	return nil

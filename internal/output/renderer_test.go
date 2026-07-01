@@ -135,3 +135,26 @@ func TestJSONMarshalError(t *testing.T) {
 		t.Fatal("expected marshal error, got nil")
 	}
 }
+
+// TestJSONDoesNotHTMLEscape locks in the readability contract: agents
+// and humans reading the CLI's JSON output should see the input string
+// verbatim. Go's encoding/json escapes the LT / GT / AMP chars to their
+// six-char Unicode escapes by default for HTML embedding safety; the
+// renderer disables that.
+func TestJSONDoesNotHTMLEscape(t *testing.T) {
+	r, stdout, _ := newTestRenderer(ModeJSON)
+	input := "pass --add <name> & --remove <name>"
+	if err := r.JSON(map[string]string{"msg": input}); err != nil {
+		t.Fatal(err)
+	}
+	out := stdout.String()
+	// The six-char JSON Unicode escapes for <, >, &.
+	for _, seq := range []string{"\\u003c", "\\u003e", "\\u0026"} {
+		if strings.Contains(out, seq) {
+			t.Fatalf("JSON output contains HTML-escape sequence %s: %q", seq, out)
+		}
+	}
+	if !strings.Contains(out, input) {
+		t.Fatalf("JSON output missing verbatim input %q: %q", input, out)
+	}
+}
