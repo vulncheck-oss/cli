@@ -129,6 +129,12 @@ vulncheck version --json
 vulncheck auth status --json
 # {"schema_version": 1, "authenticated": true, "token_source": "env", "user": "...", "email": "..."}
 # Exit 0 even when authenticated=false — agents dispatch on the bool.
+
+vulncheck commands
+# {"schema_version": 1, "root": {"name":"vulncheck", "subcommands":[...]}, ...}
+# Machine-readable dump of the whole command tree — every subcommand,
+# every flag (with type + default + usage), aliases, deprecation. Use
+# this instead of parsing --help. Auth is not required.
 ```
 
 ### Pagination

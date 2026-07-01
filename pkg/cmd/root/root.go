@@ -21,6 +21,7 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/cmd/about"
 	"github.com/vulncheck-oss/cli/pkg/cmd/auth"
 	"github.com/vulncheck-oss/cli/pkg/cmd/backup"
+	"github.com/vulncheck-oss/cli/pkg/cmd/commands"
 	"github.com/vulncheck-oss/cli/pkg/cmd/cpe"
 	"github.com/vulncheck-oss/cli/pkg/cmd/index"
 	"github.com/vulncheck-oss/cli/pkg/cmd/indices"
@@ -95,6 +96,7 @@ func NewCmdRoot() *cobra.Command {
 
 	cmd.AddCommand(version.Command())
 	cmd.AddCommand(about.Command())
+	cmd.AddCommand(commands.Command())
 	cmd.AddCommand(auth.Command())
 	cmd.AddCommand(token.Command())
 	cmd.AddCommand(upgrade.Command())
