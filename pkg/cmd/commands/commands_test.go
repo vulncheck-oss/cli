@@ -171,8 +171,8 @@ func TestCommandCanBeConstructed(t *testing.T) {
 	if c.Name() != "commands" {
 		t.Errorf("Name() = %q, want commands", c.Name())
 	}
-	if !c.Hidden {
-		t.Error("commands should be hidden from top-level help listings")
+	if c.Hidden {
+		t.Error("commands must be visible in --help — it's the CLI's capability probe")
 	}
 	if c.Annotations["skipAuthCheck"] != "true" {
 		t.Error("commands should skip auth (it's a probe)")

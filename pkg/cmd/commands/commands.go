@@ -67,9 +67,11 @@ type flagInfo struct {
 // invoke it is machine consumption.
 func Command() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:    "commands",
-		Short:  "Print the command tree as JSON for agent / skill capability discovery",
-		Hidden: true, // keep out of the main --help listing to avoid clutter
+		Use:   "commands",
+		Short: "Print the command tree as JSON for agent / skill capability discovery",
+		// Deliberately visible in the top-level help listing — this is a
+		// first-class discoverability surface, and hiding it defeats the
+		// point of shipping a capability probe.
 		RunE: func(cmd *cobra.Command, args []string) error {
 			r := output.FromCmd(cmd)
 			root := cmd.Root()
