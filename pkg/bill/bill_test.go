@@ -64,6 +64,21 @@ func TestLoadSBOM(t *testing.T) {
 	}
 }
 
+// TestLoadSBOM_CycloneDX17 documents that scanning against a CycloneDX 1.7
+// SBOM (the spec version syft >= 1.46.0 defaults to) must succeed. Syft
+// versions before 1.46.0 don't recognize specVersion "1.7" and fail to
+// decode it, breaking `scan --sbom-input-file` for these inputs.
+func TestLoadSBOM_CycloneDX17(t *testing.T) {
+	loadedSBOM, _, err := LoadSBOM(filepath.Join("testdata", "cyclonedx-1.7.json"))
+	if err != nil {
+		t.Fatalf("LoadSBOM failed to decode a CycloneDX 1.7 SBOM: %v", err)
+	}
+
+	if loadedSBOM == nil {
+		t.Fatal("LoadSBOM returned nil SBOM")
+	}
+}
+
 func TestGetPURLDetail(t *testing.T) {
 	mockSBOM := &sbom.SBOM{}
 
