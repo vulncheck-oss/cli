@@ -4,6 +4,8 @@
 /share/man/man1
 /share/zsh/site-functions
 /vulncheck-cli
+/vulncheck
+/vulncheck.exe
 .envrc
 /dist
 /site

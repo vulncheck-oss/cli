@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -25,7 +26,14 @@ func TestMain(m *testing.M) {
 	}
 	defer func() { _ = os.RemoveAll(tmp) }()
 
-	binPath = filepath.Join(tmp, "vulncheck")
+	// On Windows `go build -o vulncheck` writes to `vulncheck.exe`;
+	// exec.Command would then fail with "file not found" on the bare name.
+	// Match Go's naming so both build and later Run land on the same path.
+	binName := "vulncheck"
+	if runtime.GOOS == "windows" {
+		binName += ".exe"
+	}
+	binPath = filepath.Join(tmp, binName)
 	build := exec.Command("go", "build", "-o", binPath, ".")
 	build.Stderr = os.Stderr
 	if err := build.Run(); err != nil {
@@ -61,7 +69,11 @@ func runCLIEnv(t *testing.T, token string, args ...string) (stdout, stderr strin
 	cmd.Stdout = &outBuf
 	cmd.Stderr = &errBuf
 	cmd.Env = append(os.Environ(),
+		// HOME on Unix, USERPROFILE on Windows — both point os.UserHomeDir
+		// at our isolated tree so the tests never touch the developer's
+		// real ~/.config/vulncheck or %APPDATA%.
 		"HOME="+isolatedHome,
+		"USERPROFILE="+isolatedHome,
 		"XDG_CONFIG_HOME="+isolatedHome,
 		"VC_TOKEN="+token,
 		"NO_COLOR=1",
