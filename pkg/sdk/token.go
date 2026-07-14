@@ -3,6 +3,7 @@ package sdk
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -56,14 +57,37 @@ type TokenResponse struct {
 	Data      TokenData `json:"data"`
 }
 
-func (c *Client) GetTokens() (responseJSON *TokenResult, err error) {
-	resp, err := c.Request("GET", "/token?limit=100")
+// TokenListParams selects a single page of tokens. Limit defaults to 100
+// when zero; Page is 1-based and defaults to the first page when zero.
+type TokenListParams struct {
+	Limit int
+	Page  int
+}
+
+// GetTokens returns one page of tokens. Variadic params keep callers that
+// only need the default page working unchanged.
+func (c *Client) GetTokens(params ...TokenListParams) (responseJSON *TokenResult, err error) {
+	var p TokenListParams
+	if len(params) > 0 {
+		p = params[0]
+	}
+	if p.Limit <= 0 {
+		p.Limit = 100
+	}
+
+	qs := url.Values{}
+	qs.Set("limit", fmt.Sprintf("%d", p.Limit))
+	if p.Page > 0 {
+		qs.Set("page", fmt.Sprintf("%d", p.Page))
+	}
+
+	resp, err := c.Request("GET", "/token?"+qs.Encode())
 	if err != nil {
 		return nil, err
 	}
 
 	defer func() { _ = resp.Body.Close() }()
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 	return responseJSON, nil
 }
 
@@ -74,7 +98,7 @@ func (c *Client) CreateToken(label string) (responseJSON *TokenResponse, err err
 	}
 
 	defer func() { _ = resp.Body.Close() }()
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 	return responseJSON, nil
 }
 
@@ -84,7 +108,7 @@ func (c *Client) DeleteToken(ID string) (responseJSON *TokenResponse, err error)
 		return nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 	return responseJSON, nil
 }
 

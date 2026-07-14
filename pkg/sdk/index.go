@@ -3,7 +3,6 @@ package sdk
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
 
 	"github.com/vulncheck-oss/cli/pkg/utils"
@@ -187,32 +186,25 @@ func setIndexQueryParameters(query url.Values, queryParameters ...IndexQueryPara
 	}
 }
 
-// https://docs.vulncheck.com/api/indice
+// GetIndex — https://docs.vulncheck.com/api/indice
+//
+// Routes through c.Request so the client's context is honoured (SIGINT
+// during --all pagination now tears down the in-flight HTTP read rather
+// than waiting for the current page to finish).
 func (c *Client) GetIndex(index string, queryParameters ...IndexQueryParameters) (responseJSON *IndexResponse, err error) {
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", c.GetUrl()+"/v3/index/"+url.QueryEscape(index), nil)
-	if err != nil {
-		return nil, err
-	}
+	// Populate c.Values so c.Request appends the encoded query string to
+	// the URL. c.Request itself only reads c.Values; it does not reset
+	// them between calls, so we ensure a fresh map here.
+	c.Values = &url.Values{}
+	setIndexQueryParameters(*c.Values, queryParameters...)
 
-	c.SetAuthHeader(req)
-
-	query := req.URL.Query()
-	setIndexQueryParameters(query, queryParameters...)
-	req.URL.RawQuery = query.Encode()
-
-	resp, err := client.Do(req)
+	resp, err := c.Request("GET", "/v3/index/"+url.QueryEscape(index))
 	if err != nil {
 		return nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode != 200 {
-		return nil, handleErrorResponse(resp)
-	}
-
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
-
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 	return responseJSON, nil
 }
 

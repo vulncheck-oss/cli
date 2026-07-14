@@ -2,6 +2,7 @@ package token
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"text/tabwriter"
@@ -9,6 +10,8 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/internal/errs"
+	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
 	"github.com/vulncheck-oss/cli/pkg/sdk"
@@ -30,28 +33,62 @@ func Command() *cobra.Command {
 	return cmd
 }
 
-type ListOptions struct {
-	Json bool
+// tokenCreateEnvelope is the JSON payload for `token create --json`.
+// By default `Token` is empty and the secret is written to stderr —
+// pipes and log capture use stdout, so this makes accidental leakage
+// impossible without the caller explicitly opting in.
+type tokenCreateEnvelope struct {
+	SchemaVersion int    `json:"schema_version"`
+	ID            string `json:"id"`
+	Label         string `json:"label"`
+	// Token is populated in stdout JSON only when the caller passes
+	// --allow-token-on-stdout. Otherwise it is empty and the actual
+	// secret is written to stderr on a line of its own.
+	Token           string `json:"token,omitempty"`
+	TokenOnStderr   bool   `json:"token_on_stderr,omitempty"`
 }
 
 func Create() *cobra.Command {
+	var allowTokenOnStdout bool
+
 	cmd := &cobra.Command{
 		Use:   "create <label>",
 		Short: i18n.C.CreateTokenShort,
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
 			if len(args) == 0 {
 				return fmt.Errorf("%s", i18n.C.CreateTokenLabelRequired)
 			}
 
-			response, err := session.Connect(config.Token()).CreateToken(args[0])
+			response, err := session.ConnectWithContext(cmd.Context(), config.Token()).CreateToken(args[0])
 			if err != nil {
 				return err
 			}
-			ui.Success(fmt.Sprintf(i18n.C.CreateTokenSuccess, args[0], response.Data.Token))
+
+			if r.IsJSON() {
+				env := tokenCreateEnvelope{
+					SchemaVersion: output.SchemaVersion,
+					ID:            response.Data.ID,
+					Label:         args[0],
+				}
+				if allowTokenOnStdout {
+					env.Token = response.Data.Token
+				} else {
+					env.TokenOnStderr = true
+					// Print the secret on stderr so callers who did NOT opt in
+					// can still capture it — separately from the JSON payload.
+					_, _ = fmt.Fprintln(r.Stderr(), response.Data.Token)
+				}
+				return r.JSON(env)
+			}
+
+			r.Success(i18n.C.CreateTokenSuccess, args[0], response.Data.Token)
 			return nil
 		},
 	}
+	cmd.Flags().BoolVar(&allowTokenOnStdout, "allow-token-on-stdout", false,
+		"Include the newly-created token in the stdout JSON. Off by default: the token is written to stderr on its own line, so `> file.json` capture never contains the secret.")
 	return cmd
 }
 
@@ -61,15 +98,20 @@ func Remove() *cobra.Command {
 		Short: i18n.C.RemoveTokenShort,
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
 			if len(args) == 0 {
 				return fmt.Errorf("%s", i18n.C.RemoveTokenIDRequired)
 			}
 
-			_, err := session.Connect(config.Token()).DeleteToken(args[0])
+			_, err := session.ConnectWithContext(cmd.Context(), config.Token()).DeleteToken(args[0])
 			if err != nil {
 				return err
 			}
-			ui.Success(fmt.Sprintf(i18n.C.RemoveTokenSuccess, args[0]))
+
+			if r.IsJSON() {
+				return r.JSON(map[string]any{"id": args[0], "removed": true})
+			}
+			r.Success(i18n.C.RemoveTokenSuccess, args[0])
 			return nil
 		},
 	}
@@ -77,34 +119,71 @@ func Remove() *cobra.Command {
 }
 
 func List() *cobra.Command {
-
-	opts := &ListOptions{
-		Json: false,
-	}
+	var (
+		limit  int
+		page   int
+		fetch  bool // --all
+	)
 
 	cmd := &cobra.Command{
 		Use:   "list <search>",
 		Short: i18n.C.ListTokensShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			response, err := session.Connect(config.Token()).GetTokens()
+			r := output.FromCmd(cmd)
+			client := session.ConnectWithContext(cmd.Context(), config.Token())
+
+			tokens, err := fetchTokens(client, limit, page, fetch)
 			if err != nil {
 				return err
 			}
-			ui.Info(fmt.Sprintf(i18n.C.ListTokensFull, len(response.GetData())))
-			if opts.Json {
-				ui.Json(response.GetData())
-				return nil
+
+			if r.IsJSON() {
+				return r.JSON(tokens)
 			}
 
-			if err := ui.TokensList(response.GetData()); err != nil {
-				return err
-			}
-			return nil
+			r.Info(i18n.C.ListTokensFull, len(tokens))
+			return ui.TokensList(tokens)
 		},
 	}
 
-	cmd.Flags().BoolVarP(&opts.Json, "json", "j", false, "Output as JSON")
+	cmd.Flags().IntVar(&limit, "limit", 0, "Page size; 0 uses the server default")
+	cmd.Flags().IntVar(&page, "page", 0, "1-based page number; 0 starts at the first page")
+	cmd.Flags().BoolVar(&fetch, "all", false, "Auto-paginate through every page and emit one combined list")
+
 	return cmd
+}
+
+// fetchTokens consolidates the single-page / all-pages paths so the RunE
+// stays small. When --all is set it loops until TotalPages, otherwise it
+// fetches a single page.
+func fetchTokens(client *sdk.Client, limit, page int, all bool) ([]sdk.TokenData, error) {
+	if !all {
+		resp, err := client.GetTokens(sdk.TokenListParams{Limit: limit, Page: page})
+		if err != nil {
+			return nil, err
+		}
+		return resp.GetData(), nil
+	}
+
+	var combined []sdk.TokenData
+	cur := page
+	if cur <= 0 {
+		cur = 1
+	}
+	for {
+		resp, err := client.GetTokens(sdk.TokenListParams{Limit: limit, Page: cur})
+		if err != nil {
+			return nil, err
+		}
+		combined = append(combined, resp.GetData()...)
+		// Stop when we've fetched the last page or got nothing back (safety
+		// against a server that returns TotalPages=0).
+		if resp.Meta.TotalPages == 0 || cur >= resp.Meta.TotalPages || len(resp.GetData()) == 0 {
+			break
+		}
+		cur++
+	}
+	return combined, nil
 }
 
 func tokenFromId(tokens []sdk.TokenData, tokenId string) *sdk.TokenData {
@@ -121,14 +200,18 @@ func Browse() *cobra.Command {
 		Use:   "browse",
 		Short: i18n.C.BrowseTokensShort,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
+			if !r.Interactive() {
+				return errs.Validation("token browse requires an interactive terminal; use `vulncheck token list --json` instead")
+			}
 
 			for {
-				response, err := session.Connect(config.Token()).GetTokens()
+				response, err := session.ConnectWithContext(cmd.Context(), config.Token()).GetTokens()
 				if err != nil {
 					return err
 				}
 				ui.ClearScreen()
-				ui.Info(fmt.Sprintf(i18n.C.BrowseTokens, len(response.GetData())))
+				r.Info(i18n.C.BrowseTokens, len(response.GetData()))
 				tokens := response.GetData()
 				selectedID, err := ui.TokensBrowse(tokens)
 				if err != nil {
@@ -136,12 +219,11 @@ func Browse() *cobra.Command {
 				}
 
 				if selectedID == "" {
-					// User quit the browse view
 					return nil
 				}
 
 				if selectedID == "createEntry" {
-					if err := BrowseCreate(); err != nil {
+					if err := BrowseCreate(cmd.Context()); err != nil {
 						return err
 					}
 					continue
@@ -149,25 +231,22 @@ func Browse() *cobra.Command {
 
 				token := tokenFromId(tokens, selectedID)
 				if token != nil {
-					if err := BrowseActions(*token, tokens); err != nil {
+					if err := BrowseActions(cmd.Context(), *token, tokens); err != nil {
 						return err
 					}
-					// If BrowseActions returns without error, continue the loop to show the token list again
 				} else {
 					return fmt.Errorf("selected token not found")
 				}
 			}
-
 		},
 	}
 
 	return cmd
 }
 
-func BrowseCreate() error {
+func BrowseCreate(ctx context.Context) error {
 	var label string
 
-	// Prompt user for token label
 	form := huh.NewForm(
 		huh.NewGroup(
 			huh.NewInput().
@@ -185,13 +264,11 @@ func BrowseCreate() error {
 		return fmt.Errorf("%s", i18n.C.CreateTokenLabelRequired)
 	}
 
-	// Create the token
-	response, err := session.Connect(config.Token()).CreateToken(label)
+	response, err := session.ConnectWithContext(ctx, config.Token()).CreateToken(label)
 	if err != nil {
 		return err
 	}
 
-	// Display the created token
 	ui.ClearScreen()
 	boxStyle := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder()).
@@ -211,14 +288,12 @@ func BrowseCreate() error {
 
 	fmt.Println(boxStyle.Render(content))
 	fmt.Println("\nPress Enter to continue...")
-	_, _ = fmt.Scanln() // Wait for user to press Enter
+	_, _ = fmt.Scanln()
 
 	return nil
 }
 
-func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
-
-	// Define styles
+func BrowseActions(ctx context.Context, token sdk.TokenData, tokens []sdk.TokenData) error {
 	boxStyle := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("#6667ab")).
@@ -249,7 +324,6 @@ func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
 		valueStyle.Render(token.GetHumanUpdatedAt()),
 	)
 
-	// Calculate the widest label for alignment
 	labels := []string{"ID:", "Source:", "Location:", "Last Activity:"}
 	maxLabelWidth := 0
 	for _, label := range labels {
@@ -258,11 +332,9 @@ func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
 		}
 	}
 
-	// Set tab stop for alignment
 	var buf bytes.Buffer
 	tabWriter := tabwriter.NewWriter(&buf, maxLabelWidth, 0, 1, ' ', 0)
 
-	// Write content to tabWriter
 	if _, err := fmt.Fprint(tabWriter, content); err != nil {
 		return fmt.Errorf("failed to write to tabWriter: %w", err)
 	}
@@ -270,10 +342,9 @@ func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
 		return fmt.Errorf("failed to flush tabWriter: %w", err)
 	}
 
-	// Render the box with all content
 	ui.ClearScreen()
 	fmt.Println(boxStyle.Render(buf.String()))
-	fmt.Println() // Add a newline after the box
+	fmt.Println()
 
 	var action string
 	form := huh.NewForm(
@@ -301,8 +372,7 @@ func BrowseActions(token sdk.TokenData, tokens []sdk.TokenData) error {
 			return err
 		}
 		if confirmed {
-			// Proceed with token deletion
-			_, err := session.Connect(config.Token()).DeleteToken(token.ID)
+			_, err := session.ConnectWithContext(ctx, config.Token()).DeleteToken(token.ID)
 			if err != nil {
 				return err
 			}

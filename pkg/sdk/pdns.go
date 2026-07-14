@@ -2,27 +2,20 @@ package sdk
 
 import (
 	"io"
-	"net/http"
 	"net/url"
 )
 
-// https://docs.vulncheck.com/api/pdns
+// GetPdns https://docs.vulncheck.com/api/pdns
 func (c *Client) GetPdns(list string) (string, error) {
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", c.GetUrl()+"/v3/pdns/"+url.QueryEscape(list), nil)
+	resp, err := c.ResetQuery().Request("GET", "/v3/pdns/"+url.QueryEscape(list))
 	if err != nil {
 		return "", err
 	}
+	defer func() { _ = resp.Body.Close() }()
 
-	c.SetAuthHeader(req)
-
-	res, err := client.Do(req)
+	body, err := io.ReadAll(LimitedBody(resp.Body))
 	if err != nil {
 		return "", err
 	}
-
-	defer func() { _ = res.Body.Close() }()
-	body, _ := io.ReadAll(res.Body)
-
 	return string(body), nil
 }

@@ -2,31 +2,24 @@ package sdk
 
 import (
 	"io"
-	"net/http"
 	"net/url"
 )
 
-// https://docs.vulncheck.com/api/rules
+// GetRule https://docs.vulncheck.com/api/rules
 func (c *Client) GetRule(rule string) (string, error) {
+	// Only the initial-access rule index is exposed today; the path is
+	// hard-coded here rather than plumbed through the API.
+	const index = "initial-access"
 
-	// in the future, we can add more indexes. For now, we only have initial-access
-	index := "initial-access"
-
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", c.GetUrl()+"/v3/rules/"+index+"/"+url.QueryEscape(rule), nil)
+	resp, err := c.ResetQuery().Request("GET", "/v3/rules/"+index+"/"+url.QueryEscape(rule))
 	if err != nil {
 		return "", err
 	}
+	defer func() { _ = resp.Body.Close() }()
 
-	c.SetAuthHeader(req)
-
-	res, err := client.Do(req)
+	body, err := io.ReadAll(LimitedBody(resp.Body))
 	if err != nil {
 		return "", err
 	}
-
-	defer func() { _ = res.Body.Close() }()
-	body, _ := io.ReadAll(res.Body)
-
 	return string(body), nil
 }

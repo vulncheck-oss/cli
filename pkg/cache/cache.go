@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	"slices"
 
 	"github.com/fumeapp/taskin"
+	"github.com/vulncheck-oss/cli/internal/tasks"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/session"
 	"github.com/vulncheck-oss/cli/pkg/utils"
@@ -67,8 +69,8 @@ func (i *InfoFile) GetIndex(name string) *IndexInfo {
 	return nil
 }
 
-func syncSingleIndex(index string, configDir string, indexInfo *InfoFile, force bool) taskin.Tasks {
-	response, err := session.Connect(config.Token()).GetIndexBackup(index)
+func syncSingleIndex(ctx context.Context, index string, configDir string, indexInfo *InfoFile, force bool) taskin.Tasks {
+	response, err := session.ConnectWithContext(ctx, config.Token()).GetIndexBackup(index)
 	if err != nil {
 		return taskin.Tasks{
 			{
@@ -118,7 +120,7 @@ func syncSingleIndex(index string, configDir string, indexInfo *InfoFile, force 
 	}
 
 	childTasks := taskin.Tasks{
-		taskDownload(index, filePath),
+		taskDownload(ctx, index, filePath),
 		taskExtract(index, configDir, filePath),
 		taskDB(index, configDir, filePath, lastUpdated, indexInfo),
 	}
@@ -126,7 +128,11 @@ func syncSingleIndex(index string, configDir string, indexInfo *InfoFile, force 
 	return childTasks
 }
 
-func IndicesSync(indices []string, force bool) error {
+// IndicesSync runs the sync-download-extract-catalog pipeline for the
+// requested indices. Pass disableUI=true to suppress the taskin progress
+// bar — required whenever stdout must stay parseable (--json mode) or
+// when there is no TTY to render into.
+func IndicesSync(ctx context.Context, indices []string, force bool, disableUI bool) error {
 	configDir, err := config.IndicesDir()
 	if err != nil {
 		return err
@@ -150,7 +156,7 @@ func IndicesSync(indices []string, force bool) error {
 
 	// If there are indices to sync, run the sync tasks
 	if len(indices) > 0 {
-		tasks := taskin.Tasks{}
+		taskList := taskin.Tasks{}
 
 		for _, index := range indices {
 			idx := index
@@ -160,15 +166,25 @@ func IndicesSync(indices []string, force bool) error {
 					t.Title = fmt.Sprintf("Syncing index %s", idx)
 					return nil
 				},
-				Tasks: syncSingleIndex(idx, configDir, &indexInfo, force),
+				Tasks: syncSingleIndex(ctx, idx, configDir, &indexInfo, force),
 			}
 
-			tasks = append(tasks, parentTask)
+			taskList = append(taskList, parentTask)
 		}
 
-		runner := taskin.New(tasks, taskin.Defaults)
-		if err := runner.Run(); err != nil {
-			return err
+		// taskin always writes to os.Stdout — DisableUI only strips ANSI
+		// escapes rather than redirecting output. To keep --json output
+		// parseable we bypass the taskin runner entirely in headless mode
+		// and just execute the task tree in order.
+		if disableUI {
+			if err := tasks.RunHeadless(taskList, nil); err != nil {
+				return err
+			}
+		} else {
+			runner := taskin.New(taskList, taskin.Defaults)
+			if err := runner.Run(); err != nil {
+				return err
+			}
 		}
 	}
 

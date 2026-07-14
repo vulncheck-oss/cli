@@ -42,7 +42,7 @@ func (c *Client) GetIndex7zip(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -79,7 +79,7 @@ func (c *Client) GetIndexA10(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -116,7 +116,7 @@ func (c *Client) GetIndexAbb(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -153,7 +153,7 @@ func (c *Client) GetIndexAbbott(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -190,7 +190,7 @@ func (c *Client) GetIndexAbsolute(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -227,7 +227,7 @@ func (c *Client) GetIndexAcronis(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -264,7 +264,7 @@ func (c *Client) GetIndexAdobe(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -300,7 +300,7 @@ func (c *Client) GetIndexAix(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -337,7 +337,7 @@ func (c *Client) GetIndexAlephResearch(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -374,7 +374,7 @@ func (c *Client) GetIndexAlma(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -411,7 +411,7 @@ func (c *Client) GetIndexAlpine(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -448,7 +448,7 @@ func (c *Client) GetIndexAlpinePurls(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -485,7 +485,7 @@ func (c *Client) GetIndexAmazon(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -521,7 +521,7 @@ func (c *Client) GetIndexAmazonCve(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -558,7 +558,7 @@ func (c *Client) GetIndexAmd(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -595,7 +595,7 @@ func (c *Client) GetIndexAmi(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -632,7 +632,7 @@ func (c *Client) GetIndexAnchoreNvdOverride(queryParameters ...IndexQueryParamet
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -669,7 +669,7 @@ func (c *Client) GetIndexAndroid(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -706,7 +706,7 @@ func (c *Client) GetIndexApacheActivemq(queryParameters ...IndexQueryParameters)
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -743,7 +743,7 @@ func (c *Client) GetIndexApacheArchiva(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -780,7 +780,7 @@ func (c *Client) GetIndexApacheArrow(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -817,7 +817,7 @@ func (c *Client) GetIndexApacheCamel(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -854,7 +854,7 @@ func (c *Client) GetIndexApacheCommons(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -891,7 +891,7 @@ func (c *Client) GetIndexApacheCouchdb(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -928,7 +928,7 @@ func (c *Client) GetIndexApacheFlink(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -965,7 +965,7 @@ func (c *Client) GetIndexApacheGuacamole(queryParameters ...IndexQueryParameters
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1002,7 +1002,7 @@ func (c *Client) GetIndexApacheHadoop(queryParameters ...IndexQueryParameters) (
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1039,7 +1039,7 @@ func (c *Client) GetIndexApacheHttp(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1076,7 +1076,7 @@ func (c *Client) GetIndexApacheJspwiki(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1113,7 +1113,7 @@ func (c *Client) GetIndexApacheKafka(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1150,7 +1150,7 @@ func (c *Client) GetIndexApacheLoggingservices(queryParameters ...IndexQueryPara
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1187,7 +1187,7 @@ func (c *Client) GetIndexApacheNifi(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1224,7 +1224,7 @@ func (c *Client) GetIndexApacheOfbiz(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1261,7 +1261,7 @@ func (c *Client) GetIndexApacheOpenmeetings(queryParameters ...IndexQueryParamet
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1298,7 +1298,7 @@ func (c *Client) GetIndexApacheOpenoffice(queryParameters ...IndexQueryParameter
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1335,7 +1335,7 @@ func (c *Client) GetIndexApachePulsar(queryParameters ...IndexQueryParameters) (
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1372,7 +1372,7 @@ func (c *Client) GetIndexApacheShiro(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1409,7 +1409,7 @@ func (c *Client) GetIndexApacheSpark(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1446,7 +1446,7 @@ func (c *Client) GetIndexApacheStruts(queryParameters ...IndexQueryParameters) (
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1483,7 +1483,7 @@ func (c *Client) GetIndexApacheSubversion(queryParameters ...IndexQueryParameter
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1520,7 +1520,7 @@ func (c *Client) GetIndexApacheSuperset(queryParameters ...IndexQueryParameters)
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1557,7 +1557,7 @@ func (c *Client) GetIndexApacheTomcat(queryParameters ...IndexQueryParameters) (
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1594,7 +1594,7 @@ func (c *Client) GetIndexApacheZookeeper(queryParameters ...IndexQueryParameters
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1631,7 +1631,7 @@ func (c *Client) GetIndexAppcheck(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1668,7 +1668,7 @@ func (c *Client) GetIndexAppgate(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1705,7 +1705,7 @@ func (c *Client) GetIndexApple(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1742,7 +1742,7 @@ func (c *Client) GetIndexArch(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1779,7 +1779,7 @@ func (c *Client) GetIndexArista(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1816,7 +1816,7 @@ func (c *Client) GetIndexAruba(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1853,7 +1853,7 @@ func (c *Client) GetIndexAsrg(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1890,7 +1890,7 @@ func (c *Client) GetIndexAssetnote(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1927,7 +1927,7 @@ func (c *Client) GetIndexAsterisk(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -1963,7 +1963,7 @@ func (c *Client) GetIndexAstra(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2000,7 +2000,7 @@ func (c *Client) GetIndexAsus(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2037,7 +2037,7 @@ func (c *Client) GetIndexAtlassian(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2074,7 +2074,7 @@ func (c *Client) GetIndexAtlassianVulns(queryParameters ...IndexQueryParameters)
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2111,7 +2111,7 @@ func (c *Client) GetIndexAtredis(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2148,7 +2148,7 @@ func (c *Client) GetIndexAuscert(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2185,7 +2185,7 @@ func (c *Client) GetIndexAutodesk(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2222,7 +2222,7 @@ func (c *Client) GetIndexAvaya(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2259,7 +2259,7 @@ func (c *Client) GetIndexAveva(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2296,7 +2296,7 @@ func (c *Client) GetIndexAvigilon(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2333,7 +2333,7 @@ func (c *Client) GetIndexAws(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2370,7 +2370,7 @@ func (c *Client) GetIndexAxis(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2407,7 +2407,7 @@ func (c *Client) GetIndexAzul(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2444,7 +2444,7 @@ func (c *Client) GetIndexBandr(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2481,7 +2481,7 @@ func (c *Client) GetIndexBaxter(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2518,7 +2518,7 @@ func (c *Client) GetIndexBbraun(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2555,7 +2555,7 @@ func (c *Client) GetIndexBd(queryParameters ...IndexQueryParameters) (responseJS
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2592,7 +2592,7 @@ func (c *Client) GetIndexBdu(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2629,7 +2629,7 @@ func (c *Client) GetIndexBeckhoff(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2666,7 +2666,7 @@ func (c *Client) GetIndexBelden(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2703,7 +2703,7 @@ func (c *Client) GetIndexBeyondTrust(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2740,7 +2740,7 @@ func (c *Client) GetIndexBinarly(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2777,7 +2777,7 @@ func (c *Client) GetIndexBitdefender(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2814,7 +2814,7 @@ func (c *Client) GetIndexBlackberry(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2851,7 +2851,7 @@ func (c *Client) GetIndexBls(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2888,7 +2888,7 @@ func (c *Client) GetIndexBosch(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2925,7 +2925,7 @@ func (c *Client) GetIndexBostonScientific(queryParameters ...IndexQueryParameter
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2962,7 +2962,7 @@ func (c *Client) GetIndexBotnets(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -2999,7 +2999,7 @@ func (c *Client) GetIndexCaCyberCentre(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3036,7 +3036,7 @@ func (c *Client) GetIndexCanvas(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3073,7 +3073,7 @@ func (c *Client) GetIndexCarestream(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3110,7 +3110,7 @@ func (c *Client) GetIndexCargo(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3147,7 +3147,7 @@ func (c *Client) GetIndexCarrier(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3184,7 +3184,7 @@ func (c *Client) GetIndexCblMariner(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3221,7 +3221,7 @@ func (c *Client) GetIndexCentos(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3258,7 +3258,7 @@ func (c *Client) GetIndexCertBe(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3295,7 +3295,7 @@ func (c *Client) GetIndexCertIn(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3332,7 +3332,7 @@ func (c *Client) GetIndexCertIrSecurityAlerts(queryParameters ...IndexQueryParam
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3369,7 +3369,7 @@ func (c *Client) GetIndexCertSe(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3406,7 +3406,7 @@ func (c *Client) GetIndexCertUa(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3443,7 +3443,7 @@ func (c *Client) GetIndexCerteu(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3480,7 +3480,7 @@ func (c *Client) GetIndexCertfr(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3517,7 +3517,7 @@ func (c *Client) GetIndexChainguard(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3554,7 +3554,7 @@ func (c *Client) GetIndexCheckpoint(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3591,7 +3591,7 @@ func (c *Client) GetIndexChrome(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3628,7 +3628,7 @@ func (c *Client) GetIndexCisaAlerts(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3665,7 +3665,7 @@ func (c *Client) GetIndexCisaKev(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3702,7 +3702,7 @@ func (c *Client) GetIndexCisco(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3738,7 +3738,7 @@ func (c *Client) GetIndexCiscoCsaf(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3775,7 +3775,7 @@ func (c *Client) GetIndexCiscoTalos(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3812,7 +3812,7 @@ func (c *Client) GetIndexCitrix(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3849,7 +3849,7 @@ func (c *Client) GetIndexClaroty(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3886,7 +3886,7 @@ func (c *Client) GetIndexCloudbees(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3923,7 +3923,7 @@ func (c *Client) GetIndexCloudvulndb(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3960,7 +3960,7 @@ func (c *Client) GetIndexCnnvd(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -3997,7 +3997,7 @@ func (c *Client) GetIndexCnvdBulletins(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4034,7 +4034,7 @@ func (c *Client) GetIndexCnvdFlaws(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4071,7 +4071,7 @@ func (c *Client) GetIndexCocoapods(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4108,7 +4108,7 @@ func (c *Client) GetIndexCodesys(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4144,7 +4144,7 @@ func (c *Client) GetIndexCommvault(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4181,7 +4181,7 @@ func (c *Client) GetIndexCompassSecurity(queryParameters ...IndexQueryParameters
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4218,7 +4218,7 @@ func (c *Client) GetIndexComposer(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4255,7 +4255,7 @@ func (c *Client) GetIndexConan(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4291,7 +4291,7 @@ func (c *Client) GetIndexCoreimpact(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4328,7 +4328,7 @@ func (c *Client) GetIndexCrestron(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4365,7 +4365,7 @@ func (c *Client) GetIndexCurl(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4402,7 +4402,7 @@ func (c *Client) GetIndexCwe(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4439,7 +4439,7 @@ func (c *Client) GetIndexDahua(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4476,7 +4476,7 @@ func (c *Client) GetIndexDassault(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4513,7 +4513,7 @@ func (c *Client) GetIndexDebian(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4550,7 +4550,7 @@ func (c *Client) GetIndexDebianDsa(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4587,7 +4587,7 @@ func (c *Client) GetIndexDell(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4624,7 +4624,7 @@ func (c *Client) GetIndexDelta(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4661,7 +4661,7 @@ func (c *Client) GetIndexDjango(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4698,7 +4698,7 @@ func (c *Client) GetIndexDnn(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4735,7 +4735,7 @@ func (c *Client) GetIndexDotcms(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4772,7 +4772,7 @@ func (c *Client) GetIndexDragos(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4809,7 +4809,7 @@ func (c *Client) GetIndexDraytek(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4845,7 +4845,7 @@ func (c *Client) GetIndexDrupal(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4882,7 +4882,7 @@ func (c *Client) GetIndexEaton(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4919,7 +4919,7 @@ func (c *Client) GetIndexElastic(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4956,7 +4956,7 @@ func (c *Client) GetIndexElspec(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -4993,7 +4993,7 @@ func (c *Client) GetIndexEmergingThreatsSnort(queryParameters ...IndexQueryParam
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5030,7 +5030,7 @@ func (c *Client) GetIndexEmerson(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5066,7 +5066,7 @@ func (c *Client) GetIndexEndoflife(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5103,7 +5103,7 @@ func (c *Client) GetIndexEol(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5139,7 +5139,7 @@ func (c *Client) GetIndexEolMicrosoft(queryParameters ...IndexQueryParameters) (
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5176,7 +5176,7 @@ func (c *Client) GetIndexEpss(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5212,7 +5212,7 @@ func (c *Client) GetIndexEuvd(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5249,7 +5249,7 @@ func (c *Client) GetIndexExodusIntel(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5286,7 +5286,7 @@ func (c *Client) GetIndexExploitChains(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5323,7 +5323,7 @@ func (c *Client) GetIndexExploitdb(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5360,7 +5360,7 @@ func (c *Client) GetIndexExploits(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5396,7 +5396,7 @@ func (c *Client) GetIndexExploitsChangelog(queryParameters ...IndexQueryParamete
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5433,7 +5433,7 @@ func (c *Client) GetIndexFSecure(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5469,7 +5469,7 @@ func (c *Client) GetIndexF5(queryParameters ...IndexQueryParameters) (responseJS
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5506,7 +5506,7 @@ func (c *Client) GetIndexFanuc(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5543,7 +5543,7 @@ func (c *Client) GetIndexFastly(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5580,7 +5580,7 @@ func (c *Client) GetIndexFedora(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5617,7 +5617,7 @@ func (c *Client) GetIndexFilecloud(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5653,7 +5653,7 @@ func (c *Client) GetIndexFilezilla(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5690,7 +5690,7 @@ func (c *Client) GetIndexFlattSecurity(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5727,7 +5727,7 @@ func (c *Client) GetIndexForgerock(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5764,7 +5764,7 @@ func (c *Client) GetIndexFortinet(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5800,7 +5800,7 @@ func (c *Client) GetIndexFortinetIps(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5837,7 +5837,7 @@ func (c *Client) GetIndexFoxit(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5874,7 +5874,7 @@ func (c *Client) GetIndexFreebsd(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5911,7 +5911,7 @@ func (c *Client) GetIndexGallagher(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5948,7 +5948,7 @@ func (c *Client) GetIndexGcp(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -5985,7 +5985,7 @@ func (c *Client) GetIndexGeGas(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6022,7 +6022,7 @@ func (c *Client) GetIndexGeHealthcare(queryParameters ...IndexQueryParameters) (
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6059,7 +6059,7 @@ func (c *Client) GetIndexGem(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6096,7 +6096,7 @@ func (c *Client) GetIndexGenetec(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6133,7 +6133,7 @@ func (c *Client) GetIndexGigabyte(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6170,7 +6170,7 @@ func (c *Client) GetIndexGiteeExploits(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6207,7 +6207,7 @@ func (c *Client) GetIndexGithubExploits(queryParameters ...IndexQueryParameters)
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6244,7 +6244,7 @@ func (c *Client) GetIndexGithubSecurityAdvisories(queryParameters ...IndexQueryP
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6281,7 +6281,7 @@ func (c *Client) GetIndexGitlabAdvisoriesCommunity(queryParameters ...IndexQuery
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6318,7 +6318,7 @@ func (c *Client) GetIndexGitlabExploits(queryParameters ...IndexQueryParameters)
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6355,7 +6355,7 @@ func (c *Client) GetIndexGnutls(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6391,7 +6391,7 @@ func (c *Client) GetIndexGoVulndb(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6428,7 +6428,7 @@ func (c *Client) GetIndexGolang(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6465,7 +6465,7 @@ func (c *Client) GetIndexGoogle0dayItw(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6502,7 +6502,7 @@ func (c *Client) GetIndexGoogleContainerOptimizedOs(queryParameters ...IndexQuer
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6539,7 +6539,7 @@ func (c *Client) GetIndexGrafana(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6576,7 +6576,7 @@ func (c *Client) GetIndexGreynoiseMetadata(queryParameters ...IndexQueryParamete
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6613,7 +6613,7 @@ func (c *Client) GetIndexHackage(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6650,7 +6650,7 @@ func (c *Client) GetIndexHarmonyos(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6687,7 +6687,7 @@ func (c *Client) GetIndexHashicorp(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6724,7 +6724,7 @@ func (c *Client) GetIndexHaskellSadb(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6761,7 +6761,7 @@ func (c *Client) GetIndexHcl(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6798,7 +6798,7 @@ func (c *Client) GetIndexHex(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6835,7 +6835,7 @@ func (c *Client) GetIndexHikvision(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6872,7 +6872,7 @@ func (c *Client) GetIndexHillrom(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6909,7 +6909,7 @@ func (c *Client) GetIndexHitachi(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6946,7 +6946,7 @@ func (c *Client) GetIndexHitachiEnergy(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -6983,7 +6983,7 @@ func (c *Client) GetIndexHkcert(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7020,7 +7020,7 @@ func (c *Client) GetIndexHoneywell(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7057,7 +7057,7 @@ func (c *Client) GetIndexHp(queryParameters ...IndexQueryParameters) (responseJS
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7093,7 +7093,7 @@ func (c *Client) GetIndexHpe(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7130,7 +7130,7 @@ func (c *Client) GetIndexHuaweiEuleros(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7167,7 +7167,7 @@ func (c *Client) GetIndexHuaweiIps(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7204,7 +7204,7 @@ func (c *Client) GetIndexHuaweiPsirt(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7241,7 +7241,7 @@ func (c *Client) GetIndexIava(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7278,7 +7278,7 @@ func (c *Client) GetIndexIbm(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7315,7 +7315,7 @@ func (c *Client) GetIndexIdemia(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7352,7 +7352,7 @@ func (c *Client) GetIndexIlAlerts(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7389,7 +7389,7 @@ func (c *Client) GetIndexIlVulnerabilities(queryParameters ...IndexQueryParamete
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7426,7 +7426,7 @@ func (c *Client) GetIndexIncibe(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7463,7 +7463,7 @@ func (c *Client) GetIndexInitialAccess(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7500,7 +7500,7 @@ func (c *Client) GetIndexInitialAccessGit(queryParameters ...IndexQueryParameter
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7537,7 +7537,7 @@ func (c *Client) GetIndexIntel(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7574,7 +7574,7 @@ func (c *Client) GetIndexIpintel10d(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7611,7 +7611,7 @@ func (c *Client) GetIndexIpintel30d(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7648,7 +7648,7 @@ func (c *Client) GetIndexIpintel3d(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7685,7 +7685,7 @@ func (c *Client) GetIndexIpintel90d(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7722,7 +7722,7 @@ func (c *Client) GetIndexIstio(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7759,7 +7759,7 @@ func (c *Client) GetIndexIvanti(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7796,7 +7796,7 @@ func (c *Client) GetIndexIvantiRss(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7833,7 +7833,7 @@ func (c *Client) GetIndexJenkins(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7870,7 +7870,7 @@ func (c *Client) GetIndexJetbrains(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7907,7 +7907,7 @@ func (c *Client) GetIndexJfrog(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7944,7 +7944,7 @@ func (c *Client) GetIndexJnj(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -7980,7 +7980,7 @@ func (c *Client) GetIndexJvn(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8017,7 +8017,7 @@ func (c *Client) GetIndexJvndb(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8054,7 +8054,7 @@ func (c *Client) GetIndexKasperskyIcsCert(queryParameters ...IndexQueryParameter
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8091,7 +8091,7 @@ func (c *Client) GetIndexKorelogic(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8128,7 +8128,7 @@ func (c *Client) GetIndexKrcertSecurityNotices(queryParameters ...IndexQueryPara
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8165,7 +8165,7 @@ func (c *Client) GetIndexKrcertVulnerabilities(queryParameters ...IndexQueryPara
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8202,7 +8202,7 @@ func (c *Client) GetIndexKubernetes(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8239,7 +8239,7 @@ func (c *Client) GetIndexLenovo(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8276,7 +8276,7 @@ func (c *Client) GetIndexLexmark(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8313,7 +8313,7 @@ func (c *Client) GetIndexLg(queryParameters ...IndexQueryParameters) (responseJS
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8350,7 +8350,7 @@ func (c *Client) GetIndexLibreOffice(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8387,7 +8387,7 @@ func (c *Client) GetIndexLinux(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8424,7 +8424,7 @@ func (c *Client) GetIndexMFiles(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8461,7 +8461,7 @@ func (c *Client) GetIndexMacert(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8498,7 +8498,7 @@ func (c *Client) GetIndexManageengine(queryParameters ...IndexQueryParameters) (
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8535,7 +8535,7 @@ func (c *Client) GetIndexMaven(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8572,7 +8572,7 @@ func (c *Client) GetIndexMbedTls(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8608,7 +8608,7 @@ func (c *Client) GetIndexMcafee(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8645,7 +8645,7 @@ func (c *Client) GetIndexMediatek(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8682,7 +8682,7 @@ func (c *Client) GetIndexMedtronic(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8719,7 +8719,7 @@ func (c *Client) GetIndexMendix(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8756,7 +8756,7 @@ func (c *Client) GetIndexMetasploit(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8793,7 +8793,7 @@ func (c *Client) GetIndexMicrosoftCvrf(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8830,7 +8830,7 @@ func (c *Client) GetIndexMicrosoftKb(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8867,7 +8867,7 @@ func (c *Client) GetIndexMikrotik(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8904,7 +8904,7 @@ func (c *Client) GetIndexMindray(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8941,7 +8941,7 @@ func (c *Client) GetIndexMispThreatActors(queryParameters ...IndexQueryParameter
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -8978,7 +8978,7 @@ func (c *Client) GetIndexMitel(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9015,7 +9015,7 @@ func (c *Client) GetIndexMitreAttackCve(queryParameters ...IndexQueryParameters)
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9052,7 +9052,7 @@ func (c *Client) GetIndexMitreCvelistV5(queryParameters ...IndexQueryParameters)
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9089,7 +9089,7 @@ func (c *Client) GetIndexMitsubishiElectric(queryParameters ...IndexQueryParamet
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9126,7 +9126,7 @@ func (c *Client) GetIndexMongodb(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9163,7 +9163,7 @@ func (c *Client) GetIndexMoxa(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9200,7 +9200,7 @@ func (c *Client) GetIndexMozilla(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9237,7 +9237,7 @@ func (c *Client) GetIndexNaver(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9273,7 +9273,7 @@ func (c *Client) GetIndexNcsc(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9309,7 +9309,7 @@ func (c *Client) GetIndexNcscCves(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9346,7 +9346,7 @@ func (c *Client) GetIndexNec(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9383,7 +9383,7 @@ func (c *Client) GetIndexNetapp(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9419,7 +9419,7 @@ func (c *Client) GetIndexNetatalk(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9456,7 +9456,7 @@ func (c *Client) GetIndexNetgate(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9493,7 +9493,7 @@ func (c *Client) GetIndexNetgear(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9530,7 +9530,7 @@ func (c *Client) GetIndexNetskope(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9567,7 +9567,7 @@ func (c *Client) GetIndexNginx(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9604,7 +9604,7 @@ func (c *Client) GetIndexNhs(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9641,7 +9641,7 @@ func (c *Client) GetIndexNi(queryParameters ...IndexQueryParameters) (responseJS
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9678,7 +9678,7 @@ func (c *Client) GetIndexNistNvd(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9715,7 +9715,7 @@ func (c *Client) GetIndexNistNvd2(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9752,7 +9752,7 @@ func (c *Client) GetIndexNistNvd2Cpematch(queryParameters ...IndexQueryParameter
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9788,7 +9788,7 @@ func (c *Client) GetIndexNistNvd2Sources(queryParameters ...IndexQueryParameters
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9825,7 +9825,7 @@ func (c *Client) GetIndexNodeSecurity(queryParameters ...IndexQueryParameters) (
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9862,7 +9862,7 @@ func (c *Client) GetIndexNodejs(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9899,7 +9899,7 @@ func (c *Client) GetIndexNokia(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9935,7 +9935,7 @@ func (c *Client) GetIndexNotepadplusplus(queryParameters ...IndexQueryParameters
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -9972,7 +9972,7 @@ func (c *Client) GetIndexNozomi(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10009,7 +10009,7 @@ func (c *Client) GetIndexNpm(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10046,7 +10046,7 @@ func (c *Client) GetIndexNtp(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10083,7 +10083,7 @@ func (c *Client) GetIndexNuget(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10120,7 +10120,7 @@ func (c *Client) GetIndexNvidia(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10157,7 +10157,7 @@ func (c *Client) GetIndexNzAdvisories(queryParameters ...IndexQueryParameters) (
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10194,7 +10194,7 @@ func (c *Client) GetIndexOctopusDeploy(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10231,7 +10231,7 @@ func (c *Client) GetIndexOkta(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10268,7 +10268,7 @@ func (c *Client) GetIndexOmron(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10305,7 +10305,7 @@ func (c *Client) GetIndexOneE(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10342,7 +10342,7 @@ func (c *Client) GetIndexOpam(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10379,7 +10379,7 @@ func (c *Client) GetIndexOpenCvdb(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10416,7 +10416,7 @@ func (c *Client) GetIndexOpenbsd(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10453,7 +10453,7 @@ func (c *Client) GetIndexOpenjdk(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10490,7 +10490,7 @@ func (c *Client) GetIndexOpenssh(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10527,7 +10527,7 @@ func (c *Client) GetIndexOpensslSecadv(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10564,7 +10564,7 @@ func (c *Client) GetIndexOpenstack(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10601,7 +10601,7 @@ func (c *Client) GetIndexOpenwrt(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10638,7 +10638,7 @@ func (c *Client) GetIndexOracle(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10675,7 +10675,7 @@ func (c *Client) GetIndexOracleCpu(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10712,7 +10712,7 @@ func (c *Client) GetIndexOracleCpuCsaf(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10749,7 +10749,7 @@ func (c *Client) GetIndexOsv(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10786,7 +10786,7 @@ func (c *Client) GetIndexOtrs(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10823,7 +10823,7 @@ func (c *Client) GetIndexOwncloud(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10859,7 +10859,7 @@ func (c *Client) GetIndexPacketstorm(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10896,7 +10896,7 @@ func (c *Client) GetIndexPalantir(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10933,7 +10933,7 @@ func (c *Client) GetIndexPaloAlto(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -10970,7 +10970,7 @@ func (c *Client) GetIndexPanasonic(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11007,7 +11007,7 @@ func (c *Client) GetIndexPapercut(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11044,7 +11044,7 @@ func (c *Client) GetIndexPega(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11081,7 +11081,7 @@ func (c *Client) GetIndexPhilips(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11118,7 +11118,7 @@ func (c *Client) GetIndexPhoenixContact(queryParameters ...IndexQueryParameters)
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11155,7 +11155,7 @@ func (c *Client) GetIndexPhpMyAdmin(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11192,7 +11192,7 @@ func (c *Client) GetIndexPostgressql(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11229,7 +11229,7 @@ func (c *Client) GetIndexPowerdns(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11266,7 +11266,7 @@ func (c *Client) GetIndexProgress(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11303,7 +11303,7 @@ func (c *Client) GetIndexProofpoint(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11339,7 +11339,7 @@ func (c *Client) GetIndexPtc(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11376,7 +11376,7 @@ func (c *Client) GetIndexPub(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11413,7 +11413,7 @@ func (c *Client) GetIndexPureStorage(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11450,7 +11450,7 @@ func (c *Client) GetIndexPypaAdvisories(queryParameters ...IndexQueryParameters)
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11487,7 +11487,7 @@ func (c *Client) GetIndexPypi(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11524,7 +11524,7 @@ func (c *Client) GetIndexQnap(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11561,7 +11561,7 @@ func (c *Client) GetIndexQualcomm(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11598,7 +11598,7 @@ func (c *Client) GetIndexQualys(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11634,7 +11634,7 @@ func (c *Client) GetIndexQubesQsb(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11671,7 +11671,7 @@ func (c *Client) GetIndexRansomware(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11708,7 +11708,7 @@ func (c *Client) GetIndexRedhat(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11745,7 +11745,7 @@ func (c *Client) GetIndexRenesas(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11782,7 +11782,7 @@ func (c *Client) GetIndexRevive(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11819,7 +11819,7 @@ func (c *Client) GetIndexRoche(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11856,7 +11856,7 @@ func (c *Client) GetIndexRockwell(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11893,7 +11893,7 @@ func (c *Client) GetIndexRocky(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11930,7 +11930,7 @@ func (c *Client) GetIndexRockyErrata(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -11967,7 +11967,7 @@ func (c *Client) GetIndexRockyPurls(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12003,7 +12003,7 @@ func (c *Client) GetIndexRsync(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12040,7 +12040,7 @@ func (c *Client) GetIndexRuckus(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12077,7 +12077,7 @@ func (c *Client) GetIndexRustsecAdvisories(queryParameters ...IndexQueryParamete
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12114,7 +12114,7 @@ func (c *Client) GetIndexSacert(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12151,7 +12151,7 @@ func (c *Client) GetIndexSaint(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12188,7 +12188,7 @@ func (c *Client) GetIndexSalesforce(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12225,7 +12225,7 @@ func (c *Client) GetIndexSamba(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12262,7 +12262,7 @@ func (c *Client) GetIndexSap(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12299,7 +12299,7 @@ func (c *Client) GetIndexSchneiderElectric(queryParameters ...IndexQueryParamete
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12336,7 +12336,7 @@ func (c *Client) GetIndexSecConsult(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12372,7 +12372,7 @@ func (c *Client) GetIndexSecuritylab(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12408,7 +12408,7 @@ func (c *Client) GetIndexSeebug(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12445,7 +12445,7 @@ func (c *Client) GetIndexSel(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12482,7 +12482,7 @@ func (c *Client) GetIndexSentinelone(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12519,7 +12519,7 @@ func (c *Client) GetIndexServicenow(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12556,7 +12556,7 @@ func (c *Client) GetIndexShadowserverExploited(queryParameters ...IndexQueryPara
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12592,7 +12592,7 @@ func (c *Client) GetIndexShielder(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12629,7 +12629,7 @@ func (c *Client) GetIndexSick(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12666,7 +12666,7 @@ func (c *Client) GetIndexSiemens(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12703,7 +12703,7 @@ func (c *Client) GetIndexSierraWireless(queryParameters ...IndexQueryParameters)
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12740,7 +12740,7 @@ func (c *Client) GetIndexSigmahqSigmaRules(queryParameters ...IndexQueryParamete
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12777,7 +12777,7 @@ func (c *Client) GetIndexSingcert(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12814,7 +12814,7 @@ func (c *Client) GetIndexSlackware(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12851,7 +12851,7 @@ func (c *Client) GetIndexSolarwinds(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12888,7 +12888,7 @@ func (c *Client) GetIndexSolr(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12924,7 +12924,7 @@ func (c *Client) GetIndexSonatype(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12961,7 +12961,7 @@ func (c *Client) GetIndexSonicwall(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -12998,7 +12998,7 @@ func (c *Client) GetIndexSpacelabsHealthcare(queryParameters ...IndexQueryParame
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13035,7 +13035,7 @@ func (c *Client) GetIndexSplunk(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13072,7 +13072,7 @@ func (c *Client) GetIndexSpring(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13109,7 +13109,7 @@ func (c *Client) GetIndexSsd(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13146,7 +13146,7 @@ func (c *Client) GetIndexStormshield(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13183,7 +13183,7 @@ func (c *Client) GetIndexStryker(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13220,7 +13220,7 @@ func (c *Client) GetIndexSudo(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13257,7 +13257,7 @@ func (c *Client) GetIndexSuse(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13293,7 +13293,7 @@ func (c *Client) GetIndexSuseSecurity(queryParameters ...IndexQueryParameters) (
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13330,7 +13330,7 @@ func (c *Client) GetIndexSwift(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13367,7 +13367,7 @@ func (c *Client) GetIndexSwisslogHealthcare(queryParameters ...IndexQueryParamet
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13404,7 +13404,7 @@ func (c *Client) GetIndexSymfony(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13441,7 +13441,7 @@ func (c *Client) GetIndexSynacktiv(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13478,7 +13478,7 @@ func (c *Client) GetIndexSyncrosoft(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13515,7 +13515,7 @@ func (c *Client) GetIndexSynology(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13551,7 +13551,7 @@ func (c *Client) GetIndexTailscale(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13588,7 +13588,7 @@ func (c *Client) GetIndexTeamviewer(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13624,7 +13624,7 @@ func (c *Client) GetIndexTenableResearchAdvisories(queryParameters ...IndexQuery
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13661,7 +13661,7 @@ func (c *Client) GetIndexTencent(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13698,7 +13698,7 @@ func (c *Client) GetIndexThales(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13735,7 +13735,7 @@ func (c *Client) GetIndexThemissinglink(queryParameters ...IndexQueryParameters)
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13772,7 +13772,7 @@ func (c *Client) GetIndexThreatActors(queryParameters ...IndexQueryParameters) (
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13809,7 +13809,7 @@ func (c *Client) GetIndexTi(queryParameters ...IndexQueryParameters) (responseJS
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13846,7 +13846,7 @@ func (c *Client) GetIndexTibco(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13883,7 +13883,7 @@ func (c *Client) GetIndexTpLink(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13920,7 +13920,7 @@ func (c *Client) GetIndexTraneTechnology(queryParameters ...IndexQueryParameters
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13957,7 +13957,7 @@ func (c *Client) GetIndexTrendmicro(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -13994,7 +13994,7 @@ func (c *Client) GetIndexTrustwave(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14031,7 +14031,7 @@ func (c *Client) GetIndexTwcert(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14068,7 +14068,7 @@ func (c *Client) GetIndexUbiquiti(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14105,7 +14105,7 @@ func (c *Client) GetIndexUbuntu(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14142,7 +14142,7 @@ func (c *Client) GetIndexUnify(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14179,7 +14179,7 @@ func (c *Client) GetIndexUnisoc(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14216,7 +14216,7 @@ func (c *Client) GetIndexUsd(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14253,7 +14253,7 @@ func (c *Client) GetIndexUsom(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14290,7 +14290,7 @@ func (c *Client) GetIndexVandyke(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14327,7 +14327,7 @@ func (c *Client) GetIndexVapidlabs(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14363,7 +14363,7 @@ func (c *Client) GetIndexVcCpeDictionary(queryParameters ...IndexQueryParameters
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14400,7 +14400,7 @@ func (c *Client) GetIndexVde(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14437,7 +14437,7 @@ func (c *Client) GetIndexVeeam(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14474,7 +14474,7 @@ func (c *Client) GetIndexVeritas(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14510,7 +14510,7 @@ func (c *Client) GetIndexVirtuozzo(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14546,7 +14546,7 @@ func (c *Client) GetIndexVlc(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14583,7 +14583,7 @@ func (c *Client) GetIndexVmware(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14620,7 +14620,7 @@ func (c *Client) GetIndexVoidsec(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14656,7 +14656,7 @@ func (c *Client) GetIndexVulncheck(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14693,7 +14693,7 @@ func (c *Client) GetIndexVulncheckConfig(queryParameters ...IndexQueryParameters
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14730,7 +14730,7 @@ func (c *Client) GetIndexVulncheckCvelistV5(queryParameters ...IndexQueryParamet
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14767,7 +14767,7 @@ func (c *Client) GetIndexVulncheckKev(queryParameters ...IndexQueryParameters) (
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14804,7 +14804,7 @@ func (c *Client) GetIndexVulncheckNvd(queryParameters ...IndexQueryParameters) (
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14842,7 +14842,7 @@ func (c *Client) GetIndexVulncheckNvd2(queryParameters ...IndexQueryParameters) 
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14879,7 +14879,7 @@ func (c *Client) GetIndexVulnerabilityAliases(queryParameters ...IndexQueryParam
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14916,7 +14916,7 @@ func (c *Client) GetIndexVulnrichment(queryParameters ...IndexQueryParameters) (
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14953,7 +14953,7 @@ func (c *Client) GetIndexVyaire(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -14990,7 +14990,7 @@ func (c *Client) GetIndexWatchguard(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15027,7 +15027,7 @@ func (c *Client) GetIndexWhatsapp(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15064,7 +15064,7 @@ func (c *Client) GetIndexWibu(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15101,7 +15101,7 @@ func (c *Client) GetIndexWireshark(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15138,7 +15138,7 @@ func (c *Client) GetIndexWithSecure(queryParameters ...IndexQueryParameters) (re
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15175,7 +15175,7 @@ func (c *Client) GetIndexWolfi(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15212,7 +15212,7 @@ func (c *Client) GetIndexWolfssl(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15249,7 +15249,7 @@ func (c *Client) GetIndexWordfence(queryParameters ...IndexQueryParameters) (res
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15286,7 +15286,7 @@ func (c *Client) GetIndexXen(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15323,7 +15323,7 @@ func (c *Client) GetIndexXerox(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15360,7 +15360,7 @@ func (c *Client) GetIndexXiaomi(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15397,7 +15397,7 @@ func (c *Client) GetIndexXylem(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15433,7 +15433,7 @@ func (c *Client) GetIndexYamaha(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15470,7 +15470,7 @@ func (c *Client) GetIndexYokogawa(queryParameters ...IndexQueryParameters) (resp
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15507,7 +15507,7 @@ func (c *Client) GetIndexYubico(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15544,7 +15544,7 @@ func (c *Client) GetIndexZdi(queryParameters ...IndexQueryParameters) (responseJ
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15581,7 +15581,7 @@ func (c *Client) GetIndexZebra(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15618,7 +15618,7 @@ func (c *Client) GetIndexZeroscience(queryParameters ...IndexQueryParameters) (r
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15655,7 +15655,7 @@ func (c *Client) GetIndexZimbra(queryParameters ...IndexQueryParameters) (respon
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15692,7 +15692,7 @@ func (c *Client) GetIndexZoom(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15729,7 +15729,7 @@ func (c *Client) GetIndexZscaler(queryParameters ...IndexQueryParameters) (respo
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15766,7 +15766,7 @@ func (c *Client) GetIndexZuso(queryParameters ...IndexQueryParameters) (response
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }
@@ -15803,7 +15803,7 @@ func (c *Client) GetIndexZyxel(queryParameters ...IndexQueryParameters) (respons
 		return nil, handleErrorResponse(resp)
 	}
 
-	_ = json.NewDecoder(resp.Body).Decode(&responseJSON)
+	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
 
 	return responseJSON, nil
 }

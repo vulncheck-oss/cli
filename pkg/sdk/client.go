@@ -1,12 +1,49 @@
 package sdk
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
+
+// defaultHTTPTimeout guards every SDK request against a stuck / slow-read
+// peer. Long enough for legitimate large-index metadata calls, short
+// enough that a stalled connection can't hang the CLI indefinitely.
+const defaultHTTPTimeout = 5 * time.Minute
+
+// maxResponseBytes caps the size of any API response body the SDK will
+// buffer into memory. Prevents a malicious or misbehaving upstream from
+// OOM-killing the CLI by streaming a multi-GB response. Genuinely large
+// payloads (backup archives) are downloaded via streamed io.Copy, not
+// through this path — see pkg/cache/tasks.go and pkg/ui/download.go.
+const maxResponseBytes = 512 * 1024 * 1024 // 512 MiB
+
+// LimitedBody wraps resp.Body with an io.LimitReader honouring the
+// maxResponseBytes ceiling. SDK methods use this before json-decoding.
+func LimitedBody(body io.Reader) io.Reader {
+	return io.LimitReader(body, maxResponseBytes)
+}
+
+// newHTTPClient builds an http.Client with the SDK's hardening defaults:
+// explicit timeout so a slow peer cannot hang forever, and Go's default
+// TLS verification (never disabled anywhere in the codebase).
+func newHTTPClient() *http.Client {
+	return &http.Client{Timeout: defaultHTTPTimeout}
+}
+
+// ResetQuery clears any accumulated query / form params from prior calls.
+// SDK methods that build up state via c.Query / c.Form must call this
+// first so a Client reused across multiple requests (e.g. inside a batch
+// loop) doesn't leak params from earlier iterations into later ones.
+func (c *Client) ResetQuery() *Client {
+	c.Values = nil
+	c.FormValues = nil
+	return c
+}
 
 type Client struct {
 	Url         string
@@ -16,6 +53,7 @@ type Client struct {
 	UserAgent   string
 	Values      *url.Values
 	FormValues  *url.Values
+	ctx         context.Context
 }
 
 type MetaError struct {
@@ -57,6 +95,22 @@ func (c *Client) SetUserAgent(userAgent string) *Client {
 	return c
 }
 
+// WithContext attaches a context to subsequent HTTP requests issued by the
+// client. Callers wire the command's cancellable context here so that
+// SIGINT/SIGTERM and explicit cancellation propagate to in-flight calls.
+func (c *Client) WithContext(ctx context.Context) *Client {
+	c.ctx = ctx
+	return c
+}
+
+// context returns the attached context or context.Background when none is set.
+func (c *Client) context() context.Context {
+	if c.ctx == nil {
+		return context.Background()
+	}
+	return c.ctx
+}
+
 // SetAuthHeader Sets the Authorization header for the request
 func (c *Client) SetAuthHeader(req *http.Request) *Client {
 	req.Header.Set("Accept", "application/json")
@@ -66,13 +120,13 @@ func (c *Client) SetAuthHeader(req *http.Request) *Client {
 
 func (c *Client) Request(method string, url string) (*http.Response, error) {
 	if c.HttpClient == nil {
-		c.HttpClient = &http.Client{}
+		c.HttpClient = newHTTPClient()
 	}
 	var err error
 	if c.FormValues != nil {
-		c.HttpRequest, err = http.NewRequest(method, c.GetUrl()+url, strings.NewReader(c.FormValues.Encode()))
+		c.HttpRequest, err = http.NewRequestWithContext(c.context(), method, c.GetUrl()+url, strings.NewReader(c.FormValues.Encode()))
 	} else {
-		c.HttpRequest, err = http.NewRequest(method, c.GetUrl()+url, nil)
+		c.HttpRequest, err = http.NewRequestWithContext(c.context(), method, c.GetUrl()+url, nil)
 	}
 	if err != nil {
 		return nil, err
@@ -108,13 +162,13 @@ func (c *Client) Request(method string, url string) (*http.Response, error) {
 }
 
 func (c *Client) PostRequestWithBody(url string, body io.Reader) (*http.Response, error) {
-	req, err := http.NewRequest(http.MethodPost, c.GetUrl()+url, body)
+	req, err := http.NewRequestWithContext(c.context(), http.MethodPost, c.GetUrl()+url, body)
 	if err != nil {
 		return nil, fmt.Errorf("making new post request: %w", err)
 	}
 
 	if c.HttpClient == nil {
-		c.HttpClient = &http.Client{}
+		c.HttpClient = newHTTPClient()
 	}
 	c.SetAuthHeader(req)
 

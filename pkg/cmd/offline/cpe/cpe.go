@@ -2,20 +2,17 @@ package cpe
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline/sync"
-	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpeuri"
 	"github.com/vulncheck-oss/cli/pkg/cpe/cpeutils"
 	"github.com/vulncheck-oss/cli/pkg/db"
-	"github.com/vulncheck-oss/cli/pkg/ui"
 )
 
 func Command() *cobra.Command {
-
-	var jsonOutput bool
-
 	var statsOnly bool
 
 	cmd := &cobra.Command{
@@ -25,9 +22,9 @@ func Command() *cobra.Command {
 		Example: "vulncheck offline cpe \"pkg:hackage/aeson@0.3.2.8\"",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
 
 			cpe, err := cpeuri.ToStruct(args[0])
-
 			if err != nil {
 				return err
 			}
@@ -47,32 +44,27 @@ func Command() *cobra.Command {
 			}
 
 			results, stats, err := db.CPESearch("cpecve", *cpe)
-
 			if err != nil {
 				return err
 			}
 			cves, err := cpeutils.Process(cpe, results)
-
 			if err != nil {
 				return err
 			}
 
-			if jsonOutput || config.IsCI() {
-				ui.Json(cves)
-				return nil
+			if r.IsJSON() {
+				return r.JSON(cves)
 			}
 
-			ui.Stat("Results found/filtered", fmt.Sprintf("%d/%d", len(results), len(cves)))
-			ui.Stat("Search duration", fmt.Sprintf("%.2f seconds", stats.Duration.Seconds()))
+			r.Stat("Results found/filtered", fmt.Sprintf("%d/%d", len(results), len(cves)))
+			r.Stat("Search duration", fmt.Sprintf("%.2f seconds", stats.Duration.Seconds()))
 
 			if !statsOnly {
-				ui.Json(cves)
+				return r.JSON(cves)
 			}
-
 			return nil
 		},
 	}
-	cmd.Flags().BoolVarP(&jsonOutput, "json", "j", false, "Output in JSON format")
 	cmd.Flags().BoolVarP(&statsOnly, "stats", "s", false, "Output stats only")
 	return cmd
 }
