@@ -248,6 +248,28 @@ func downloadAndInstall(downloadURL, filename, currentVersion string) error {
 	return nil
 }
 
+// isArchivedBinary reports whether an archive entry is THE release binary.
+//
+// The release archives ship the executable at `bin/<binaryName>` (from
+// goreleaser's builds.binary). Other files in the archive (bash completion
+// script, man pages) can share the basename `vulncheck` too — we must
+// disambiguate by requiring the parent directory to be `bin`, otherwise
+// the extract picks whichever colliding entry the archive iterator hits
+// first and installs it as the binary.
+//
+// Accepts both forward and backward slashes so it works for both zip
+// (Windows-flavoured paths allowed) and tar (Unix paths).
+func isArchivedBinary(entryPath, binaryName string) bool {
+	// Normalise to forward slashes so the check works on both zip
+	// (may contain \) and tar (always /) headers on all platforms.
+	entryPath = strings.ReplaceAll(entryPath, "\\", "/")
+	if filepath.Base(entryPath) != binaryName {
+		return false
+	}
+	parent := filepath.Base(filepath.Dir(entryPath))
+	return parent == "bin"
+}
+
 func extractArchive(archivePath, destDir string) (string, error) {
 	var binaryName string
 	if runtime.GOOS == "windows" {
@@ -277,35 +299,39 @@ func extractZip(zipPath, destDir, binaryName string) (string, error) {
 	}()
 
 	for _, f := range r.File {
-		if filepath.Base(f.Name) == binaryName {
-			rc, err := f.Open()
-			if err != nil {
-				return "", err
-			}
-			defer func() {
-				if closeErr := rc.Close(); closeErr != nil {
-					fmt.Fprintf(os.Stderr, "Warning: failed to close zip entry: %v\n", closeErr)
-				}
-			}()
-
-			binaryPath := filepath.Join(destDir, binaryName)
-			outFile, err := os.OpenFile(binaryPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-			if err != nil {
-				return "", err
-			}
-			defer func() {
-				if closeErr := outFile.Close(); closeErr != nil {
-					fmt.Fprintf(os.Stderr, "Warning: failed to close output file: %v\n", closeErr)
-				}
-			}()
-
-			_, err = io.Copy(outFile, rc)
-			if err != nil {
-				return "", err
-			}
-
-			return binaryPath, nil
+		if !isArchivedBinary(f.Name, binaryName) {
+			continue
 		}
+		if f.FileInfo().IsDir() {
+			continue
+		}
+		rc, err := f.Open()
+		if err != nil {
+			return "", err
+		}
+		defer func() {
+			if closeErr := rc.Close(); closeErr != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to close zip entry: %v\n", closeErr)
+			}
+		}()
+
+		binaryPath := filepath.Join(destDir, binaryName)
+		outFile, err := os.OpenFile(binaryPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+		if err != nil {
+			return "", err
+		}
+		defer func() {
+			if closeErr := outFile.Close(); closeErr != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to close output file: %v\n", closeErr)
+			}
+		}()
+
+		_, err = io.Copy(outFile, rc)
+		if err != nil {
+			return "", err
+		}
+
+		return binaryPath, nil
 	}
 
 	return "", fmt.Errorf("binary %s not found in zip archive", binaryName)
@@ -343,7 +369,7 @@ func extractTarGz(tarPath, destDir, binaryName string) (string, error) {
 			return "", err
 		}
 
-		if filepath.Base(header.Name) == binaryName && header.Typeflag == tar.TypeReg {
+		if header.Typeflag == tar.TypeReg && isArchivedBinary(header.Name, binaryName) {
 			binaryPath := filepath.Join(destDir, binaryName)
 			outFile, err := os.Create(binaryPath)
 			if err != nil {
