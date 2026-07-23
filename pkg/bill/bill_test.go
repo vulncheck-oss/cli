@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/models"
@@ -199,6 +200,35 @@ func TestBuildSBOMConfig(t *testing.T) {
 		}
 		if cfg.Packages.JavaScript.SearchRemoteLicenses {
 			t.Error("javascript should be disabled under none")
+		}
+	})
+
+	// Syft accepts several scope aliases per language (internal/task/package_tasks.go):
+	// go/golang, javascript/node/npm, java/maven. Users typing any of them should
+	// get the same behaviour as with the publicised name.
+	aliases := []struct {
+		name  string
+		alias string
+		check func(cfg *syft.CreateSBOMConfig) bool
+	}{
+		{"go alias enables golang", "go", func(c *syft.CreateSBOMConfig) bool { return c.Packages.Golang.SearchRemoteLicenses }},
+		{"node alias enables javascript", "node", func(c *syft.CreateSBOMConfig) bool { return c.Packages.JavaScript.SearchRemoteLicenses }},
+		{"npm alias enables javascript", "npm", func(c *syft.CreateSBOMConfig) bool { return c.Packages.JavaScript.SearchRemoteLicenses }},
+		{"maven alias enables java", "maven", func(c *syft.CreateSBOMConfig) bool { return c.Packages.JavaArchive.UseNetwork }},
+	}
+	for _, a := range aliases {
+		t.Run(a.name, func(t *testing.T) {
+			cfg := buildSBOMConfig(SBOMOptions{Enrich: []string{a.alias}})
+			if cfg == nil || !a.check(cfg) {
+				t.Errorf("--enrich %s did not enable the language it aliases", a.alias)
+			}
+		})
+	}
+
+	t.Run("golang enrichment sets UsePackagesLib", func(t *testing.T) {
+		cfg := buildSBOMConfig(SBOMOptions{Enrich: []string{"golang"}})
+		if !cfg.Packages.Golang.UsePackagesLib {
+			t.Error("golang enrichment did not set UsePackagesLib (matches syft's own flip)")
 		}
 	})
 }

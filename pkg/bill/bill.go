@@ -73,13 +73,18 @@ func buildSBOMConfig(opts SBOMOptions) *syft.CreateSBOMConfig {
 
 	pkgCfg := pkgcataloging.DefaultConfig()
 
-	if enrichmentScope(opts.Enrich, "golang") {
+	// Aliases mirror syft's own task-name mapping (internal/task/package_tasks.go).
+	// Advertising only the publicised names in --help keeps parity with syft's help
+	// output, but users typing an alias syft accepts should still get the same
+	// behaviour they'd get from `syft --enrich <alias>`.
+	if enrichmentScope(opts.Enrich, "golang", "go") {
 		pkgCfg.Golang = pkgCfg.Golang.
 			WithSearchLocalModCacheLicenses(true).
 			WithSearchLocalVendorLicenses(true).
-			WithSearchRemoteLicenses(true)
+			WithSearchRemoteLicenses(true).
+			WithUsePackagesLib(true)
 	}
-	if enrichmentScope(opts.Enrich, "javascript") {
+	if enrichmentScope(opts.Enrich, "javascript", "node", "npm") {
 		pkgCfg.JavaScript = pkgCfg.JavaScript.WithSearchRemoteLicenses(true)
 	}
 	if enrichmentScope(opts.Enrich, "python") {
@@ -87,7 +92,7 @@ func buildSBOMConfig(opts SBOMOptions) *syft.CreateSBOMConfig {
 			WithSearchRemoteLicenses(true).
 			WithGuessUnpinnedRequirements(true)
 	}
-	if enrichmentScope(opts.Enrich, "java") {
+	if enrichmentScope(opts.Enrich, "java", "maven") {
 		pkgCfg.JavaArchive = pkgCfg.JavaArchive.
 			WithUseMavenLocalRepository(true).
 			WithUseNetwork(true)
@@ -96,11 +101,12 @@ func buildSBOMConfig(opts SBOMOptions) *syft.CreateSBOMConfig {
 	return syft.DefaultCreateSBOMConfig().WithPackagesConfig(pkgCfg)
 }
 
-// enrichmentScope reports whether enrichment should be enabled for the given
-// scope under the user's directives, using the same precedence syft's CLI
-// uses: an explicit `+scope` / bare `scope` / `-scope` wins over the `all` /
-// `none` fallback.
-func enrichmentScope(directives []string, scope string) bool {
+// enrichmentScope reports whether enrichment should be enabled for a language
+// under the user's directives. Multiple aliases can be passed for languages
+// syft's CLI accepts under more than one name (e.g. golang/go, javascript/node/npm,
+// java/maven); an explicit `+alias` / bare `alias` / `-alias` on any of them
+// wins over the `all` / `none` fallback, matching syft's own precedence.
+func enrichmentScope(directives []string, aliases ...string) bool {
 	lookup := func(name string) (found, enable bool) {
 		for _, d := range directives {
 			d = strings.TrimPrefix(d, "+")
@@ -114,8 +120,10 @@ func enrichmentScope(directives []string, scope string) bool {
 		}
 		return false, false
 	}
-	if found, en := lookup(scope); found {
-		return en
+	for _, alias := range aliases {
+		if found, en := lookup(alias); found {
+			return en
+		}
 	}
 	if _, disableAll := lookup("none"); disableAll {
 		return false
