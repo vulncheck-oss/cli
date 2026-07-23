@@ -92,6 +92,37 @@ func TestGetPURLDetail(t *testing.T) {
 	if len(nilPurls) != 0 {
 		t.Errorf("Expected 0 PURLs for nil SBOM, got %d", len(nilPurls))
 	}
+
+	// PURLs declared on CycloneDX "file" components are not surfaced by Syft
+	// as packages, so they reach us only through the raw inputRefs — the same
+	// class of gap the CPE side already handles.
+	refs := []InputSbomRef{
+		{SbomRef: "ref-1", PURL: "pkg:generic/qnx_software_development_platform@7.1"},
+		{SbomRef: "ref-2", PURL: "pkg:generic/qnx_software_development_platform@7.1"}, // duplicate
+		{SbomRef: "ref-3", PURL: ""},                                                  // empty
+		{SbomRef: "ref-4", PURL: "pkg:github/actions/checkout@v3"},                    // filtered
+		{SbomRef: "ref-5", PURL: "pkg:generic/other@1.0"},
+	}
+
+	got := GetPURLDetail(nil, refs)
+
+	if len(got) != 2 {
+		t.Fatalf("expected 2 PURLs after dedupe + filters, got %d: %v", len(got), got)
+	}
+	wantByPurl := map[string]string{
+		"pkg:generic/qnx_software_development_platform@7.1": "ref-1",
+		"pkg:generic/other@1.0":                             "ref-5",
+	}
+	for _, p := range got {
+		wantRef, ok := wantByPurl[p.Purl]
+		if !ok {
+			t.Errorf("unexpected PURL %q in result", p.Purl)
+			continue
+		}
+		if p.SbomRef != wantRef {
+			t.Errorf("PURL %q: got SbomRef %q, want %q", p.Purl, p.SbomRef, wantRef)
+		}
+	}
 }
 
 func TestGetCPEDetail(t *testing.T) {

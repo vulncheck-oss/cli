@@ -185,14 +185,22 @@ func GetCPEDetail(sbm *sbom.SBOM, inputRefs []InputSbomRef) []string {
 }
 
 func GetPURLDetail(sbm *sbom.SBOM, inputRefs []InputSbomRef) []models.PurlDetail {
-	if sbm == nil {
-		return []models.PurlDetail{}
+	var purls []models.PurlDetail
+	seen := make(map[string]struct{})
+
+	add := func(purl models.PurlDetail) {
+		if purl.Purl == "" || strings.HasPrefix(purl.Purl, "pkg:github") {
+			return
+		}
+		if _, exists := seen[purl.Purl]; exists {
+			return
+		}
+		seen[purl.Purl] = struct{}{}
+		purls = append(purls, purl)
 	}
 
-	var purls []models.PurlDetail
-
-	for p := range sbm.Artifacts.Packages.Enumerate() {
-		if p.PURL != "" && !strings.HasPrefix(p.PURL, "pkg:github") {
+	if sbm != nil {
+		for p := range sbm.Artifacts.Packages.Enumerate() {
 			locations := make([]string, len(p.Locations.ToSlice()))
 			for i, l := range p.Locations.ToSlice() {
 				locations[i] = l.RealPath
@@ -212,10 +220,20 @@ func GetPURLDetail(sbm *sbom.SBOM, inputRefs []InputSbomRef) []models.PurlDetail
 				}
 			}
 
-			purls = append(purls, purlDetail)
-
+			add(purlDetail)
 		}
 	}
+
+	// CycloneDX components of type "file" (and others) carry PURLs that Syft
+	// does not surface as packages, so pull them straight from the parsed SBOM
+	// — mirrors what GetCPEDetail does for the CPE side.
+	for _, ref := range inputRefs {
+		add(models.PurlDetail{
+			Purl:    ref.PURL,
+			SbomRef: ref.SbomRef,
+		})
+	}
+
 	return purls
 }
 
