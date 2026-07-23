@@ -69,6 +69,14 @@ func Command() *cobra.Command {
 				return ui.Error("--enrich has no effect when reading a pre-built SBOM via --sbom-input-file")
 			}
 
+			// Enrichment fetches metadata from proxy.golang.org, Maven Central,
+			// NPM and PyPI — none of which are reachable in offline mode. Fail
+			// loudly rather than silently produce an SBOM missing the metadata
+			// the user opted in for.
+			if opts.Offline && len(opts.Enrich) > 0 {
+				return ui.Error("--enrich requires network access and cannot be combined with --offline")
+			}
+
 			var sbm *sbom.SBOM
 			var inputRefs []bill.InputSbomRef
 			var purls []models.PurlDetail

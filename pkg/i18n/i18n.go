@@ -195,7 +195,7 @@ var En = Copy{
 	FlagSpecifySbomInput: "Specify an existing SBOM file to scan instead of creating one from a folder",
 	FlagSpecifySbomOnly:  "Do not run a scan and only create a SBOM file",
 	FlagIncludeCpes:      "Include and Scan CPEs",
-	FlagEnrich:           "Enrich the generated SBOM with additional metadata from local and online sources (e.g. proxy.golang.org, Maven Central, NPM, PyPI). Comma-separated scopes; supported values: all, golang, java, javascript, python. Prefix with '-' to exclude (e.g. all,-java). Off by default; enabling adds runtime cost and requires network access. Has no effect with --sbom-input-file.",
+	FlagEnrich:           "Enrich the generated SBOM with additional metadata from local and online sources (e.g. proxy.golang.org, Maven Central, NPM, PyPI). Comma-separated scopes; supported values: all, golang, java, javascript, python. Prefix with '-' to exclude (e.g. all,-java). Off by default; enabling adds runtime cost and requires network access. Cannot be combined with --offline or --sbom-input-file.",
 	SavingResultsStart:   "Saving Results to %s",
 	SavingResultsEnd:     "Results saved to %s",
 

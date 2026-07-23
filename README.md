@@ -328,6 +328,7 @@ Generates an SBOM for `<path>`, extracts PURLs, then either calls the vulncheck 
 | `--offline-meta` | Populate metadata (CVSS, KEV, description) from `vulncheck-nvd2` in offline mode. |
 | `--warn-on-index` | Warn instead of failing when a required offline index isn't cached. |
 | `--disable-ui` | Alias for `--no-interactive` (kept for backwards compatibility). |
+| `--enrich` | Enrich the generated SBOM with metadata from `proxy.golang.org` / Maven Central / NPM / PyPI. Comma-separated scopes: `all`, `golang`, `java`, `javascript`, `python`; prefix with `-` to exclude (e.g. `all,-java`). Off by default; requires network — cannot be combined with `--offline` or `--sbom-input-file`. |
 
 The progress TUI is auto-suppressed whenever the renderer can't safely draw it (`--json`, `--no-interactive`, non-TTY, CI).
 
