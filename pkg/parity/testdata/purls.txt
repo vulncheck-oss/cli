@@ -1,0 +1,27 @@
+# Fixture set for offline-vs-online PURL parity.
+# One PURL per line. Blank lines and `#` comments are ignored.
+#
+# Regression seeds — the exact inputs from a previously reported drift where
+# an alpine SBOM returned zero vulnerabilities offline while online returned
+# many (fixed in commit f7e0456). If either of these ever reports "only in
+# online" again, the OS-purls emulation has regressed.
+pkg:apk/alpine/musl@1.1.22-r2
+pkg:apk/alpine/busybox@1.30.1-r2
+pkg:apk/alpine/apk-tools@2.10.4-r1
+pkg:apk/alpine/zlib@1.2.11-r1
+
+# Other OS distros exercised by purlSearchOS (pkg/db/purl.go:101).
+# The API requires a distro qualifier — without it /v3/purls returns 500
+# "no distro qualifier found". Format: ?distro=<name>-<release>.
+pkg:deb/ubuntu/openssl@1.1.1f-1ubuntu2.16?distro=ubuntu-20.04
+pkg:deb/debian/curl@7.64.0-4+deb10u2?distro=debian-10
+
+# Language ecosystems exercised by purlSearchExact (pkg/db/purl.go:44).
+pkg:npm/lodash@4.17.15
+pkg:pypi/django@2.2.0
+pkg:cargo/openssl@0.10.29
+pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1
+
+# Version-prefix collision — regression for commit 9a2556c which anchored the
+# LIKE query on JSON quotes so "1.0.1" no longer matches "1.0.10".
+pkg:npm/minimist@1.2.0
