@@ -30,8 +30,13 @@ type CpeMeta struct {
 }
 
 // https://docs.vulncheck.com/api/cpe
+//
+// ResetQuery is mandatory here: c.Query appends via url.Values.Add, and
+// without a reset a reused Client would send ?cpe=<prev>&cpe=<current> on the
+// second call. The API keys off the first param and would silently return the
+// previous CPE's CVE set. Matches the pattern used by sdk.GetPurl.
 func (c *Client) GetCpe(cpe string) (responseJSON *CpeResponse, err error) {
-	resp, err := c.Query("cpe", cpe).Request("GET", "/v3/cpe")
+	resp, err := c.ResetQuery().Query("cpe", cpe).Request("GET", "/v3/cpe")
 	if err != nil {
 		return nil, err
 	}
