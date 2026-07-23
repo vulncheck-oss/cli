@@ -110,24 +110,35 @@ func LoadSBOM(inputFile string) (*sbom.SBOM, []InputSbomRef, error) {
 
 	var inputSbomRefs []InputSbomRef
 
-	// Extract bom-ref, purl and cpe from components. We read these straight from
-	// the raw JSON because Syft only surfaces packages: CycloneDX components of
-	// type "file" (and others) carry purls/cpes that never make it into
-	// sbm.Artifacts.Packages, so relying on the decoded SBOM alone drops them
+	// Extract bom-ref, purl and cpe from every CycloneDX object that can carry
+	// them. We read these straight from the raw JSON because Syft only surfaces
+	// what its catalogers recognise as packages: CycloneDX components of type
+	// "file" (and others), and metadata.component (the object the SBOM
+	// describes), carry purls/cpes that never make it into
+	// sbm.Artifacts.Packages, so relying on the decoded SBOM alone drops them.
+	appendRef := func(component map[string]interface{}) {
+		bomRef, _ := component["bom-ref"].(string)
+		purl, _ := component["purl"].(string)
+		cpe, _ := component["cpe"].(string)
+		if purl != "" || cpe != "" {
+			inputSbomRefs = append(inputSbomRefs, InputSbomRef{
+				SbomRef: bomRef,
+				PURL:    purl,
+				CPE:     cpe,
+			})
+		}
+	}
+
 	if components, ok := rawSBOM["components"].([]interface{}); ok {
 		for _, comp := range components {
 			if component, ok := comp.(map[string]interface{}); ok {
-				bomRef, _ := component["bom-ref"].(string)
-				purl, _ := component["purl"].(string)
-				cpe, _ := component["cpe"].(string)
-				if purl != "" || cpe != "" {
-					inputSbomRefs = append(inputSbomRefs, InputSbomRef{
-						SbomRef: bomRef,
-						PURL:    purl,
-						CPE:     cpe,
-					})
-				}
+				appendRef(component)
 			}
+		}
+	}
+	if metadata, ok := rawSBOM["metadata"].(map[string]interface{}); ok {
+		if component, ok := metadata["component"].(map[string]interface{}); ok {
+			appendRef(component)
 		}
 	}
 

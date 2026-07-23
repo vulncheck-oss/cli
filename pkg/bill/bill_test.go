@@ -79,6 +79,35 @@ func TestLoadSBOM_CycloneDX17(t *testing.T) {
 	}
 }
 
+// TestLoadSBOM_MetadataComponent asserts that a purl/cpe declared on
+// metadata.component (the object the SBOM describes — often the top-level
+// scanned artifact, e.g. an OS image or firmware blob) is picked up. Syft
+// does not surface this as a package, so without the raw-JSON pass reading
+// metadata.component the top-level product would be silently unscanned.
+func TestLoadSBOM_MetadataComponent(t *testing.T) {
+	_, refs, err := LoadSBOM(filepath.Join("testdata", "cyclonedx-metadata-component.json"))
+	if err != nil {
+		t.Fatalf("LoadSBOM failed: %v", err)
+	}
+
+	var found bool
+	for _, r := range refs {
+		if r.SbomRef == "top-level-artifact" {
+			found = true
+			if r.PURL != "pkg:generic/example-os@1.0.0" {
+				t.Errorf("metadata.component PURL: got %q", r.PURL)
+			}
+			if r.CPE != "cpe:2.3:o:example:example-os:1.0.0:*:*:*:*:*:*:*" {
+				t.Errorf("metadata.component CPE: got %q", r.CPE)
+			}
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("metadata.component ref not extracted; got refs=%+v", refs)
+	}
+}
+
 func TestGetPURLDetail(t *testing.T) {
 	mockSBOM := &sbom.SBOM{}
 
