@@ -110,24 +110,35 @@ func LoadSBOM(inputFile string) (*sbom.SBOM, []InputSbomRef, error) {
 
 	var inputSbomRefs []InputSbomRef
 
-	// Extract bom-ref, purl and cpe from components. We read these straight from
-	// the raw JSON because Syft only surfaces packages: CycloneDX components of
-	// type "file" (and others) carry purls/cpes that never make it into
-	// sbm.Artifacts.Packages, so relying on the decoded SBOM alone drops them
+	// Extract bom-ref, purl and cpe from every CycloneDX object that can carry
+	// them. We read these straight from the raw JSON because Syft only surfaces
+	// what its catalogers recognise as packages: CycloneDX components of type
+	// "file" (and others), and metadata.component (the object the SBOM
+	// describes), carry purls/cpes that never make it into
+	// sbm.Artifacts.Packages, so relying on the decoded SBOM alone drops them.
+	appendRef := func(component map[string]interface{}) {
+		bomRef, _ := component["bom-ref"].(string)
+		purl, _ := component["purl"].(string)
+		cpe, _ := component["cpe"].(string)
+		if purl != "" || cpe != "" {
+			inputSbomRefs = append(inputSbomRefs, InputSbomRef{
+				SbomRef: bomRef,
+				PURL:    purl,
+				CPE:     cpe,
+			})
+		}
+	}
+
 	if components, ok := rawSBOM["components"].([]interface{}); ok {
 		for _, comp := range components {
 			if component, ok := comp.(map[string]interface{}); ok {
-				bomRef, _ := component["bom-ref"].(string)
-				purl, _ := component["purl"].(string)
-				cpe, _ := component["cpe"].(string)
-				if purl != "" || cpe != "" {
-					inputSbomRefs = append(inputSbomRefs, InputSbomRef{
-						SbomRef: bomRef,
-						PURL:    purl,
-						CPE:     cpe,
-					})
-				}
+				appendRef(component)
 			}
+		}
+	}
+	if metadata, ok := rawSBOM["metadata"].(map[string]interface{}); ok {
+		if component, ok := metadata["component"].(map[string]interface{}); ok {
+			appendRef(component)
 		}
 	}
 
@@ -185,14 +196,22 @@ func GetCPEDetail(sbm *sbom.SBOM, inputRefs []InputSbomRef) []string {
 }
 
 func GetPURLDetail(sbm *sbom.SBOM, inputRefs []InputSbomRef) []models.PurlDetail {
-	if sbm == nil {
-		return []models.PurlDetail{}
+	var purls []models.PurlDetail
+	seen := make(map[string]struct{})
+
+	add := func(purl models.PurlDetail) {
+		if purl.Purl == "" || strings.HasPrefix(purl.Purl, "pkg:github") {
+			return
+		}
+		if _, exists := seen[purl.Purl]; exists {
+			return
+		}
+		seen[purl.Purl] = struct{}{}
+		purls = append(purls, purl)
 	}
 
-	var purls []models.PurlDetail
-
-	for p := range sbm.Artifacts.Packages.Enumerate() {
-		if p.PURL != "" && !strings.HasPrefix(p.PURL, "pkg:github") {
+	if sbm != nil {
+		for p := range sbm.Artifacts.Packages.Enumerate() {
 			locations := make([]string, len(p.Locations.ToSlice()))
 			for i, l := range p.Locations.ToSlice() {
 				locations[i] = l.RealPath
@@ -212,10 +231,20 @@ func GetPURLDetail(sbm *sbom.SBOM, inputRefs []InputSbomRef) []models.PurlDetail
 				}
 			}
 
-			purls = append(purls, purlDetail)
-
+			add(purlDetail)
 		}
 	}
+
+	// CycloneDX components of type "file" (and others) carry PURLs that Syft
+	// does not surface as packages, so pull them straight from the parsed SBOM
+	// — mirrors what GetCPEDetail does for the CPE side.
+	for _, ref := range inputRefs {
+		add(models.PurlDetail{
+			Purl:    ref.PURL,
+			SbomRef: ref.SbomRef,
+		})
+	}
+
 	return purls
 }
 

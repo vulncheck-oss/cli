@@ -79,6 +79,35 @@ func TestLoadSBOM_CycloneDX17(t *testing.T) {
 	}
 }
 
+// TestLoadSBOM_MetadataComponent asserts that a purl/cpe declared on
+// metadata.component (the object the SBOM describes — often the top-level
+// scanned artifact, e.g. an OS image or firmware blob) is picked up. Syft
+// does not surface this as a package, so without the raw-JSON pass reading
+// metadata.component the top-level product would be silently unscanned.
+func TestLoadSBOM_MetadataComponent(t *testing.T) {
+	_, refs, err := LoadSBOM(filepath.Join("testdata", "cyclonedx-metadata-component.json"))
+	if err != nil {
+		t.Fatalf("LoadSBOM failed: %v", err)
+	}
+
+	var found bool
+	for _, r := range refs {
+		if r.SbomRef == "top-level-artifact" {
+			found = true
+			if r.PURL != "pkg:generic/example-os@1.0.0" {
+				t.Errorf("metadata.component PURL: got %q", r.PURL)
+			}
+			if r.CPE != "cpe:2.3:o:example:example-os:1.0.0:*:*:*:*:*:*:*" {
+				t.Errorf("metadata.component CPE: got %q", r.CPE)
+			}
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("metadata.component ref not extracted; got refs=%+v", refs)
+	}
+}
+
 func TestGetPURLDetail(t *testing.T) {
 	mockSBOM := &sbom.SBOM{}
 
@@ -91,6 +120,37 @@ func TestGetPURLDetail(t *testing.T) {
 	nilPurls := GetPURLDetail(nil, nil)
 	if len(nilPurls) != 0 {
 		t.Errorf("Expected 0 PURLs for nil SBOM, got %d", len(nilPurls))
+	}
+
+	// PURLs declared on CycloneDX "file" components are not surfaced by Syft
+	// as packages, so they reach us only through the raw inputRefs — the same
+	// class of gap the CPE side already handles.
+	refs := []InputSbomRef{
+		{SbomRef: "ref-1", PURL: "pkg:generic/qnx_software_development_platform@7.1"},
+		{SbomRef: "ref-2", PURL: "pkg:generic/qnx_software_development_platform@7.1"}, // duplicate
+		{SbomRef: "ref-3", PURL: ""},                                                  // empty
+		{SbomRef: "ref-4", PURL: "pkg:github/actions/checkout@v3"},                    // filtered
+		{SbomRef: "ref-5", PURL: "pkg:generic/other@1.0"},
+	}
+
+	got := GetPURLDetail(nil, refs)
+
+	if len(got) != 2 {
+		t.Fatalf("expected 2 PURLs after dedupe + filters, got %d: %v", len(got), got)
+	}
+	wantByPurl := map[string]string{
+		"pkg:generic/qnx_software_development_platform@7.1": "ref-1",
+		"pkg:generic/other@1.0":                             "ref-5",
+	}
+	for _, p := range got {
+		wantRef, ok := wantByPurl[p.Purl]
+		if !ok {
+			t.Errorf("unexpected PURL %q in result", p.Purl)
+			continue
+		}
+		if p.SbomRef != wantRef {
+			t.Errorf("PURL %q: got SbomRef %q, want %q", p.Purl, p.SbomRef, wantRef)
+		}
 	}
 }
 

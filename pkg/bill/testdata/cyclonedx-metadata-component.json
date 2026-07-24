@@ -1,0 +1,19 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.7",
+  "serialNumber": "urn:uuid:00000000-0000-0000-0000-000000000000",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-01-01T00:00:00Z",
+    "component": {
+      "bom-ref": "top-level-artifact",
+      "type": "operating-system",
+      "name": "example-os",
+      "version": "1.0.0",
+      "purl": "pkg:generic/example-os@1.0.0",
+      "cpe": "cpe:2.3:o:example:example-os:1.0.0:*:*:*:*:*:*:*"
+    }
+  },
+  "components": []
+}
