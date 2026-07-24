@@ -38,6 +38,12 @@ completions: bin/vulncheck$(EXE)
 test:
 	go test ./...
 
+# Opt-in offline↔online parity suite. Needs VC_TOKEN and synced offline
+# indices; the tests skip themselves if either is missing. See pkg/parity.
+.PHONY: test-parity
+test-parity:
+	go test -tags=parity ./pkg/parity/...
+
 dbug:
 	@go get github.com/dbugapp/dbug-go
 

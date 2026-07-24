@@ -1,0 +1,24 @@
+# Fixture set for offline-vs-online CPE parity.
+# One CPE per line. Blank lines and `#` comments are ignored.
+#
+# Regression seed — the exact input from a previously reported drift where a
+# linux_kernel CPE returned zero in an offline SBOM scan while `vulncheck cpe`
+# returned thousands online (fixed in commit f7e0456). If this ever reports
+# "only in online" again, either the CycloneDX file-component extraction in
+# bill.LoadSBOM has regressed or the offline CPE lookup + client-side version
+# filter in cpeutils.Process has drifted from the server's matcher.
+cpe:2.3:o:*:linux_kernel:5.15.201:*:*:*:*:*:*:*
+
+# High-volume vendor to stress version-range logic in cpeutils.Process
+# (pkg/cpe/cpeutils/cpeutils.go:32) against the server matcher.
+cpe:2.3:a:openssl:openssl:1.1.1:*:*:*:*:*:*:*
+cpe:2.3:a:apache:log4j:2.14.1:*:*:*:*:*:*:*
+cpe:2.3:a:nginx:nginx:1.18.0:*:*:*:*:*:*:*
+
+# Wildcards on vendor and product exercise the LIKE-clause branch in
+# db.CPESearch (pkg/db/cpe.go:31-58).
+cpe:2.3:a:*:log4j:2.14.1:*:*:*:*:*:*:*
+
+# Negative case — vendor/product that should not exist; both paths should
+# agree on the empty set.
+cpe:2.3:a:vendor-that-does-not-exist:product-x:1.0.0:*:*:*:*:*:*:*
