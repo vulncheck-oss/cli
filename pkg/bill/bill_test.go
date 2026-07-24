@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/models"
@@ -178,6 +179,144 @@ func TestGetCPEDetail(t *testing.T) {
 	want := "cpe:2.3:a:blackberry:qnx_software_development_platform:7.1:*:*:*:*:*:*:*"
 	if got[0] != want {
 		t.Errorf("expected %q, got %q", want, got[0])
+	}
+}
+
+// TestBuildSBOMConfig documents the mapping between our --enrich directive
+// slice and the pkgcataloging.Config fields we hand to syft. Locks in the
+// expected per-scope behaviour so a future refactor can't quietly stop
+// flipping (or start over-flipping) fields.
+func TestBuildSBOMConfig(t *testing.T) {
+	t.Run("empty Enrich returns nil (preserves syft defaults)", func(t *testing.T) {
+		if cfg := buildSBOMConfig(SBOMOptions{}); cfg != nil {
+			t.Fatalf("expected nil config for empty Enrich, got %+v", cfg)
+		}
+	})
+
+	t.Run("Enrich=all flips every scope", func(t *testing.T) {
+		cfg := buildSBOMConfig(SBOMOptions{Enrich: []string{"all"}})
+		if cfg == nil {
+			t.Fatal("expected non-nil config")
+		}
+		if !cfg.Packages.Golang.SearchRemoteLicenses {
+			t.Error("golang.SearchRemoteLicenses not enabled under all")
+		}
+		if !cfg.Packages.Golang.SearchLocalModCacheLicenses {
+			t.Error("golang.SearchLocalModCacheLicenses not enabled under all")
+		}
+		if !cfg.Packages.Golang.SearchLocalVendorLicenses {
+			t.Error("golang.SearchLocalVendorLicenses not enabled under all")
+		}
+		if !cfg.Packages.JavaScript.SearchRemoteLicenses {
+			t.Error("javascript.SearchRemoteLicenses not enabled under all")
+		}
+		if !cfg.Packages.Python.SearchRemoteLicenses {
+			t.Error("python.SearchRemoteLicenses not enabled under all")
+		}
+		if !cfg.Packages.Python.GuessUnpinnedRequirements {
+			t.Error("python.GuessUnpinnedRequirements not enabled under all")
+		}
+		if !cfg.Packages.JavaArchive.UseNetwork {
+			t.Error("java.UseNetwork not enabled under all")
+		}
+		if !cfg.Packages.JavaArchive.UseMavenLocalRepository {
+			t.Error("java.UseMavenLocalRepository not enabled under all")
+		}
+	})
+
+	t.Run("single scope only flips that scope", func(t *testing.T) {
+		cfg := buildSBOMConfig(SBOMOptions{Enrich: []string{"golang"}})
+		if !cfg.Packages.Golang.SearchRemoteLicenses {
+			t.Error("golang enrichment not enabled")
+		}
+		if cfg.Packages.JavaScript.SearchRemoteLicenses {
+			t.Error("javascript enrichment leaked in")
+		}
+		if cfg.Packages.Python.SearchRemoteLicenses {
+			t.Error("python enrichment leaked in")
+		}
+		if cfg.Packages.JavaArchive.UseNetwork {
+			t.Error("java enrichment leaked in")
+		}
+	})
+
+	t.Run("all with per-scope negation excludes only that scope", func(t *testing.T) {
+		cfg := buildSBOMConfig(SBOMOptions{Enrich: []string{"all", "-java"}})
+		if !cfg.Packages.Golang.SearchRemoteLicenses {
+			t.Error("golang should still be enabled")
+		}
+		if cfg.Packages.JavaArchive.UseNetwork {
+			t.Error("java should be excluded by -java")
+		}
+	})
+
+	t.Run("none disables everything", func(t *testing.T) {
+		cfg := buildSBOMConfig(SBOMOptions{Enrich: []string{"none"}})
+		if cfg == nil {
+			t.Fatal("expected non-nil config even when none directive is present")
+		}
+		if cfg.Packages.Golang.SearchRemoteLicenses {
+			t.Error("golang should be disabled under none")
+		}
+		if cfg.Packages.JavaScript.SearchRemoteLicenses {
+			t.Error("javascript should be disabled under none")
+		}
+	})
+
+	// Syft accepts several scope aliases per language (internal/task/package_tasks.go):
+	// go/golang, javascript/node/npm, java/maven. Users typing any of them should
+	// get the same behaviour as with the publicised name.
+	aliases := []struct {
+		name  string
+		alias string
+		check func(cfg *syft.CreateSBOMConfig) bool
+	}{
+		{"go alias enables golang", "go", func(c *syft.CreateSBOMConfig) bool { return c.Packages.Golang.SearchRemoteLicenses }},
+		{"node alias enables javascript", "node", func(c *syft.CreateSBOMConfig) bool { return c.Packages.JavaScript.SearchRemoteLicenses }},
+		{"npm alias enables javascript", "npm", func(c *syft.CreateSBOMConfig) bool { return c.Packages.JavaScript.SearchRemoteLicenses }},
+		{"maven alias enables java", "maven", func(c *syft.CreateSBOMConfig) bool { return c.Packages.JavaArchive.UseNetwork }},
+	}
+	for _, a := range aliases {
+		t.Run(a.name, func(t *testing.T) {
+			cfg := buildSBOMConfig(SBOMOptions{Enrich: []string{a.alias}})
+			if cfg == nil || !a.check(cfg) {
+				t.Errorf("--enrich %s did not enable the language it aliases", a.alias)
+			}
+		})
+	}
+
+	t.Run("golang enrichment sets UsePackagesLib", func(t *testing.T) {
+		cfg := buildSBOMConfig(SBOMOptions{Enrich: []string{"golang"}})
+		if !cfg.Packages.Golang.UsePackagesLib {
+			t.Error("golang enrichment did not set UsePackagesLib (matches syft's own flip)")
+		}
+	})
+}
+
+func TestEnrichmentScope(t *testing.T) {
+	cases := []struct {
+		name       string
+		directives []string
+		scope      string
+		want       bool
+	}{
+		{"empty directives", nil, "golang", false},
+		{"bare scope match", []string{"golang"}, "golang", true},
+		{"plus scope match", []string{"+golang"}, "golang", true},
+		{"negated scope match", []string{"-golang"}, "golang", false},
+		{"all enables scope", []string{"all"}, "golang", true},
+		{"none disables scope", []string{"none"}, "golang", false},
+		{"all beats none absent", []string{"all"}, "python", true},
+		{"explicit negation beats all", []string{"all", "-python"}, "python", false},
+		{"explicit include beats none", []string{"none", "+python"}, "python", true},
+		{"unrelated scope stays off", []string{"golang"}, "python", false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := enrichmentScope(tc.directives, tc.scope); got != tc.want {
+				t.Errorf("enrichmentScope(%v, %q) = %v, want %v", tc.directives, tc.scope, got, tc.want)
+			}
+		})
 	}
 }
 

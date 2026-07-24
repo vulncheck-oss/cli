@@ -41,6 +41,7 @@ type Options struct {
 	OfflineMeta bool
 	DisableUI   bool
 	WarnOnIndex bool
+	Enrich      []string
 }
 
 func Command() *cobra.Command {
@@ -58,6 +59,22 @@ func Command() *cobra.Command {
 
 			if opts.SbomInput == "" && len(args) < 1 {
 				return ui.Error(i18n.C.ScanErrorDirectoryRequired)
+			}
+
+			// Enrichment only kicks in during SBOM generation. Reading a
+			// pre-built SBOM via --sbom-input-file skips generation, so
+			// --enrich would silently do nothing — hard-fail instead of
+			// pretending the flag took effect.
+			if opts.SbomInput != "" && len(opts.Enrich) > 0 {
+				return ui.Error("--enrich has no effect when reading a pre-built SBOM via --sbom-input-file")
+			}
+
+			// Enrichment fetches metadata from proxy.golang.org, Maven Central,
+			// NPM and PyPI — none of which are reachable in offline mode. Fail
+			// loudly rather than silently produce an SBOM missing the metadata
+			// the user opted in for.
+			if opts.Offline && len(opts.Enrich) > 0 {
+				return ui.Error("--enrich requires network access and cannot be combined with --offline")
 			}
 
 			var sbm *sbom.SBOM
@@ -98,7 +115,7 @@ func Command() *cobra.Command {
 					Title: i18n.C.ScanSbomStart,
 					Task: func(t *taskin.Task) error {
 						var err error
-						sbm, err = bill.GetSBOM(args[0])
+						sbm, err = bill.GetSBOM(args[0], bill.SBOMOptions{Enrich: opts.Enrich})
 						if err != nil {
 							return err
 						}
@@ -354,6 +371,7 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVar(&opts.OfflineMeta, "offline-meta", false, "Use with offline mode to populate CVE metadata - requires the vulncheck-nvd2 index to be cached")
 	cmd.Flags().BoolVar(&opts.WarnOnIndex, "warn-on-index", false, "When an index is not present locally, show a warning instead of shutting down")
 	cmd.Flags().BoolVar(&opts.DisableUI, "disable-ui", false, "Disable interactive UI elements (progress bars, spinners)")
+	cmd.Flags().StringSliceVar(&opts.Enrich, "enrich", nil, i18n.C.FlagEnrich)
 
 	return cmd
 }

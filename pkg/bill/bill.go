@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/anchore/syft/syft"
+	"github.com/anchore/syft/syft/cataloging/pkgcataloging"
 	"github.com/anchore/syft/syft/format"
 	"github.com/anchore/syft/syft/format/cyclonedxjson"
 	"github.com/anchore/syft/syft/sbom"
@@ -32,18 +33,105 @@ type InputSbomRef struct {
 	CPE     string
 }
 
-func GetSBOM(dir string) (*sbom.SBOM, error) {
+// SBOMOptions carries knobs for GetSBOM. Kept as a struct so future toggles
+// can be added without churning every caller.
+type SBOMOptions struct {
+	// Enrich is a passthrough of syft's `--enrich` scope list. Empty means
+	// enrichment is disabled and syft runs with its default (offline-safe)
+	// behaviour. Non-empty entries opt in to network-backed metadata lookups
+	// (proxy.golang.org, Maven Central, NPM registry, PyPI) — see
+	// buildEnrichConfig for which fields each scope flips.
+	Enrich []string
+}
+
+func GetSBOM(dir string, opts SBOMOptions) (*sbom.SBOM, error) {
 	src, err := syft.GetSource(context.Background(), dir, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	sbm, err := syft.CreateSBOM(context.Background(), src, nil)
+	sbm, err := syft.CreateSBOM(context.Background(), src, buildSBOMConfig(opts))
 	if err != nil {
 		return nil, err
 	}
 
 	return sbm, nil
+}
+
+// buildSBOMConfig returns nil when no options need setting, preserving syft's
+// default behaviour end-to-end. When Enrich is populated it starts from syft's
+// defaults and flips the same per-language fields that syft's own CLI flips
+// for `--enrich <scope>` — the scope mapping lives in syft's internal options
+// package (cmd/syft/internal/options/catalog.go) and cannot be imported, so we
+// mirror it here. Scopes match syft's publicised list: all, golang, java,
+// javascript, python. The `+scope` / `-scope` / `all` / `none` precedence
+// rules are handled by enrichmentScope.
+func buildSBOMConfig(opts SBOMOptions) *syft.CreateSBOMConfig {
+	if len(opts.Enrich) == 0 {
+		return nil
+	}
+
+	pkgCfg := pkgcataloging.DefaultConfig()
+
+	// Aliases mirror syft's own task-name mapping (internal/task/package_tasks.go).
+	// Advertising only the publicised names in --help keeps parity with syft's help
+	// output, but users typing an alias syft accepts should still get the same
+	// behaviour they'd get from `syft --enrich <alias>`.
+	if enrichmentScope(opts.Enrich, "golang", "go") {
+		pkgCfg.Golang = pkgCfg.Golang.
+			WithSearchLocalModCacheLicenses(true).
+			WithSearchLocalVendorLicenses(true).
+			WithSearchRemoteLicenses(true).
+			WithUsePackagesLib(true)
+	}
+	if enrichmentScope(opts.Enrich, "javascript", "node", "npm") {
+		pkgCfg.JavaScript = pkgCfg.JavaScript.WithSearchRemoteLicenses(true)
+	}
+	if enrichmentScope(opts.Enrich, "python") {
+		pkgCfg.Python = pkgCfg.Python.
+			WithSearchRemoteLicenses(true).
+			WithGuessUnpinnedRequirements(true)
+	}
+	if enrichmentScope(opts.Enrich, "java", "maven") {
+		pkgCfg.JavaArchive = pkgCfg.JavaArchive.
+			WithUseMavenLocalRepository(true).
+			WithUseNetwork(true)
+	}
+
+	return syft.DefaultCreateSBOMConfig().WithPackagesConfig(pkgCfg)
+}
+
+// enrichmentScope reports whether enrichment should be enabled for a language
+// under the user's directives. Multiple aliases can be passed for languages
+// syft's CLI accepts under more than one name (e.g. golang/go, javascript/node/npm,
+// java/maven); an explicit `+alias` / bare `alias` / `-alias` on any of them
+// wins over the `all` / `none` fallback, matching syft's own precedence.
+func enrichmentScope(directives []string, aliases ...string) bool {
+	lookup := func(name string) (found, enable bool) {
+		for _, d := range directives {
+			d = strings.TrimPrefix(d, "+")
+			neg := strings.HasPrefix(d, "-")
+			if neg {
+				d = d[1:]
+			}
+			if d == name {
+				return true, !neg
+			}
+		}
+		return false, false
+	}
+	for _, alias := range aliases {
+		if found, en := lookup(alias); found {
+			return en
+		}
+	}
+	if _, disableAll := lookup("none"); disableAll {
+		return false
+	}
+	if _, enableAll := lookup("all"); enableAll {
+		return true
+	}
+	return false
 }
 
 func SaveSBOM(sbm *sbom.SBOM, file string) error {
