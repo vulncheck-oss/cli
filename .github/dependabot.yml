@@ -4,3 +4,64 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    open-pull-requests-limit: 15
+    labels:
+      - "dependencies"
+      - "go"
+    groups:
+      syft:
+        applies-to: version-updates
+        patterns:
+          - "github.com/anchore/syft"
+
+      charmbracelet:
+        applies-to: version-updates
+        patterns:
+          - "github.com/charmbracelet/*"
+
+      cloud-sdks:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "cloud.google.com/go*"
+          - "google.golang.org/*"
+          - "github.com/aws/*"
+          - "github.com/Azure/*"
+          - "github.com/GoogleCloudPlatform/*"
+          - "go.opentelemetry.io/*"
+
+      container-tooling:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "github.com/anchore/*"
+          - "github.com/containerd/*"
+          - "github.com/docker/*"
+          - "github.com/opencontainers/*"
+          - "k8s.io/*"
+
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    groups:
+      github-actions:
+        applies-to: version-updates
+        patterns:
+          - "*"
