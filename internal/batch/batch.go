@@ -27,11 +27,13 @@ type Result struct {
 //
 //	args      - positional CLI arguments (caller passes cobra's args slice)
 //	fromFile  - value of --from-file (empty = unset)
-//	stdin     - reader to use for stdin fallback; nil defaults to os.Stdin
+//	stdin     - reader to use for stdin fallback; nil skips stdin entirely
 //
-// Precedence: --from-file wins, then positional args, then stdin if it is
-// not a terminal. Empty/whitespace lines and leading '#' comment lines
-// are skipped. Returns an empty slice if no source provided any input.
+// Precedence: --from-file wins, then positional args, then stdin. Callers
+// wiring an interactive TTY must pass nil to opt out — otherwise a
+// blocking Read on the terminal will hang the command and swallow
+// Ctrl+C. Empty/whitespace lines and leading '#' comment lines are
+// skipped. Returns an empty slice if no source provided any input.
 func CollectInputs(args []string, fromFile string, stdin io.Reader) ([]string, error) {
 	if fromFile != "" {
 		f, err := os.Open(fromFile)
@@ -45,11 +47,8 @@ func CollectInputs(args []string, fromFile string, stdin io.Reader) ([]string, e
 		return args, nil
 	}
 	if stdin == nil {
-		stdin = os.Stdin
+		return nil, nil
 	}
-	// Only consume stdin when it is being piped to us — interactive shells
-	// would block forever. Caller is expected to have checked TTY via
-	// output.IsTTY(os.Stdin) when wiring this.
 	return readLines(stdin), nil
 }
 
