@@ -69,7 +69,7 @@ func TestCollectInputsMissingFile(t *testing.T) {
 
 // A nil stdin means "no stdin available" — CollectInputs must NOT fall
 // back to os.Stdin, which would block on a TTY and hang subcommands
-// like `vulncheck pdns` / `vulncheck tag` (issue #3194).
+// like `vulncheck pdns` / `vulncheck tag`.
 func TestCollectInputsNilStdinReturnsEmpty(t *testing.T) {
 	got, err := CollectInputs(nil, "", nil)
 	if err != nil {
