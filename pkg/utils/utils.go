@@ -50,6 +50,30 @@ func ExtractFileBasename(urlStr string) (string, error) {
 	return filepath.Base(name), nil
 }
 
+// BackupFilename derives the local filename to save an index backup under.
+// Unlike ExtractFile it makes no assumption about the archive format: most
+// indices ship a zip, but target-intel ships a bare Avro container file.
+func BackupFilename(urlStr string) (string, error) {
+	parsedUrl, err := url.Parse(urlStr)
+	if err != nil {
+		return "", err
+	}
+
+	// filepath.Base trims a trailing separator, so "/latest/" would otherwise
+	// resolve to the directory name "latest" rather than being rejected.
+	path := strings.TrimPrefix(parsedUrl.Path, "/")
+	if path == "" || strings.HasSuffix(path, "/") {
+		return "", fmt.Errorf("could not determine a filename from backup URL")
+	}
+
+	name := filepath.Base(path)
+	if name == "." || name == ".." || name == string(os.PathSeparator) {
+		return "", fmt.Errorf("could not determine a filename from backup URL")
+	}
+
+	return name, nil
+}
+
 // ParseDate parses a date string in RFC3339 format and returns a formatted string.
 func ParseDate(date string) string {
 	dateAdded, err := time.Parse(time.RFC3339, date)

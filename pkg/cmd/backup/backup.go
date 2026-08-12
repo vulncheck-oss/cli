@@ -145,7 +145,7 @@ func Command() *cobra.Command {
 				}
 			}
 
-			file, err := utils.ExtractFileBasename(response.GetData()[0].URL)
+			file, err := utils.BackupFilename(response.GetData()[0].URL)
 			if err != nil {
 				return err
 			}
