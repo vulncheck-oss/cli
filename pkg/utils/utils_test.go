@@ -183,6 +183,80 @@ func TestExtractFileBasename(t *testing.T) {
 	}
 }
 
+func TestBackupFilename(t *testing.T) {
+	tests := []struct {
+		name    string
+		urlStr  string
+		want    string
+		wantErr bool
+	}{
+		{
+			name:    "Zip backup",
+			urlStr:  "https://example.com/latest/exploits-1786528609040972582.zip",
+			want:    "exploits-1786528609040972582.zip",
+			wantErr: false,
+		},
+		{
+			// target-intel ships Avro rather than zip; this is the case that
+			// ExtractFile rejects outright.
+			name:    "Avro backup",
+			urlStr:  "https://example.com/latest/target-intel-1786521601737157533.avro",
+			want:    "target-intel-1786521601737157533.avro",
+			wantErr: false,
+		},
+		{
+			// Backup URLs are presigned and always carry a query string.
+			name:    "URL with query parameters",
+			urlStr:  "https://example.com/latest/target-intel-1786521601737157533.avro?X-Amz-Expires=900&X-Amz-Signature=abc",
+			want:    "target-intel-1786521601737157533.avro",
+			wantErr: false,
+		},
+		{
+			name:    "No extension",
+			urlStr:  "https://example.com/latest/target-intel",
+			want:    "target-intel",
+			wantErr: false,
+		},
+		{
+			name:    "Invalid URL",
+			urlStr:  "://invalid-url",
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name:    "No path",
+			urlStr:  "https://example.com",
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name:    "Directory path",
+			urlStr:  "https://example.com/latest/",
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name:    "Traversal path",
+			urlStr:  "https://example.com/latest/..",
+			want:    "",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := BackupFilename(tt.urlStr)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("BackupFilename() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("BackupFilename() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestParseDate(t *testing.T) {
 	tests := []struct {
 		name string
