@@ -31,6 +31,10 @@ func Command() *cobra.Command {
 				return errs.Validation("%s", i18n.C.AuthLoginErrorCI)
 			}
 
+			if err := pkgLogin.GuardEnvToken(); err != nil {
+				return err
+			}
+
 			if config.HasConfig() && config.HasToken() {
 				if err := pkgLogin.ExistingToken(); err != nil {
 					return err

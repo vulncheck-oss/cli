@@ -63,6 +63,12 @@ func runCLIAuthed(t *testing.T, args ...string) (stdout, stderr string, exitCode
 }
 
 func runCLIEnv(t *testing.T, token string, args ...string) (stdout, stderr string, exitCode int) {
+	return runCLIHome(t, isolatedHome, token, args...)
+}
+
+// runCLIHome is runCLIEnv with an explicit HOME, for tests that need to seed
+// their own vulncheck.yaml without disturbing the package-wide isolatedHome.
+func runCLIHome(t *testing.T, home, token string, args ...string) (stdout, stderr string, exitCode int) {
 	t.Helper()
 	cmd := exec.Command(binPath, args...)
 	var outBuf, errBuf bytes.Buffer
@@ -72,9 +78,9 @@ func runCLIEnv(t *testing.T, token string, args ...string) (stdout, stderr strin
 		// HOME on Unix, USERPROFILE on Windows — both point os.UserHomeDir
 		// at our isolated tree so the tests never touch the developer's
 		// real ~/.config/vulncheck or %APPDATA%.
-		"HOME="+isolatedHome,
-		"USERPROFILE="+isolatedHome,
-		"XDG_CONFIG_HOME="+isolatedHome,
+		"HOME="+home,
+		"USERPROFILE="+home,
+		"XDG_CONFIG_HOME="+home,
 		"VC_TOKEN="+token,
 		"NO_COLOR=1",
 		// Clear CI so Interactive() logic isn't skewed by the outer test env.
@@ -303,5 +309,121 @@ func TestContractScanSbomOnlyJSON(t *testing.T) {
 	// the scan explicitly skipped the vuln lookup.
 	if _, present := m["vulnerabilities"]; present {
 		t.Errorf("sbom-only response should not include a vulnerabilities key; got %v", m)
+	}
+}
+
+// ----- VC_TOKEN shadowing guardrail -----
+
+// homeWithToken returns a fresh HOME containing a vulncheck.yaml that holds
+// the given token, so tests can create the "logged in AND VC_TOKEN set" state.
+func homeWithToken(t *testing.T, token string) string {
+	t.Helper()
+	home := t.TempDir()
+	dir := filepath.Join(home, ".config", "vulncheck")
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "vulncheck.yaml"),
+		[]byte("token: "+token+"\nindicesdir: \"\"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return home
+}
+
+// A stale VC_TOKEN silently overrode a saved token, so `auth login` verified
+// the pasted value, skipped the save, and still reported success. It must now
+// refuse rather than pretend.
+func TestContractAuthLoginRefusesWhenEnvTokenSet(t *testing.T) {
+	home := homeWithToken(t, "vulncheck_saved_token_value")
+
+	// --json implies non-interactive, which would trip the CI guard first, so
+	// exercise the plain path and read stderr.
+	_, stderr, exit := runCLIHome(t, home, "vulncheck_env_token_value", "auth", "login", "token")
+	if exit != 2 {
+		t.Fatalf("exit = %d, want 2 (validation)\nstderr: %s", exit, stderr)
+	}
+	if !strings.Contains(stderr, "VC_TOKEN") {
+		t.Errorf("stderr should name VC_TOKEN as the cause; got %q", stderr)
+	}
+	if !strings.Contains(stderr, "unset") {
+		t.Errorf("stderr should tell the user to unset VC_TOKEN; got %q", stderr)
+	}
+
+	// The saved token must be untouched — refusing is not a licence to write.
+	b, err := os.ReadFile(filepath.Join(home, ".config", "vulncheck", "vulncheck.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(b), "vulncheck_saved_token_value") {
+		t.Errorf("saved token should be unchanged after a refused login; file = %q", b)
+	}
+}
+
+// `auth logout` used to revoke the *env* token server-side while deleting a
+// different token from disk, then report success even though the caller was
+// still authenticated. It must refuse instead of touching anything.
+func TestContractAuthLogoutRefusesWhenEnvTokenSet(t *testing.T) {
+	home := homeWithToken(t, "vulncheck_saved_token_value")
+
+	_, stderr, exit := runCLIHome(t, home, "vulncheck_env_token_value", "auth", "logout")
+	if exit != 2 {
+		t.Fatalf("exit = %d, want 2 (validation)\nstderr: %s", exit, stderr)
+	}
+	if !strings.Contains(stderr, "VC_TOKEN") {
+		t.Errorf("stderr should name VC_TOKEN; got %q", stderr)
+	}
+
+	b, err := os.ReadFile(filepath.Join(home, ".config", "vulncheck", "vulncheck.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(b), "vulncheck_saved_token_value") {
+		t.Errorf("logout must not clear the saved token while refusing; file = %q", b)
+	}
+}
+
+// auth status reports the source and the shadowing state so an agent can
+// explain why a freshly saved credential appears to do nothing.
+func TestContractAuthStatusReportsShadowing(t *testing.T) {
+	home := homeWithToken(t, "vulncheck_saved_token_value")
+
+	stdout, _, exit := runCLIHome(t, home, "vulncheck_env_token_value", "auth", "status", "--json")
+	if exit != 0 {
+		t.Fatalf("exit = %d, want 0", exit)
+	}
+	m := mustJSON(t, stdout)
+	if m["token_source"] != "env" {
+		t.Errorf("token_source = %v, want env", m["token_source"])
+	}
+	if v, _ := m["token_shadowed"].(bool); !v {
+		t.Errorf("token_shadowed = %v, want true", m["token_shadowed"])
+	}
+}
+
+// token_shadowed must stay absent when only VC_TOKEN is set — that is the
+// normal CI shape and it must not look like a misconfiguration.
+func TestContractAuthStatusNoShadowingInCIShape(t *testing.T) {
+	stdout, _, exit := runCLIHome(t, t.TempDir(), "vulncheck_env_token_value", "auth", "status", "--json")
+	if exit != 0 {
+		t.Fatalf("exit = %d, want 0", exit)
+	}
+	m := mustJSON(t, stdout)
+	if _, present := m["token_shadowed"]; present {
+		t.Errorf("token_shadowed should be omitted when nothing is shadowed; got %v", m)
+	}
+}
+
+// The auth_required envelope gains a hint naming the token source, so the
+// "re-login changes nothing" loop is self-diagnosing.
+func TestContractAuthErrorEnvelopeHint(t *testing.T) {
+	// No token anywhere: no source to name, so no hint.
+	stdout, _, _ := runCLIHome(t, t.TempDir(), "", "indices", "list", "--json")
+	m := mustJSON(t, stdout)
+	errObj, ok := m["error"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected an error envelope, got %v", m)
+	}
+	if _, present := errObj["hint"]; present {
+		t.Errorf("hint should be omitted when there is no token source to name; got %v", errObj)
 	}
 }

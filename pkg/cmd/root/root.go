@@ -160,6 +160,31 @@ type errorBody struct {
 	Code       string `json:"code"`
 	Message    string `json:"message"`
 	HTTPStatus int    `json:"http_status,omitempty"`
+	// Hint is optional remediation context. Omitted when empty, so adding it
+	// does not change the envelope for errors that carry no hint.
+	Hint string `json:"hint,omitempty"`
+}
+
+// authHint explains which token source produced the credential that just
+// failed. Without this, a user with a stale VC_TOKEN shadowing a freshly
+// saved config token sees "unauthorized", re-runs `auth login`, is told it
+// succeeded, and hits the same error forever — the CLI never mentions that
+// the token in play came from the environment.
+func authHint(kind errs.Kind) string {
+	if kind != errs.KindAuthInvalid && kind != errs.KindAuthRequired {
+		return ""
+	}
+	res := config.Resolve()
+	switch {
+	case res.Shadowed:
+		return fmt.Sprintf(
+			"the token in use came from %s, which overrides the different token saved in your config file. Run `unset %s` to use the saved one.",
+			config.EnvToken, config.EnvToken)
+	case res.FromEnv():
+		return fmt.Sprintf("the token in use came from %s, not your config file.", config.EnvToken)
+	default:
+		return ""
+	}
 }
 
 func Execute() {
@@ -192,6 +217,10 @@ func Execute() {
 		classified = errs.Wrap(errs.KindCancelled, err, "cancelled")
 	}
 
+	if classified.Hint == "" {
+		classified.Hint = authHint(classified.Kind)
+	}
+
 	if r.IsJSON() {
 		_ = r.JSON(errorEnvelope{
 			SchemaVersion: output.SchemaVersion,
@@ -199,10 +228,14 @@ func Execute() {
 				Code:       string(classified.Kind),
 				Message:    classified.Message,
 				HTTPStatus: classified.HTTPStatus,
+				Hint:       classified.Hint,
 			},
 		})
 	} else {
 		_, _ = fmt.Fprintln(r.Stderr(), ui.Danger(classified.Message).Error())
+		if classified.Hint != "" {
+			_, _ = fmt.Fprintf(r.Stderr(), "hint: %s\n", classified.Hint)
+		}
 	}
 
 	os.Exit(classified.ExitCode())

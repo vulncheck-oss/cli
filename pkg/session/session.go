@@ -25,12 +25,12 @@ type Me struct {
 	Avatar string
 }
 
+// CheckAuth reports whether a usable token was found in any source.
+// config.Resolve already rejects invalid values in both positions, so this is
+// simply "did we resolve anything" — it must not re-validate independently, or
+// it drifts from what HasToken/Token report.
 func CheckAuth() bool {
-	token := config.Token()
-	if token != "" && config.ValidToken(token) {
-		return true
-	}
-	return false
+	return config.Resolve().Token != ""
 }
 
 func ChangelogURL(version string) string {
