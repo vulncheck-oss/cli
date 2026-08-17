@@ -1,7 +1,6 @@
 package config
 
 import (
-	"os"
 	"testing"
 )
 
@@ -38,17 +37,11 @@ func TestValidToken(t *testing.T) {
 }
 
 func TestSaveAndLoadConfig(t *testing.T) {
-	// Setup: Create a temporary directory for config
-	tempDir := t.TempDir()
-	homeDir := os.Getenv("HOME") // Save original HOME
-	if err := os.Setenv("HOME", tempDir); err != nil {
-		t.Fatalf("Failed to set HOME env var: %v", err)
-	}
-	defer func() {
-		if err := os.Setenv("HOME", homeDir); err != nil {
-			t.Errorf("Failed to restore HOME env var: %v", err)
-		}
-	}()
+	// isolateHome sets both HOME and USERPROFILE, so config.Dir() resolves
+	// into the temp tree on Windows too. Setting HOME alone left this writing
+	// into the runner's real profile, where the token below then leaked into
+	// every other test in the package.
+	isolateHome(t)
 
 	expectedToken := "vulncheck_testtoken1234567890abcdefghijklmnopqrstuvw"
 	config := &Config{Token: expectedToken}

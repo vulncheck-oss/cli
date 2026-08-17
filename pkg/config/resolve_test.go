@@ -6,16 +6,28 @@ import (
 	"testing"
 )
 
-// writeConfigToken seeds a config file under a temp HOME and returns nothing;
-// callers use Resolve() to observe it.
+// isolateHome points config.Dir() at a fresh temp directory and returns it.
+//
+// os.UserHomeDir reads USERPROFILE on Windows and HOME elsewhere, so setting
+// only HOME leaves Windows resolving the runner's real profile — every test in
+// the package then shares one config file and they contaminate each other.
+// Always set both.
+func isolateHome(t *testing.T) string {
+	t.Helper()
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	return home
+}
+
+// writeConfigToken seeds a config file under an isolated home. Callers use
+// Resolve() to observe it.
 func writeConfigToken(t *testing.T, token string) {
 	t.Helper()
-	dir := filepath.Join(t.TempDir(), ".config", "vulncheck")
+	dir := filepath.Join(isolateHome(t), ".config", "vulncheck")
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		t.Fatal(err)
 	}
-	// t.TempDir() differs per call, so derive HOME from the dir we just made.
-	t.Setenv("HOME", filepath.Dir(filepath.Dir(dir)))
 	if err := os.WriteFile(filepath.Join(dir, "vulncheck.yaml"),
 		[]byte("token: "+token+"\n"), 0600); err != nil {
 		t.Fatal(err)
@@ -85,7 +97,7 @@ func TestResolvePrecedence(t *testing.T) {
 			if tt.configToken != "" {
 				writeConfigToken(t, tt.configToken)
 			} else {
-				t.Setenv("HOME", t.TempDir())
+				isolateHome(t)
 			}
 			t.Setenv(EnvToken, tt.env)
 
@@ -127,8 +139,7 @@ func TestAccessorsAgreeWithResolve(t *testing.T) {
 // saveConfig must not leak values into later loadConfig calls via viper's
 // override layer, and loadConfig must reflect what is actually on disk.
 func TestLoadConfigReadsDisk(t *testing.T) {
-	home := t.TempDir()
-	t.Setenv("HOME", home)
+	home := isolateHome(t)
 
 	if err := saveConfig(&Config{Token: "from_save"}); err != nil {
 		t.Fatal(err)
@@ -150,8 +161,7 @@ func TestLoadConfigReadsDisk(t *testing.T) {
 
 // SaveToken / RemoveToken change one field; they must not drop the others.
 func TestTokenWritesPreserveIndicesDir(t *testing.T) {
-	home := t.TempDir()
-	t.Setenv("HOME", home)
+	home := isolateHome(t)
 	dir := filepath.Join(home, ".config", "vulncheck")
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		t.Fatal(err)
