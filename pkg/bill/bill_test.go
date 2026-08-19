@@ -3,6 +3,7 @@ package bill
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/anchore/syft/syft"
@@ -129,8 +130,8 @@ func TestGetPURLDetail(t *testing.T) {
 	refs := []InputSbomRef{
 		{SbomRef: "ref-1", PURL: "pkg:generic/qnx_software_development_platform@7.1"},
 		{SbomRef: "ref-2", PURL: "pkg:generic/qnx_software_development_platform@7.1"}, // duplicate
-		{SbomRef: "ref-3", PURL: ""},                                                  // empty
-		{SbomRef: "ref-4", PURL: "pkg:github/actions/checkout@v3"},                    // filtered
+		{SbomRef: "ref-3", PURL: ""},                               // empty
+		{SbomRef: "ref-4", PURL: "pkg:github/actions/checkout@v3"}, // filtered
 		{SbomRef: "ref-5", PURL: "pkg:generic/other@1.0"},
 	}
 
@@ -168,7 +169,7 @@ func TestGetCPEDetail(t *testing.T) {
 			CPE: "cpe:2.3:a:blackberry:qnx_software_development_platform:7.1:*:*:*:*:*:*:*"},
 		{SbomRef: "ref-2", PURL: "pkg:generic/qnx_software_development_platform@7.1",
 			CPE: "cpe:2.3:a:blackberry:qnx_software_development_platform:7.1:*:*:*:*:*:*:*"}, // duplicate
-		{SbomRef: "ref-3", PURL: "pkg:generic/other@1.0", CPE: ""},                          // no CPE
+		{SbomRef: "ref-3", PURL: "pkg:generic/other@1.0", CPE: ""}, // no CPE
 	}
 
 	got := GetCPEDetail(nil, refs)
@@ -411,4 +412,129 @@ func TestGetOfflineMeta(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestValidateEnrich(t *testing.T) {
+	cases := []struct {
+		name       string
+		directives []string
+		wantErr    bool
+		wantSubstr string
+	}{
+		{name: "no directives", directives: nil},
+		{name: "empty slice", directives: []string{}},
+		{name: "publicised scopes", directives: []string{"all", "golang", "java", "javascript", "python"}},
+		{name: "aliases syft accepts", directives: []string{"go", "node", "npm", "maven"}},
+		{name: "none directive", directives: []string{"none"}},
+		{name: "plus prefix", directives: []string{"+golang"}},
+		{name: "minus prefix", directives: []string{"all", "-java"}},
+
+		{
+			name:       "unknown scope",
+			directives: []string{"rust"},
+			wantErr:    true,
+			wantSubstr: `unknown --enrich scope "rust"`,
+		},
+		{
+			name:       "typo is rejected not ignored",
+			directives: []string{"golang", "pythonn"},
+			wantErr:    true,
+			wantSubstr: `unknown --enrich scope "pythonn"`,
+		},
+		{
+			name:       "case mismatch rejected for syft parity",
+			directives: []string{"Golang"},
+			wantErr:    true,
+			wantSubstr: `unknown --enrich scope "Golang"`,
+		},
+		{
+			name:       "empty element from trailing comma",
+			directives: []string{"golang", ""},
+			wantErr:    true,
+			wantSubstr: "empty --enrich scope",
+		},
+		{
+			name:       "bare minus is an empty scope",
+			directives: []string{"-"},
+			wantErr:    true,
+			wantSubstr: "empty --enrich scope",
+		},
+		{
+			name:       "vcpkg rejected with reason",
+			directives: []string{"vcpkg"},
+			wantErr:    true,
+			wantSubstr: "not supported by this CLI",
+		},
+		{
+			name:       "cpp alias rejected too",
+			directives: []string{"cpp"},
+			wantErr:    true,
+			wantSubstr: "not supported by this CLI",
+		},
+		{
+			// Disabling an unsupported scope asks for the behaviour we already
+			// have, so it is honoured rather than rejected.
+			name:       "negated vcpkg accepted",
+			directives: []string{"all", "-vcpkg"},
+		},
+		{
+			name:       "negated cpp accepted",
+			directives: []string{"-cpp"},
+		},
+		{
+			name:       "plus-prefixed vcpkg still rejected",
+			directives: []string{"+vcpkg"},
+			wantErr:    true,
+			wantSubstr: "not supported by this CLI",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateEnrich(tc.directives)
+			if tc.wantErr {
+				if err == nil {
+					t.Fatalf("ValidateEnrich(%v) = nil, want error", tc.directives)
+				}
+				if !strings.Contains(err.Error(), tc.wantSubstr) {
+					t.Errorf("ValidateEnrich(%v) error = %q, want it to contain %q", tc.directives, err, tc.wantSubstr)
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("ValidateEnrich(%v) = %v, want nil", tc.directives, err)
+			}
+		})
+	}
+}
+
+// Every scope ValidateEnrich accepts must be one buildSBOMConfig can actually
+// dispatch on, otherwise a scope could pass validation and still silently do
+// nothing - the exact failure this validation exists to prevent.
+func TestValidateEnrichAgreesWithDispatch(t *testing.T) {
+	languageScopes := [][]string{scopeGolang, scopeJavaScript, scopePython, scopeJava}
+
+	for _, group := range languageScopes {
+		for _, alias := range group {
+			if err := ValidateEnrich([]string{alias}); err != nil {
+				t.Errorf("alias %q is dispatchable but ValidateEnrich rejected it: %v", alias, err)
+			}
+			if cfg := buildSBOMConfig(SBOMOptions{Enrich: []string{alias}}); cfg == nil {
+				t.Errorf("alias %q passed validation but buildSBOMConfig returned nil", alias)
+			}
+		}
+	}
+
+	for scope := range unsupportedScopes {
+		if err := ValidateEnrich([]string{scope}); err == nil {
+			t.Errorf("scope %q is unsupported but ValidateEnrich accepted it", scope)
+		}
+		// Negation is the one accepted form, and it must not enable anything.
+		if err := ValidateEnrich([]string{"-" + scope}); err != nil {
+			t.Errorf("scope %q negated should be accepted, got: %v", scope, err)
+		}
+		if enrichmentScope([]string{"-" + scope}, scope) {
+			t.Errorf("scope %q negated must not enable anything", scope)
+		}
+	}
 }

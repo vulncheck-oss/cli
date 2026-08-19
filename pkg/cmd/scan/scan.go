@@ -77,6 +77,13 @@ func Command() *cobra.Command {
 				return ui.Error("--enrich requires network access and cannot be combined with --offline")
 			}
 
+			// Reject unrecognised scopes before cataloguing starts. An unknown
+			// scope is otherwise a silent no-op, which reads as success while
+			// producing an SBOM without the metadata the user opted in for.
+			if err := bill.ValidateEnrich(opts.Enrich); err != nil {
+				return ui.Error(err)
+			}
+
 			var sbm *sbom.SBOM
 			var inputRefs []bill.InputSbomRef
 			var purls []models.PurlDetail

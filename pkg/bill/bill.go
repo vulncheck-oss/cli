@@ -58,6 +58,102 @@ func GetSBOM(dir string, opts SBOMOptions) (*sbom.SBOM, error) {
 	return sbm, nil
 }
 
+// Scope alias groups, mirroring syft's own task-name mapping
+// (internal/task/package_tasks.go). Every name syft's CLI accepts for a
+// language is listed so `--enrich <alias>` behaves the same here as it would
+// under syft itself. These are the single source of truth for both
+// buildSBOMConfig's dispatch and ValidateEnrich's accepted set, so a scope can
+// never be dispatchable but unrecognised (or vice versa).
+var (
+	scopeGolang     = []string{"golang", "go"}
+	scopeJavaScript = []string{"javascript", "node", "npm"}
+	scopePython     = []string{"python"}
+	scopeJava       = []string{"java", "maven"}
+
+	// scopeMeta are the collective directives syft accepts alongside language
+	// names. Their precedence is handled by enrichmentScope.
+	scopeMeta = []string{"all", "none"}
+)
+
+// vcpkgUnsupported explains why we reject a scope syft itself accepts. Kept as
+// a named constant because it is the one rejection that is a deliberate product
+// decision rather than a typo, and the reasoning needs to survive contact with
+// the next person who wonders why parity is missing.
+//
+// Must stay a single line: ui.Error renders through lipgloss, which pads a
+// multi-line block out to its widest line and leaves trailing whitespace on
+// every row.
+const vcpkgUnsupported = "--enrich %s is not supported by this CLI (syft accepts it, but it clones git registries named in " +
+	"the scanned repository's own vcpkg.json). Packages declared in vcpkg.json are still catalogued without it; " +
+	"run syft directly if you need registry resolution. Supported scopes: all, golang, java, javascript, python"
+
+// unsupportedScopes are scopes syft recognises that this CLI deliberately does
+// not wire up, mapped to the explanation shown to the user. syft enables vcpkg
+// registry cloning under both "vcpkg" and "cpp", so both are rejected.
+var unsupportedScopes = map[string]string{
+	"vcpkg": vcpkgUnsupported,
+	"cpp":   vcpkgUnsupported,
+}
+
+// ValidateEnrich checks --enrich directives before any cataloguing starts.
+// Without it an unrecognised scope is silently ignored: enrichmentScope simply
+// never matches it, so `--enrich typo` or `--enrich vcpkg` looks accepted and
+// quietly enriches nothing. Failing up front is the difference between "your
+// flag did nothing" and "your SBOM is missing the metadata you asked for".
+//
+// Matching is case-sensitive and the +/- prefixes are accepted, both for parity
+// with syft, whose own directive comparison is an exact match against lowercase
+// task names. Scopes in unsupportedScopes are rejected only in their enabling
+// forms; see the negation carve-out below.
+func ValidateEnrich(directives []string) error {
+	known := make(map[string]struct{})
+	for _, group := range [][]string{scopeMeta, scopeGolang, scopeJavaScript, scopePython, scopeJava} {
+		for _, name := range group {
+			known[name] = struct{}{}
+		}
+	}
+
+	for _, d := range directives {
+		scope, negated := normalizeScope(d)
+		if scope == "" {
+			return fmt.Errorf("empty --enrich scope in %q; supported scopes: %s", d, supportedScopes())
+		}
+		if reason, ok := unsupportedScopes[scope]; ok {
+			// A negated directive asks for the behaviour we already have, so
+			// honour it rather than failing a command whose intent we satisfy —
+			// `all,-vcpkg` is what someone hardening a syft invocation writes.
+			// Only the enabling forms are an error.
+			if negated {
+				continue
+			}
+			return fmt.Errorf(reason, scope)
+		}
+		if _, ok := known[scope]; !ok {
+			return fmt.Errorf("unknown --enrich scope %q; supported scopes: %s", scope, supportedScopes())
+		}
+	}
+	return nil
+}
+
+// supportedScopes renders the publicised scope list for error messages. It
+// mirrors syft's publicisedEnrichmentOptions rather than every alias, so the
+// hint stays short and matches what --help advertises.
+func supportedScopes() string {
+	return "all, golang, java, javascript, python"
+}
+
+// normalizeScope strips the +/- prefix from a directive, returning the bare
+// scope name and whether it was negated. Shared by enrichmentScope and
+// ValidateEnrich so validation accepts exactly the syntax the dispatcher
+// understands.
+func normalizeScope(d string) (scope string, negated bool) {
+	d = strings.TrimPrefix(d, "+")
+	if strings.HasPrefix(d, "-") {
+		return d[1:], true
+	}
+	return d, false
+}
+
 // buildSBOMConfig returns nil when no options need setting, preserving syft's
 // default behaviour end-to-end. When Enrich is populated it starts from syft's
 // defaults and flips the same per-language fields that syft's own CLI flips
@@ -77,22 +173,22 @@ func buildSBOMConfig(opts SBOMOptions) *syft.CreateSBOMConfig {
 	// Advertising only the publicised names in --help keeps parity with syft's help
 	// output, but users typing an alias syft accepts should still get the same
 	// behaviour they'd get from `syft --enrich <alias>`.
-	if enrichmentScope(opts.Enrich, "golang", "go") {
+	if enrichmentScope(opts.Enrich, scopeGolang...) {
 		pkgCfg.Golang = pkgCfg.Golang.
 			WithSearchLocalModCacheLicenses(true).
 			WithSearchLocalVendorLicenses(true).
 			WithSearchRemoteLicenses(true).
 			WithUsePackagesLib(true)
 	}
-	if enrichmentScope(opts.Enrich, "javascript", "node", "npm") {
+	if enrichmentScope(opts.Enrich, scopeJavaScript...) {
 		pkgCfg.JavaScript = pkgCfg.JavaScript.WithSearchRemoteLicenses(true)
 	}
-	if enrichmentScope(opts.Enrich, "python") {
+	if enrichmentScope(opts.Enrich, scopePython...) {
 		pkgCfg.Python = pkgCfg.Python.
 			WithSearchRemoteLicenses(true).
 			WithGuessUnpinnedRequirements(true)
 	}
-	if enrichmentScope(opts.Enrich, "java", "maven") {
+	if enrichmentScope(opts.Enrich, scopeJava...) {
 		pkgCfg.JavaArchive = pkgCfg.JavaArchive.
 			WithUseMavenLocalRepository(true).
 			WithUseNetwork(true)
@@ -109,12 +205,8 @@ func buildSBOMConfig(opts SBOMOptions) *syft.CreateSBOMConfig {
 func enrichmentScope(directives []string, aliases ...string) bool {
 	lookup := func(name string) (found, enable bool) {
 		for _, d := range directives {
-			d = strings.TrimPrefix(d, "+")
-			neg := strings.HasPrefix(d, "-")
-			if neg {
-				d = d[1:]
-			}
-			if d == name {
+			scope, neg := normalizeScope(d)
+			if scope == name {
 				return true, !neg
 			}
 		}
