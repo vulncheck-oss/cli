@@ -1,0 +1,193 @@
+#!/usr/bin/env bash
+# usage: script/verify-release <tag>
+#
+# Verifies the artifacts in dist/ before anything is published. This encodes the checks that used
+# to be run by hand after every build:
+#
+#   - the version embedded in the binary matches the tag being released
+#   - macOS binaries are code-signed and satisfy their designated requirement
+#   - macOS archives pass a Gatekeeper assessment, i.e. notarization actually succeeded
+#   - Windows executables carry a signature and an RFC3161 timestamp
+#   - the checksum manifest matches the artifacts beside it
+#
+# Must run on macOS: codesign and spctl are the only way to confirm notarization.
+set -euo pipefail
+
+TAG="${1:-}"
+if [ -z "$TAG" ]; then
+  echo "usage: script/verify-release <tag>" >&2
+  exit 1
+fi
+
+VERSION="${TAG#v}"
+DIST="${DIST:-dist}"
+HOST_ARCH="$(uname -m)"
+failures=0
+
+pass() { printf '  \033[32mok\033[0m    %s\n' "$1"; }
+fail() { printf '  \033[31mFAIL\033[0m  %s\n' "$1"; failures=$((failures + 1)); }
+
+if [ "$(uname -s)" != "Darwin" ]; then
+  echo "error: must run on macOS (codesign/spctl are required to confirm notarization)" >&2
+  exit 1
+fi
+
+workdir="$(mktemp -d)"
+trap 'rm -rf "$workdir"' EXIT
+
+echo "Verifying $TAG artifacts in $DIST/"
+echo ""
+
+# ---------------------------------------------------------------------------
+echo "Archive set"
+# ---------------------------------------------------------------------------
+expected=(
+  "vulncheck_${VERSION}_linux_386.tar.gz"
+  "vulncheck_${VERSION}_linux_amd64.tar.gz"
+  "vulncheck_${VERSION}_linux_arm64.tar.gz"
+  "vulncheck_${VERSION}_linux_armv6.tar.gz"
+  "vulncheck_${VERSION}_macOS_amd64.zip"
+  "vulncheck_${VERSION}_macOS_arm64.zip"
+  "vulncheck_${VERSION}_windows_386.zip"
+  "vulncheck_${VERSION}_windows_amd64.zip"
+  "vulncheck_${VERSION}_windows_arm64.zip"
+  "vulncheck_${VERSION}_checksums.txt"
+)
+for f in "${expected[@]}"; do
+  if [ -f "$DIST/$f" ]; then pass "$f"; else fail "$f is missing"; fi
+done
+
+# ---------------------------------------------------------------------------
+echo ""
+echo "Checksum manifest"
+# ---------------------------------------------------------------------------
+if [ -f "$DIST/vulncheck_${VERSION}_checksums.txt" ]; then
+  if (cd "$DIST" && shasum -a 256 -c "vulncheck_${VERSION}_checksums.txt" >/dev/null 2>&1); then
+    pass "all checksums match"
+  else
+    fail "checksum mismatch — rerun with: (cd $DIST && shasum -a 256 -c vulncheck_${VERSION}_checksums.txt)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+echo ""
+echo "macOS signing and notarization"
+# ---------------------------------------------------------------------------
+for arch in arm64 amd64; do
+  zip="$DIST/vulncheck_${VERSION}_macOS_${arch}.zip"
+  [ -f "$zip" ] || continue
+
+  zipname="$(basename "$zip")"
+  zipabs="$(cd "$(dirname "$zip")" && pwd)/$zipname"
+
+  # Extract a clean copy for signature inspection and for running the binary. This has to stay
+  # separate from the quarantined copy below, because macOS refuses to execute a quarantined file.
+  clean="$workdir/clean-$arch"
+  mkdir -p "$clean"
+  (cd "$clean" && unzip -q "$zipabs")
+
+  bin="$clean/vulncheck_${VERSION}_macOS_${arch}/bin/vulncheck"
+  if [ ! -f "$bin" ]; then
+    fail "macOS $arch: bin/vulncheck not found inside archive"
+    continue
+  fi
+
+  if codesign --verify --deep --strict "$bin" 2>/dev/null; then
+    pass "macOS $arch: code signature valid"
+  else
+    fail "macOS $arch: codesign --verify --deep --strict failed"
+  fi
+
+  # --verify alone is satisfied by the ad-hoc signature the Go toolchain applies to arm64
+  # binaries, so assert the signature actually chains to our Developer ID.
+  details="$(codesign -dv --verbose=4 "$bin" 2>&1 || true)"
+  if grep -q "^Authority=Developer ID Application:" <<<"$details"; then
+    pass "macOS $arch: signed with a Developer ID ($(sed -n 's/^Authority=Developer ID Application: //p' <<<"$details" | head -1))"
+  else
+    fail "macOS $arch: not signed with a Developer ID (ad-hoc or unsigned)"
+  fi
+
+  if grep -q "^Timestamp=" <<<"$details"; then
+    pass "macOS $arch: secure timestamp present"
+  else
+    fail "macOS $arch: no secure timestamp on signature"
+  fi
+
+  # Only execute the slice built for this runner's architecture. Running the other one would
+  # depend on Rosetta, which is not guaranteed to be installed on a CI runner.
+  if { [ "$arch" = "arm64" ] && [ "$HOST_ARCH" = "arm64" ]; } ||
+     { [ "$arch" = "amd64" ] && [ "$HOST_ARCH" = "x86_64" ]; }; then
+    reported="$("$bin" version 2>&1 || true)"
+    if grep -qF "$VERSION" <<<"$reported"; then
+      pass "macOS $arch: embedded version reports $VERSION"
+    else
+      fail "macOS $arch: embedded version is wrong — got: $(tr '\n' ' ' <<<"$reported")"
+    fi
+  fi
+
+  # Stamp a second copy with a quarantine attribute the way a browser download would, so spctl
+  # performs the same assessment Gatekeeper does on an end user's machine.
+  gk="$workdir/gk-$arch"
+  mkdir -p "$gk"
+  cp "$zipabs" "$gk/"
+  xattr -w com.apple.quarantine "0081;$(printf '%x' "$(date +%s)");Safari;|com.apple.Safari" "$gk/$zipname"
+  (cd "$gk" && unzip -q "$zipname")
+
+  gkbin="$gk/vulncheck_${VERSION}_macOS_${arch}/bin/vulncheck"
+  assessment="$(spctl --assess --type open --context context:primary-signature --verbose=4 "$gkbin" 2>&1 || true)"
+  if grep -q "source=Notarized Developer ID" <<<"$assessment"; then
+    pass "macOS $arch: Gatekeeper accepted (notarized)"
+  else
+    fail "macOS $arch: Gatekeeper assessment failed — $(tr '\n' ' ' <<<"$assessment")"
+  fi
+done
+
+# ---------------------------------------------------------------------------
+echo ""
+echo "Windows signing"
+# ---------------------------------------------------------------------------
+if ! command -v osslsigncode >/dev/null 2>&1; then
+  fail "osslsigncode not installed — cannot verify Windows signatures"
+else
+  for arch in 386 amd64 arm64; do
+    zip="$DIST/vulncheck_${VERSION}_windows_${arch}.zip"
+    [ -f "$zip" ] || continue
+
+    wd="$workdir/win-$arch"
+    mkdir -p "$wd"
+    zipabs="$(cd "$(dirname "$zip")" && pwd)/$(basename "$zip")"
+    (cd "$wd" && unzip -q "$zipabs")
+
+    exe="$wd/bin/vulncheck.exe"
+    if [ ! -f "$exe" ]; then
+      fail "windows $arch: bin/vulncheck.exe not found inside archive"
+      continue
+    fi
+
+    # The chain cannot be validated without a local CA bundle, so assert on the digest match and
+    # the timestamp instead — those are what an expired or untrusted signature actually loses.
+    out="$(osslsigncode verify "$exe" 2>&1 || true)"
+    current="$(sed -n 's/^Current message digest *: *//p' <<<"$out" | head -1)"
+    calculated="$(sed -n 's/^Calculated message digest *: *//p' <<<"$out" | head -1)"
+
+    if [ -n "$current" ] && [ "$current" = "$calculated" ]; then
+      pass "windows $arch: signature digest matches"
+    else
+      fail "windows $arch: signature missing or digest mismatch"
+    fi
+
+    if grep -q "^Timestamp: " <<<"$out"; then
+      pass "windows $arch: timestamp present"
+    else
+      fail "windows $arch: no RFC3161 timestamp — signature will break when the cert expires"
+    fi
+  done
+fi
+
+# ---------------------------------------------------------------------------
+echo ""
+if [ "$failures" -gt 0 ]; then
+  echo "$failures check(s) failed — refusing to publish $TAG"
+  exit 1
+fi
+echo "All checks passed for $TAG"
