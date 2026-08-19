@@ -19,6 +19,10 @@ func Command() *cobra.Command {
 
 func CmdToken(cmd *cobra.Command, args []string) error {
 
+	if err := login.GuardEnvToken(); err != nil {
+		return err
+	}
+
 	var token string
 
 	input := huh.

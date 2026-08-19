@@ -66,6 +66,11 @@ You should see the version, build date, and changelog URL. If you get "command n
 * Alternatively `vulncheck` will respect the `VC_TOKEN` environment variable.
 * `vulncheck auth` by itself will show other options like checking your status and logging out.
 
+`VC_TOKEN` wins over the saved config file. Because of that, `auth login` and
+`auth logout` refuse while it is set — otherwise they would report success
+having changed nothing that takes effect. Run `vulncheck auth status` to see
+which of the two sources the active token came from.
+
 
 ## Agentic / scripted usage
 
@@ -84,7 +89,7 @@ The CLI is designed to be safe to drive from scripts and AI agents. This section
 
 | Variable                                   | Effect |
 |--------------------------------------------|--------|
-| `VC_TOKEN`                                 | API token. Takes precedence over `~/.config/vulncheck/vulncheck.yaml`. |
+| `VC_TOKEN`                                 | API token. Takes precedence over `~/.config/vulncheck/vulncheck.yaml`. While it is set, `auth login` and `auth logout` refuse rather than writing a config file that would be ignored — `unset VC_TOKEN` first. |
 | `NO_COLOR`                                 | Any non-empty value disables ANSI styling. |
 | `CI` / `BUILD_NUMBER` / `RUN_ID`           | Any of these set implies non-interactive mode (no prompts). |
 
@@ -111,12 +116,13 @@ In `--json` mode, errors are emitted to **stdout** as:
   "error": {
     "code": "auth_required",
     "message": "...",
-    "http_status": 401
+    "http_status": 401,
+    "hint": "..."
   }
 }
 ```
 
-`code` is one of: `internal`, `validation`, `auth_required`, `auth_invalid`, `not_found`, `rate_limited`, `network`, `bad_request`, `cancelled`. `http_status` is omitted for non-HTTP errors.
+`code` is one of: `internal`, `validation`, `auth_required`, `auth_invalid`, `not_found`, `rate_limited`, `network`, `bad_request`, `cancelled`. `http_status` is omitted for non-HTTP errors. `hint` is optional remediation context — present only when the message alone isn't actionable (e.g. naming `VC_TOKEN` as the source of a rejected token) — and is rendered on stderr as `hint: ...` outside `--json` mode.
 
 ### Probe commands
 
@@ -129,6 +135,10 @@ vulncheck version --json
 vulncheck auth status --json
 # {"schema_version": 1, "authenticated": true, "token_source": "env", "user": "...", "email": "..."}
 # Exit 0 even when authenticated=false — agents dispatch on the bool.
+# token_shadowed: true is added when VC_TOKEN is overriding a *different*
+# token saved in vulncheck.yaml — the usual cause of "I logged in but
+# nothing changed". Omitted otherwise, so the CI shape (VC_TOKEN only,
+# no config file) never reports shadowing.
 
 vulncheck commands
 # {"schema_version": 1, "root": {"name":"vulncheck", "subcommands":[...]}, ...}

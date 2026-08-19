@@ -72,7 +72,22 @@ type Error struct {
 	Kind       Kind
 	Message    string
 	HTTPStatus int
-	cause      error
+	// Hint is optional remediation context that explains *why* the caller hit
+	// this error, when the message alone is not actionable. Rendered after the
+	// message on stderr and as `error.hint` in the JSON envelope. Additive:
+	// callers that don't know the field simply ignore it.
+	Hint  string
+	cause error
+}
+
+// WithHint attaches remediation context and returns the receiver so it can be
+// chained onto a constructor. No-op on nil.
+func (e *Error) WithHint(format string, args ...any) *Error {
+	if e == nil {
+		return nil
+	}
+	e.Hint = fmt.Sprintf(format, args...)
+	return e
 }
 
 // Error satisfies the error interface.

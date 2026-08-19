@@ -24,9 +24,25 @@ type authStatus struct {
 	SchemaVersion int    `json:"schema_version"`
 	Authenticated bool   `json:"authenticated"`
 	TokenSource   string `json:"token_source,omitempty"` // "env" | "config" | ""
+	// TokenShadowed reports that VC_TOKEN is overriding a different token
+	// saved in the config file. Agents can key off this to explain why a
+	// freshly saved credential appears to have no effect.
+	TokenShadowed bool   `json:"token_shadowed,omitempty"`
 	User          string `json:"user,omitempty"`
 	Email         string `json:"email,omitempty"`
 	Reason        string `json:"reason,omitempty"` // populated when authenticated=false
+}
+
+// tokenSourceLabel describes the active token's origin in human terms,
+// naming the concrete location so the user knows where to go and change it.
+func tokenSourceLabel(res config.Resolution) string {
+	if res.FromEnv() {
+		return config.EnvToken + " environment variable"
+	}
+	if dir, err := config.Dir(); err == nil {
+		return dir + "/vulncheck.yaml"
+	}
+	return "config file"
 }
 
 func Command() *cobra.Command {
@@ -38,7 +54,9 @@ func Command() *cobra.Command {
 			r := output.FromCmd(cmd)
 			config.Init()
 
-			if !config.HasToken() {
+			res := config.Resolve()
+
+			if res.Token == "" {
 				if r.IsJSON() {
 					// No token = not an error from the agent's POV; emit the
 					// status payload and exit 0 so callers can dispatch on
@@ -51,13 +69,8 @@ func Command() *cobra.Command {
 				return errs.AuthRequired(i18n.C.ErrorNoToken)
 			}
 
-			source := "config"
-			if config.TokenFromEnv() {
-				source = "env"
-			}
-
 			// Verify against the API rather than trusting "token is present".
-			resp, err := session.ConnectWithContext(cmd.Context(), config.Token()).GetMe()
+			resp, err := session.ConnectWithContext(cmd.Context(), res.Token).GetMe()
 			if err != nil {
 				if r.IsJSON() {
 					reason := err.Error()
@@ -66,7 +79,8 @@ func Command() *cobra.Command {
 					}
 					s := newAuthStatus()
 					s.Authenticated = false
-					s.TokenSource = source
+					s.TokenSource = string(res.Source)
+					s.TokenShadowed = res.Shadowed
 					s.Reason = reason
 					return r.JSON(s)
 				}
@@ -76,13 +90,24 @@ func Command() *cobra.Command {
 			if r.IsJSON() {
 				s := newAuthStatus()
 				s.Authenticated = true
-				s.TokenSource = source
+				s.TokenSource = string(res.Source)
+				s.TokenShadowed = res.Shadowed
 				s.User = resp.Data.Name
 				s.Email = resp.Data.Email
 				return r.JSON(s)
 			}
 
-			return login.SaveToken(config.Token())
+			// Human output: name the source explicitly. Which of the two
+			// places the token came from is the single most useful fact when
+			// an unexpected account or a stale credential is in play, and it
+			// was previously only visible via --json.
+			r.Stat("Token source", tokenSourceLabel(res))
+			if res.Shadowed {
+				r.Warn("%s is overriding a different token saved in your config file; run `unset %s` to use the saved one.",
+					config.EnvToken, config.EnvToken)
+			}
+
+			return login.SaveToken(res.Token)
 		},
 	}
 	session.DisableAuthCheck(cmd)

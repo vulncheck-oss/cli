@@ -28,6 +28,10 @@ func Command() *cobra.Command {
 
 func CmdWeb(cmd *cobra.Command, args []string) error {
 
+	if err := login.GuardEnvToken(); err != nil {
+		return err
+	}
+
 	if !inquiry.IsPortAvailable(inquiry.Port) {
 		return fmt.Errorf("this method is not available, try vc auth login token")
 	}
