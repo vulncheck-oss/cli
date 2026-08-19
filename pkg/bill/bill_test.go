@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/anchore/syft/syft"
+	"github.com/anchore/syft/syft/cataloging/pkgcataloging"
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/vulncheck-oss/cli/pkg/cache"
 	"github.com/vulncheck-oss/cli/pkg/models"
@@ -536,5 +537,27 @@ func TestValidateEnrichAgreesWithDispatch(t *testing.T) {
 		if enrichmentScope([]string{"-" + scope}, scope) {
 			t.Errorf("scope %q negated must not enable anything", scope)
 		}
+	}
+}
+
+// The whole point of rejecting vcpkg is that we never turn on registry
+// cloning, so pin that directly against syft's config rather than trusting the
+// dispatch table. syft 1.51 added this scope to its publicised list, and a
+// future bump could quietly start defaulting it on.
+func TestEnrichAllDoesNotEnableVcpkgCloning(t *testing.T) {
+	for _, directives := range [][]string{{"all"}, {"all", "-vcpkg"}, {"golang", "java", "javascript", "python"}} {
+		cfg := buildSBOMConfig(SBOMOptions{Enrich: directives})
+		if cfg == nil {
+			t.Fatalf("buildSBOMConfig(%v) = nil, want a config", directives)
+		}
+		if cfg.Packages.Cpp.VcpkgAllowGitClone {
+			t.Errorf("--enrich %v enabled vcpkg git cloning; it must stay off", directives)
+		}
+	}
+
+	// syft's own default must also be off, otherwise the nil-config path
+	// (no --enrich at all) would clone registries.
+	if pkgcataloging.DefaultConfig().Cpp.VcpkgAllowGitClone {
+		t.Error("syft's default config now enables vcpkg git cloning; the --enrich rejection is no longer sufficient")
 	}
 }
