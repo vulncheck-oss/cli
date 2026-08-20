@@ -16,13 +16,13 @@ require (
 	github.com/getkin/kin-openapi v0.146.0
 	github.com/hashicorp/go-version v1.9.0
 	github.com/itchyny/gojq v0.12.19
-	github.com/oapi-codegen/runtime v1.6.0
+	github.com/oapi-codegen/runtime v1.7.0
 	github.com/package-url/packageurl-go v0.1.6
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
-	github.com/stretchr/testify v1.12.0
+	github.com/stretchr/testify v1.12.1
 	github.com/tidwall/gjson v1.19.0
 	golang.org/x/term v0.45.0
 	gopkg.in/yaml.v3 v3.0.1
