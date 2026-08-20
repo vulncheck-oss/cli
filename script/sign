@@ -9,10 +9,25 @@
 #
 set -e
 
-# Public RFC3161 timestamp authority. Without a countersignature, Authenticode validates the
-# signing certificate against the current time rather than the signing time, so the signature
-# stops being trusted the moment the certificate expires.
-TIMESTAMP_URL="${TIMESTAMP_URL:-http://timestamp.digicert.com}"
+# RFC3161 timestamp authorities, tried in order until one returns a token.
+#
+# Without a countersignature, Authenticode validates the signing certificate against the current
+# time rather than the signing time, so the signature stops being trusted the moment the
+# certificate expires. Timestamping cannot be self-hosted: Windows only honours a token whose TSA
+# certificate carries the Time Stamping EKU and chains to a root in the Microsoft Trusted Root
+# Program, so it has to come from a publicly trusted authority.
+#
+# GlobalSign is first because it issued our signing certificate — using their TSA introduces no
+# trust relationship we do not already depend on. The rest are fallbacks for an outage, since a
+# single authority would otherwise be able to block a release on its own. A TSA only ever receives
+# a hash of the signature, never the key or the binary.
+#
+# Set TIMESTAMP_URL to pin a single authority, or TIMESTAMP_URLS to override the whole list.
+TIMESTAMP_URLS="${TIMESTAMP_URLS:-${TIMESTAMP_URL:-http://timestamp.globalsign.com/tsa/r6advanced1 http://timestamp.digicert.com http://timestamp.sectigo.com}}"
+
+has_timestamp() {
+  osslsigncode verify "$1" 2>&1 | grep -q "^Timestamp: "
+}
 
 missing_creds() {
   if [ "${REQUIRE_SIGNING:-}" = "1" ]; then
@@ -47,19 +62,30 @@ sign_windows() {
     return 1
   fi
 
-  osslsigncode sign -n "VulnCheck CLI" \
-    -certs "$CERT_FILE" -key "$KEY_FILE" \
-    -ts "$TIMESTAMP_URL" \
-    -in "$1" -out "$1"~
+  # Each attempt is only accepted once the timestamp is confirmed present in the output, so a TSA
+  # that answers but returns no usable token falls through to the next one rather than yielding a
+  # signature that dies with the certificate.
+  local url signed=0
+  for url in $TIMESTAMP_URLS; do
+    echo "Signing $1 (timestamp authority: $url)"
+    if osslsigncode sign -n "VulnCheck CLI" \
+      -certs "$CERT_FILE" -key "$KEY_FILE" \
+      -ts "$url" \
+      -in "$1" -out "$1"~ && has_timestamp "$1"~; then
+      signed=1
+      break
+    fi
+    echo "warning: timestamp authority unusable, trying next: $url" >&2
+    rm -f "$1"~
+  done
 
-  mv "$1"~ "$1"
-
-  # Confirm the timestamp actually landed. osslsigncode cannot chain to a local trust store here,
-  # so only assert on what does not require an issuer lookup.
-  if ! osslsigncode verify "$1" 2>&1 | grep -q "^Timestamp: "; then
-    echo "error Windows code-signing; no timestamp present on '$1' after signing" >&2
+  if [ "$signed" -ne 1 ]; then
+    echo "error Windows code-signing; no timestamp authority succeeded for '$1'" >&2
+    echo "  tried: $TIMESTAMP_URLS" >&2
     return 1
   fi
+
+  mv "$1"~ "$1"
 }
 
 sign_macos() {
