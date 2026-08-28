@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -70,6 +72,14 @@ func runCLIEnv(t *testing.T, token string, args ...string) (stdout, stderr strin
 // their own vulncheck.yaml without disturbing the package-wide isolatedHome.
 func runCLIHome(t *testing.T, home, token string, args ...string) (stdout, stderr string, exitCode int) {
 	t.Helper()
+	return runCLIHomeEnv(t, home, nil, token, args...)
+}
+
+// runCLIHomeEnv is runCLIHome with extra environment entries appended after
+// the fixture, so a test can point the CLI at a stub API. Later entries win,
+// so extra overrides the defaults below.
+func runCLIHomeEnv(t *testing.T, home string, extra []string, token string, args ...string) (stdout, stderr string, exitCode int) {
+	t.Helper()
 	cmd := exec.Command(binPath, args...)
 	var outBuf, errBuf bytes.Buffer
 	cmd.Stdout = &outBuf
@@ -88,6 +98,7 @@ func runCLIHome(t *testing.T, home, token string, args ...string) (stdout, stder
 		"BUILD_NUMBER=",
 		"RUN_ID=",
 	)
+	cmd.Env = append(cmd.Env, extra...)
 	_ = cmd.Run()
 	return outBuf.String(), errBuf.String(), cmd.ProcessState.ExitCode()
 }
@@ -330,6 +341,21 @@ func homeWithToken(t *testing.T, token string) string {
 	return home
 }
 
+// unauthorizedAPI starts a stub API that rejects every request and returns the
+// VC_API entry pointing the CLI at it. Any test whose fixture token reaches a
+// *verification* call needs this: the tokens are syntactically valid, so the
+// 401 has to come from a server, and without the override that server is
+// production.
+func unauthorizedAPI(t *testing.T) string {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = w.Write([]byte(`{"message":"unauthorized"}`))
+	}))
+	t.Cleanup(srv.Close)
+	return "VC_API=" + srv.URL
+}
+
 // A stale VC_TOKEN silently overrode a saved token, so `auth login` verified
 // the pasted value, skipped the save, and still reported success. It must now
 // refuse rather than pretend.
@@ -387,7 +413,8 @@ func TestContractAuthLogoutRefusesWhenEnvTokenSet(t *testing.T) {
 func TestContractAuthStatusReportsShadowing(t *testing.T) {
 	home := homeWithToken(t, "vulncheck_saved_token_value")
 
-	stdout, _, exit := runCLIHome(t, home, "vulncheck_env_token_value", "auth", "status", "--json")
+	stdout, _, exit := runCLIHomeEnv(t, home, []string{unauthorizedAPI(t)},
+		"vulncheck_env_token_value", "auth", "status", "--json")
 	if exit != 0 {
 		t.Fatalf("exit = %d, want 0", exit)
 	}
@@ -403,7 +430,8 @@ func TestContractAuthStatusReportsShadowing(t *testing.T) {
 // token_shadowed must stay absent when only VC_TOKEN is set — that is the
 // normal CI shape and it must not look like a misconfiguration.
 func TestContractAuthStatusNoShadowingInCIShape(t *testing.T) {
-	stdout, _, exit := runCLIHome(t, t.TempDir(), "vulncheck_env_token_value", "auth", "status", "--json")
+	stdout, _, exit := runCLIHomeEnv(t, t.TempDir(), []string{unauthorizedAPI(t)},
+		"vulncheck_env_token_value", "auth", "status", "--json")
 	if exit != 0 {
 		t.Fatalf("exit = %d, want 0", exit)
 	}
