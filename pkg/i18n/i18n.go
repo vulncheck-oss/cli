@@ -168,7 +168,7 @@ var En = Copy{
 
 			Alternatively, use %[1]stoken%[1]s to specify an issued token directly.
 
-			Alternatively, vulncheck will use the authentication token found in the %[1]sVC_TOKEN%[1]s environment variable.
+			Alternatively, vulncheck will use the authentication token found in the %[1]sVULNCHECK_API_TOKEN%[1]s environment variable.
 			This method is most suitable for "headless" use of vulncheck such as in automation.
 		`, "`"),
 	AuthLoginExample: heredoc.Doc(`
@@ -178,7 +178,7 @@ var En = Copy{
 			# Authenticate with vulncheck.com by passing in a token
 			$ vulncheck auth login token vulncheck_******************
 	`),
-	AuthLoginErrorCI: "This command is interactive and cannot be run in a CI environment, use the VC_TOKEN environment variable instead",
+	AuthLoginErrorCI: "This command is interactive and cannot be run in a CI environment, use the VULNCHECK_API_TOKEN environment variable instead",
 
 	AuthLoginToken: "Connect a VulnCheck account using an authentication token",
 	AuthLoginWeb:   "Log in with a VulnCheck account using a web browser",
@@ -313,7 +313,7 @@ var En = Copy{
 	UpgradeStatusLong:  "Check if a new version of the CLI is available.",
 
 	ErrorUnauthorized: "Error: Unauthorized, Try authenticating with: vulncheck auth login",
-	ErrorNoToken:      "No token found. Please run `vulncheck auth login` to authenticate or populate the environment variable `VC_TOKEN`.",
+	ErrorNoToken:      "No token found. Please run `vulncheck auth login` to authenticate or populate the environment variable `VULNCHECK_API_TOKEN`.",
 
 	OfflineStatusShort: "Check the status of the offline database",
 	OfflineStatusLong:  "Check the status of the offline database",

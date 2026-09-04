@@ -681,3 +681,20 @@ func TestContractWhitespacePaddedTokenIsUsable(t *testing.T) {
 		})
 	}
 }
+
+// The GitHub Actions help is the one place the CLI hands the user a snippet to
+// paste. Naming only VULNCHECK_API_TOKEN sends anyone holding the VC_TOKEN
+// secret that vulncheck-oss/action documents into a dead end: a missing secret
+// expands to an empty string, so they land right back on "No token found".
+func TestContractGitHubActionsHelpNamesBothSecrets(t *testing.T) {
+	_, stderr, exit := runCLIHomeEnv(t, t.TempDir(),
+		[]string{"GITHUB_ACTIONS=true"}, "", "indices", "list")
+	if exit != 3 {
+		t.Fatalf("exit = %d, want 3 (auth)", exit)
+	}
+	for _, want := range []string{"VULNCHECK_API_TOKEN", "VC_TOKEN"} {
+		if !strings.Contains(stderr, want) {
+			t.Errorf("Actions help must name %s; got %q", want, stderr)
+		}
+	}
+}
