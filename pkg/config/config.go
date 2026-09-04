@@ -203,18 +203,21 @@ func (r Resolution) UnsetHint() string {
 
 // Resolve determines the active token. Precedence: EnvToken, EnvTokenAPI, then
 // vulncheck.yaml; a value failing ValidToken is absent in every position.
+// Values are trimmed as captured — net/http rejects an Authorization header
+// containing a newline, and a trailing space returns a plain 401.
+//
 // The only place the CLI reads a token environment variable. Reading one
 // elsewhere duplicates the ValidToken rule and the precedence order.
 func Resolve() Resolution {
 	var res Resolution
 
 	if config, err := loadConfig(); err == nil && ValidToken(config.Token) {
-		res.ConfigToken = config.Token
+		res.ConfigToken = strings.TrimSpace(config.Token)
 	}
 
 	// Keep scanning past the winner — see EnvVarsSet.
 	for _, name := range []string{EnvToken, EnvTokenAPI} {
-		env := os.Getenv(name)
+		env := strings.TrimSpace(os.Getenv(name))
 		if !ValidToken(env) {
 			continue
 		}
@@ -249,8 +252,9 @@ func HasToken() bool {
 }
 
 // SaveToken writes token to vulncheck.yaml, preserving every other setting.
+// Trimmed first: a padded paste saved verbatim fails every later run.
 func SaveToken(token string) error {
-	return mutateConfig(func(c *Config) { c.Token = token })
+	return mutateConfig(func(c *Config) { c.Token = strings.TrimSpace(token) })
 }
 
 // RemoveToken clears the saved token, preserving every other setting.

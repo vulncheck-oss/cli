@@ -374,6 +374,23 @@ func authorizedAPI(t *testing.T) string {
 	return "VC_API=" + srv.URL
 }
 
+// authorizedAPIExpecting is authorizedAPI plus an assertion on the exact
+// Authorization header received. The permissive stub cannot tell a trimmed
+// token from a padded one: net/http refuses a header value containing a
+// newline outright, but a trailing space travels fine and the stub would
+// accept it. Proving the trim means looking at what went over the wire.
+func authorizedAPIExpecting(t *testing.T, wantToken string) string {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		if got := req.Header.Get("Authorization"); got != "Bearer "+wantToken {
+			t.Errorf("Authorization = %q, want %q", got, "Bearer "+wantToken)
+		}
+		_, _ = w.Write([]byte(`{"data":{"Name":"Test User","Email":"test@example.com"}}`))
+	}))
+	t.Cleanup(srv.Close)
+	return "VC_API=" + srv.URL
+}
+
 // A stale VC_TOKEN silently overrode a saved token, so `auth login` verified
 // the pasted value, skipped the save, and still reported success. It must now
 // refuse rather than pretend.
@@ -633,5 +650,34 @@ func TestContractUnsetHintNamesAndExplainsBothVars(t *testing.T) {
 	// credential the SDK needs.
 	if strings.Contains(stderr, "would have no effect") && !strings.Contains(stderr, "nothing to do") {
 		t.Errorf("refusal must not read as a broken setup; got %q", stderr)
+	}
+}
+
+// A token carrying a trailing newline used to reach net/http, which refuses
+// the Authorization header — surfacing as code "internal" (exit 1) naming no
+// variable, so an agent branching on the auth codes treated a fixable
+// credential problem as a CLI bug. A trailing space was worse: it survives
+// the header and comes back as a bare 401 on a perfectly good token.
+func TestContractWhitespacePaddedTokenIsUsable(t *testing.T) {
+	for _, tt := range []struct{ name, padded string }{
+		{"trailing newline", "vulncheck_api_token_value\n"},
+		{"surrounding spaces", "  vulncheck_api_token_value  "},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, _, exit := runCLIHomeEnv(t, t.TempDir(),
+				[]string{
+					"VULNCHECK_API_TOKEN=" + tt.padded,
+					authorizedAPIExpecting(t, "vulncheck_api_token_value"),
+				},
+				"", "auth", "status", "--json")
+			if exit != 0 {
+				t.Fatalf("exit = %d, want 0", exit)
+			}
+			m := mustJSON(t, stdout)
+			if m["authenticated"] != true {
+				t.Errorf("authenticated = %v, want true (padding should be trimmed); got %v",
+					m["authenticated"], m)
+			}
+		})
 	}
 }

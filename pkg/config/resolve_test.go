@@ -105,6 +105,26 @@ func TestResolvePrecedence(t *testing.T) {
 			wantEnvVar: EnvTokenAPI,
 		},
 		{
+			// A Kubernetes secret mounted from a file, or a sourced .env,
+			// arrives with the newline still attached. Untrimmed it reaches
+			// net/http, which refuses the Authorization header outright.
+			name:       "surrounding whitespace is trimmed off the env token",
+			documented: "  api_token\n",
+			wantToken:  "api_token",
+			wantSource: SourceEnv,
+			wantEnvVar: EnvTokenAPI,
+		},
+		{
+			// Same credential, different spelling. Reporting a conflict here
+			// would send the user unsetting a variable for no reason.
+			name:        "whitespace-only difference from config is not shadowing",
+			legacy:      "same_token\n",
+			configToken: "same_token",
+			wantToken:   "same_token",
+			wantSource:  SourceEnv,
+			wantEnvVar:  EnvToken,
+		},
+		{
 			name:        "config only",
 			configToken: "file_token",
 			wantToken:   "file_token",
@@ -316,6 +336,23 @@ func TestTokenWritesPreserveIndicesDir(t *testing.T) {
 	}
 	if c.Token != "" {
 		t.Errorf("after RemoveToken, Token = %q, want empty", c.Token)
+	}
+}
+
+// A padded paste saved verbatim fails every run afterwards, and unlike an
+// environment variable the user cannot see the padding to fix it.
+func TestSaveTokenTrimsWhitespace(t *testing.T) {
+	isolateHome(t)
+
+	if err := SaveToken("  vulncheck_padded_token\n"); err != nil {
+		t.Fatal(err)
+	}
+	c, err := loadConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.Token != "vulncheck_padded_token" {
+		t.Errorf("saved token = %q, want it trimmed", c.Token)
 	}
 }
 
