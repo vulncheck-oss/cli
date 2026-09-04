@@ -51,8 +51,8 @@ func TestMain(m *testing.M) {
 }
 
 // runCLI shells out to the built binary with the given args and returns
-// stdout, stderr, and the process exit code. VC_TOKEN is force-cleared
-// so tests that assert auth-required paths behave consistently.
+// stdout, stderr, and the process exit code. Both token variables are
+// force-cleared so tests that assert auth-required paths behave consistently.
 func runCLI(t *testing.T, args ...string) (stdout, stderr string, exitCode int) {
 	return runCLIEnv(t, "", args...)
 }
@@ -76,8 +76,8 @@ func runCLIHome(t *testing.T, home, token string, args ...string) (stdout, stder
 }
 
 // runCLIHomeEnv is runCLIHome with extra environment entries appended after
-// the fixture, so a test can point the CLI at a stub API. Later entries win,
-// so extra overrides the defaults below.
+// the fixture, so a test can set both token variables at once. Later entries
+// win, so extra overrides the defaults below.
 func runCLIHomeEnv(t *testing.T, home string, extra []string, token string, args ...string) (stdout, stderr string, exitCode int) {
 	t.Helper()
 	cmd := exec.Command(binPath, args...)
@@ -92,6 +92,11 @@ func runCLIHomeEnv(t *testing.T, home string, extra []string, token string, args
 		"USERPROFILE="+home,
 		"XDG_CONFIG_HOME="+home,
 		"VC_TOKEN="+token,
+		// runCLI passes token == "", which falls through to the next variable:
+		// without this a developer with VULNCHECK_API_TOKEN exported has their
+		// real token satisfy every auth-required test. CI never exports one,
+		// so it presents as developer-machine-only flakiness.
+		"VULNCHECK_API_TOKEN=",
 		"NO_COLOR=1",
 		// Clear CI so Interactive() logic isn't skewed by the outer test env.
 		"CI=",
@@ -323,10 +328,11 @@ func TestContractScanSbomOnlyJSON(t *testing.T) {
 	}
 }
 
-// ----- VC_TOKEN shadowing guardrail -----
+// ----- environment token guardrails -----
 
 // homeWithToken returns a fresh HOME containing a vulncheck.yaml that holds
-// the given token, so tests can create the "logged in AND VC_TOKEN set" state.
+// the given token, so tests can create the "logged in AND an environment
+// token set" state.
 func homeWithToken(t *testing.T, token string) string {
 	t.Helper()
 	home := t.TempDir()
@@ -356,6 +362,18 @@ func unauthorizedAPI(t *testing.T) string {
 	return "VC_API=" + srv.URL
 }
 
+// authorizedAPI starts a stub API that accepts every request with a /me
+// payload, and returns the VC_API entry pointing the CLI at it. Needed by the
+// tests that assert on *successful* auth output.
+func authorizedAPI(t *testing.T) string {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"data":{"Name":"Test User","Email":"test@example.com"}}`))
+	}))
+	t.Cleanup(srv.Close)
+	return "VC_API=" + srv.URL
+}
+
 // A stale VC_TOKEN silently overrode a saved token, so `auth login` verified
 // the pasted value, skipped the save, and still reported success. It must now
 // refuse rather than pretend.
@@ -371,8 +389,8 @@ func TestContractAuthLoginRefusesWhenEnvTokenSet(t *testing.T) {
 	if !strings.Contains(stderr, "VC_TOKEN") {
 		t.Errorf("stderr should name VC_TOKEN as the cause; got %q", stderr)
 	}
-	if !strings.Contains(stderr, "unset") {
-		t.Errorf("stderr should tell the user to unset VC_TOKEN; got %q", stderr)
+	if !strings.Contains(stderr, "clear VC_TOKEN from your environment") {
+		t.Errorf("stderr should tell the user how to stop VC_TOKEN winning; got %q", stderr)
 	}
 
 	// The saved token must be untouched — refusing is not a licence to write.
@@ -425,6 +443,75 @@ func TestContractAuthStatusReportsShadowing(t *testing.T) {
 	if v, _ := m["token_shadowed"].(bool); !v {
 		t.Errorf("token_shadowed = %v, want true", m["token_shadowed"])
 	}
+	if m["token_env_var"] != "VC_TOKEN" {
+		t.Errorf("token_env_var = %v, want VC_TOKEN", m["token_env_var"])
+	}
+}
+
+// The CLI must accept VULNCHECK_API_TOKEN and report which variable it read.
+// Runs through the verify-failed branch, where naming it matters most.
+func TestContractAuthStatusAcceptsDocumentedEnvVar(t *testing.T) {
+	stdout, _, exit := runCLIHomeEnv(t, t.TempDir(),
+		[]string{"VULNCHECK_API_TOKEN=vulncheck_api_token_value", unauthorizedAPI(t)},
+		"", "auth", "status", "--json")
+	if exit != 0 {
+		t.Fatalf("exit = %d, want 0", exit)
+	}
+	m := mustJSON(t, stdout)
+	if m["token_source"] != "env" {
+		t.Errorf("token_source = %v, want env", m["token_source"])
+	}
+	if m["token_env_var"] != "VULNCHECK_API_TOKEN" {
+		t.Errorf("token_env_var = %v, want VULNCHECK_API_TOKEN", m["token_env_var"])
+	}
+}
+
+// VC_TOKEN keeps winning, so no existing setup silently changes which
+// credential it authenticates with when VULNCHECK_API_TOKEN is also present.
+func TestContractLegacyEnvVarTakesPrecedence(t *testing.T) {
+	stdout, _, exit := runCLIHomeEnv(t, t.TempDir(),
+		[]string{"VULNCHECK_API_TOKEN=vulncheck_api_token_value", unauthorizedAPI(t)},
+		"vulncheck_env_token_value", "auth", "status", "--json")
+	if exit != 0 {
+		t.Fatalf("exit = %d, want 0", exit)
+	}
+	if m := mustJSON(t, stdout); m["token_env_var"] != "VC_TOKEN" {
+		t.Errorf("token_env_var = %v, want VC_TOKEN (legacy must keep winning)", m["token_env_var"])
+	}
+}
+
+// Refusals must name the variable actually in use, not a hardcoded VC_TOKEN:
+// advice to clear VC_TOKEN would leave a VULNCHECK_API_TOKEN user just as stuck.
+func TestContractAuthLoginRefusalNamesDocumentedEnvVar(t *testing.T) {
+	home := homeWithToken(t, "vulncheck_saved_token_value")
+
+	_, stderr, exit := runCLIHomeEnv(t, home,
+		[]string{"VULNCHECK_API_TOKEN=vulncheck_api_token_value"},
+		"", "auth", "login", "token")
+	if exit != 2 {
+		t.Fatalf("exit = %d, want 2 (validation)\nstderr: %s", exit, stderr)
+	}
+	if !strings.Contains(stderr, "clear VULNCHECK_API_TOKEN from your environment") {
+		t.Errorf("hint must name the variable in use; got %q", stderr)
+	}
+}
+
+// With both variables set, a hint naming only the winner sends the user in a
+// loop: clearing VC_TOKEN hands the win to VULNCHECK_API_TOKEN and the next
+// attempt is refused all over again. Assert the joined form specifically — a
+// test that merely looked for "VC_TOKEN" would pass against that bug.
+func TestContractAuthLoginHintNamesEveryEnvToken(t *testing.T) {
+	home := homeWithToken(t, "vulncheck_saved_token_value")
+
+	_, stderr, exit := runCLIHomeEnv(t, home,
+		[]string{"VULNCHECK_API_TOKEN=vulncheck_api_token_value"},
+		"vulncheck_env_token_value", "auth", "login", "token")
+	if exit != 2 {
+		t.Fatalf("exit = %d, want 2 (validation)\nstderr: %s", exit, stderr)
+	}
+	if !strings.Contains(stderr, "clear VC_TOKEN and VULNCHECK_API_TOKEN from your environment") {
+		t.Errorf("hint must name both variables at once; got %q", stderr)
+	}
 }
 
 // token_shadowed must stay absent when only VC_TOKEN is set — that is the
@@ -445,7 +532,10 @@ func TestContractAuthStatusNoShadowingInCIShape(t *testing.T) {
 // "re-login changes nothing" loop is self-diagnosing.
 func TestContractAuthErrorEnvelopeHint(t *testing.T) {
 	// No token anywhere: no source to name, so no hint.
-	stdout, _, _ := runCLIHome(t, t.TempDir(), "", "indices", "list", "--json")
+	stdout, _, exit := runCLIHome(t, t.TempDir(), "", "indices", "list", "--json")
+	if exit != 3 {
+		t.Errorf("exit = %d, want 3 (auth)", exit)
+	}
 	m := mustJSON(t, stdout)
 	errObj, ok := m["error"].(map[string]any)
 	if !ok {
@@ -453,5 +543,95 @@ func TestContractAuthErrorEnvelopeHint(t *testing.T) {
 	}
 	if _, present := errObj["hint"]; present {
 		t.Errorf("hint should be omitted when there is no token source to name; got %v", errObj)
+	}
+}
+
+// The auth_required hint must name whichever variable supplied the rejected
+// token, so a user who exported only the documented name is not sent looking
+// for a VC_TOKEN they never set.
+func TestContractAuthErrorEnvelopeNamesDocumentedEnvVar(t *testing.T) {
+	stdout, _, exit := runCLIHomeEnv(t, t.TempDir(),
+		[]string{"VULNCHECK_API_TOKEN=vulncheck_api_token_value", unauthorizedAPI(t)},
+		"", "indices", "list", "--json")
+
+	// The exit code is what an agent branches on before it ever parses the
+	// envelope; a rejected token must not arrive as a generic failure.
+	if exit != 3 {
+		t.Errorf("exit = %d, want 3 (auth)", exit)
+	}
+	m := mustJSON(t, stdout)
+	errObj, ok := m["error"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected an error envelope, got %v", m)
+	}
+	if errObj["code"] != "auth_invalid" {
+		t.Errorf("code = %v, want auth_invalid", errObj["code"])
+	}
+	hint, _ := errObj["hint"].(string)
+	if !strings.Contains(hint, "VULNCHECK_API_TOKEN") {
+		t.Errorf("hint should name the variable the token came from; got %q", hint)
+	}
+	// No config file was written here, so a hint contrasting the environment
+	// with one sends the user looking for a file that does not exist.
+	if strings.Contains(hint, "config file") {
+		t.Errorf("hint must not point at a config file that was never written; got %q", hint)
+	}
+}
+
+// ----- both token variables set -----
+
+// The two-variable state is reported by the unset command naming both, never
+// by prose about the variable that lost. Prose would have to know which won,
+// whether the other differs, whether a config file exists and whether that
+// differs — a state space that produced a false "is being ignored" warning for
+// the one setup this fallback exists to serve: a single credential exported
+// under both names to feed the CLI and an SDK.
+func TestContractBothEnvVarsSetStayQuiet(t *testing.T) {
+	for _, tt := range []struct{ name, documented string }{
+		{"identical tokens", "vulncheck_legacy_token"},
+		{"differing tokens", "vulncheck_documented_token"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, exit := runCLIHomeEnv(t, t.TempDir(),
+				[]string{"VULNCHECK_API_TOKEN=" + tt.documented, authorizedAPI(t)},
+				"vulncheck_legacy_token", "auth", "status", "--json")
+			if exit != 0 {
+				t.Fatalf("exit = %d, want 0\nstderr: %s", exit, stderr)
+			}
+			m := mustJSON(t, stdout)
+			// The variable in use is named; the one that lost is not a field.
+			if m["token_env_var"] != "VC_TOKEN" {
+				t.Errorf("token_env_var = %v, want VC_TOKEN", m["token_env_var"])
+			}
+			for _, gone := range []string{"token_env_var_ignored", "token_env_var_conflict"} {
+				if _, present := m[gone]; present {
+					t.Errorf("%s must not be part of the contract; got %v", gone, m)
+				}
+			}
+			if strings.Contains(stderr, "ignored") {
+				t.Errorf("no prose about the losing variable; got %q", stderr)
+			}
+		})
+	}
+}
+
+// With both variables set, the remediation has to clear both — clearing only
+// the winner hands the win to the other and refuses the next attempt all over
+// again. The command therefore names a variable the sentence does not, so it
+// has to say why, or it reads as the CLI having picked the wrong variable.
+func TestContractUnsetHintNamesAndExplainsBothVars(t *testing.T) {
+	_, stderr, exit := runCLIHomeEnv(t, t.TempDir(),
+		[]string{"VULNCHECK_API_TOKEN=vulncheck_documented_token", authorizedAPI(t)},
+		"vulncheck_legacy_token", "auth", "login", "token", "vulncheck_pasted_token")
+	if exit != 2 {
+		t.Fatalf("exit = %d, want 2 (validation)", exit)
+	}
+	if !strings.Contains(stderr, "clear VC_TOKEN and VULNCHECK_API_TOKEN from your environment") {
+		t.Errorf("hint must name both variables at once; got %q", stderr)
+	}
+	// A working SDK setup is not a failure to be fixed by deleting the
+	// credential the SDK needs.
+	if strings.Contains(stderr, "would have no effect") && !strings.Contains(stderr, "nothing to do") {
+		t.Errorf("refusal must not read as a broken setup; got %q", stderr)
 	}
 }

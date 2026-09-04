@@ -3,6 +3,8 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 	"testing"
 )
 
@@ -36,18 +38,71 @@ func writeConfigToken(t *testing.T, token string) {
 
 func TestResolvePrecedence(t *testing.T) {
 	tests := []struct {
-		name         string
-		env          string
-		configToken  string
-		wantToken    string
-		wantSource   TokenSource
-		wantShadowed bool
+		name        string
+		legacy      string // VC_TOKEN
+		documented  string // VULNCHECK_API_TOKEN
+		configToken string
+
+		wantToken      string
+		wantSource     TokenSource
+		wantShadowed   bool
+		wantEnvVar     string
+		wantUnsetsBoth bool // UnsetTargets must name both variables
 	}{
 		{
-			name:       "env only",
-			env:        "env_token",
+			name:       "legacy only",
+			legacy:     "env_token",
 			wantToken:  "env_token",
 			wantSource: SourceEnv,
+			wantEnvVar: EnvToken,
+		},
+		{
+			name:       "documented only",
+			documented: "api_token",
+			wantToken:  "api_token",
+			wantSource: SourceEnv,
+			wantEnvVar: EnvTokenAPI,
+		},
+		{
+			// The design decision: the documented name is a fallback, so no
+			// existing setup silently changes which credential it uses.
+			name:       "legacy wins over documented",
+			legacy:     "env_token",
+			documented: "api_token",
+			wantToken:  "env_token",
+			wantSource: SourceEnv,
+			wantEnvVar: EnvToken,
+			// Unsetting only the winner hands the win to the other one.
+			wantUnsetsBoth: true,
+		},
+		{
+			// Same value, but unsetting one still leaves the other winning,
+			// so the hint must clear both here too.
+			name:           "both set to the same value",
+			legacy:         "same_token",
+			documented:     "same_token",
+			wantToken:      "same_token",
+			wantSource:     SourceEnv,
+			wantEnvVar:     EnvToken,
+			wantUnsetsBoth: true,
+		},
+		{
+			// A whitespace-only value was never going to be sent, so it must
+			// stay out of the unset hint.
+			name:       "whitespace documented beside a valid legacy",
+			legacy:     "env_token",
+			documented: "   ",
+			wantToken:  "env_token",
+			wantSource: SourceEnv,
+			wantEnvVar: EnvToken,
+		},
+		{
+			name:       "blank legacy falls through to documented",
+			legacy:     "   ",
+			documented: "api_token",
+			wantToken:  "api_token",
+			wantSource: SourceEnv,
+			wantEnvVar: EnvTokenAPI,
 		},
 		{
 			name:        "config only",
@@ -56,21 +111,47 @@ func TestResolvePrecedence(t *testing.T) {
 			wantSource:  SourceConfig,
 		},
 		{
-			name:         "env shadows a different config token",
-			env:          "env_token",
+			name:         "legacy shadows a different config token",
+			legacy:       "env_token",
 			configToken:  "file_token",
 			wantToken:    "env_token",
 			wantSource:   SourceEnv,
 			wantShadowed: true,
+			wantEnvVar:   EnvToken,
+		},
+		{
+			name:         "documented shadows a different config token",
+			documented:   "api_token",
+			configToken:  "file_token",
+			wantToken:    "api_token",
+			wantSource:   SourceEnv,
+			wantShadowed: true,
+			wantEnvVar:   EnvTokenAPI,
+		},
+		{
+			// The state UnsetTargets was written for: both variables set
+			// *and* a different token in the config file. Clearing only the
+			// winner hands the win to the other variable, so the hint has to
+			// name both while still reporting the config file as shadowed.
+			name:           "both env vars set beside a differing config token",
+			legacy:         "env_token",
+			documented:     "api_token",
+			configToken:    "file_token",
+			wantToken:      "env_token",
+			wantSource:     SourceEnv,
+			wantShadowed:   true,
+			wantEnvVar:     EnvToken,
+			wantUnsetsBoth: true,
 		},
 		{
 			name:        "identical values are not shadowing",
-			env:         "same_token",
+			legacy:      "same_token",
 			configToken: "same_token",
 			wantToken:   "same_token",
 			wantSource:  SourceEnv,
 			// No possible confusion, so no warning should ever fire.
 			wantShadowed: false,
+			wantEnvVar:   EnvToken,
 		},
 		{
 			name:       "neither source",
@@ -79,7 +160,7 @@ func TestResolvePrecedence(t *testing.T) {
 		},
 		{
 			name:        "blank env falls through to config",
-			env:         "   ",
+			legacy:      "   ",
 			configToken: "file_token",
 			wantToken:   "file_token",
 			wantSource:  SourceConfig,
@@ -99,7 +180,10 @@ func TestResolvePrecedence(t *testing.T) {
 			} else {
 				isolateHome(t)
 			}
-			t.Setenv(EnvToken, tt.env)
+			// Set both unconditionally: neither may leak in from the
+			// developer's own environment.
+			t.Setenv(EnvToken, tt.legacy)
+			t.Setenv(EnvTokenAPI, tt.documented)
 
 			got := Resolve()
 			if got.Token != tt.wantToken {
@@ -111,6 +195,37 @@ func TestResolvePrecedence(t *testing.T) {
 			if got.Shadowed != tt.wantShadowed {
 				t.Errorf("Shadowed = %v, want %v", got.Shadowed, tt.wantShadowed)
 			}
+			if got.EnvVar != tt.wantEnvVar {
+				t.Errorf("EnvVar = %q, want %q", got.EnvVar, tt.wantEnvVar)
+			}
+			// EnvVar is named exactly when the env supplied the token; a
+			// message that names a variable the token did not come from is
+			// worse than naming none.
+			if got.FromEnv() != (got.EnvVar != "") {
+				t.Errorf("FromEnv()=%v disagrees with EnvVar=%q", got.FromEnv(), got.EnvVar)
+			}
+			var wantUnset []string
+			switch {
+			case tt.wantUnsetsBoth:
+				wantUnset = []string{EnvToken, EnvTokenAPI}
+			case tt.wantEnvVar != "":
+				wantUnset = []string{tt.wantEnvVar}
+			}
+			if !slices.Equal(got.EnvVarsSet, wantUnset) {
+				t.Errorf("EnvVarsSet = %v, want %v", got.EnvVarsSet, wantUnset)
+			}
+			// The winner must be the head of the list, or a caller reading
+			// EnvVarsSet[0] names a variable the token did not come from.
+			if len(got.EnvVarsSet) > 0 && got.EnvVarsSet[0] != got.EnvVar {
+				t.Errorf("EnvVarsSet[0] = %q but EnvVar = %q", got.EnvVarsSet[0], got.EnvVar)
+			}
+			// The hint has to name every variable: a user who clears only some
+			// of them still has one winning, and gets refused all over again.
+			for _, name := range got.EnvVarsSet {
+				if !strings.Contains(got.UnsetHint(), name) {
+					t.Errorf("UnsetHint() = %q, does not name %s", got.UnsetHint(), name)
+				}
+			}
 		})
 	}
 }
@@ -120,6 +235,7 @@ func TestResolvePrecedence(t *testing.T) {
 func TestAccessorsAgreeWithResolve(t *testing.T) {
 	writeConfigToken(t, `"   "`) // whitespace: previously HasToken=true, CheckAuth=false
 	t.Setenv(EnvToken, "")
+	t.Setenv(EnvTokenAPI, "")
 
 	res := Resolve()
 	if HasToken() != (res.Token != "") {
@@ -130,6 +246,9 @@ func TestAccessorsAgreeWithResolve(t *testing.T) {
 	}
 	if TokenFromEnv() != res.FromEnv() {
 		t.Errorf("TokenFromEnv()=%v but Resolve().FromEnv()=%v", TokenFromEnv(), res.FromEnv())
+	}
+	if res.EnvVar != "" {
+		t.Errorf("EnvVar=%q with no env token set, want empty", res.EnvVar)
 	}
 	if HasToken() {
 		t.Error("a whitespace-only config token must not count as a token")
@@ -197,5 +316,24 @@ func TestTokenWritesPreserveIndicesDir(t *testing.T) {
 	}
 	if c.Token != "" {
 		t.Errorf("after RemoveToken, Token = %q, want empty", c.Token)
+	}
+}
+
+// The hint is embedded in sentences, so it must read as a fragment and must
+// not name a shell: `unset` is not a command in any Windows shell, and the CLI
+// ships Windows binaries.
+func TestUnsetHintPhrasing(t *testing.T) {
+	tests := []struct {
+		names []string
+		want  string
+	}{
+		{nil, ""},
+		{[]string{EnvToken}, "clear VC_TOKEN from your environment"},
+		{[]string{EnvToken, EnvTokenAPI}, "clear VC_TOKEN and VULNCHECK_API_TOKEN from your environment"},
+	}
+	for _, tt := range tests {
+		if got := (Resolution{EnvVarsSet: tt.names}).UnsetHint(); got != tt.want {
+			t.Errorf("UnsetHint() with %v = %q, want %q", tt.names, got, tt.want)
+		}
 	}
 }

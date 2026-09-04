@@ -12,11 +12,12 @@ import (
 	"github.com/vulncheck-oss/cli/pkg/ui"
 )
 
-// GuardEnvToken refuses a login when VC_TOKEN is set. Every login path writes
-// to the config file, but Resolve() prefers the environment — so the write
-// would be dead on arrival. Previously these paths verified the pasted token,
-// skipped the save, and still printed "Authenticated as ...", which is why a
-// user with a stale VC_TOKEN could log in repeatedly and never change anything.
+// GuardEnvToken refuses a login when a token environment variable is set.
+// Every login path writes to the config file, but Resolve() prefers the
+// environment — so the write would be dead on arrival. Previously these paths
+// verified the pasted token, skipped the save, and still printed
+// "Authenticated as ...", which is why a user with a stale VC_TOKEN could log
+// in repeatedly and never change anything.
 //
 // Callers must invoke this *before* prompting, so the user isn't asked to paste
 // a token or complete a browser flow that is going to be discarded.
@@ -27,16 +28,18 @@ func GuardEnvToken() error {
 	}
 
 	e := errs.Validation(
-		"%s is set and takes precedence over the config file, so logging in would have no effect",
-		config.EnvToken)
+		"%s is set, so the CLI already authenticates with it and `auth login` would have no effect",
+		res.EnvVar)
 	if res.Shadowed {
 		return e.WithHint(
-			"a different token is already saved in your config file. Run `unset %s` to use it, or keep using the environment token as-is.",
-			config.EnvToken)
+			"a different token is already saved in your config file. To use it, %s, or keep using the environment token as-is.",
+			res.UnsetHint())
 	}
+	// Exported on purpose by anyone running an SDK or the MCP server too, so
+	// lead with the fact that nothing is wrong.
 	return e.WithHint(
-		"run `unset %s` first if you want credentials stored in the config file.",
-		config.EnvToken)
+		"nothing to do if that is the token you want. To store a different credential in the config file instead, %s first.",
+		res.UnsetHint())
 }
 
 func ChooseAuthMethod() (string, error) {
@@ -118,9 +121,9 @@ func SaveToken(token string) error {
 	// changed which credential is in use. Login paths are already blocked by
 	// GuardEnvToken; this branch is reached by `auth status`, which re-verifies
 	// the active token without wanting to persist an environment value to disk.
-	if config.Resolve().FromEnv() {
+	if active := config.Resolve(); active.FromEnv() {
 		ui.Info(fmt.Sprintf("Verified as %s (%s) using the token from %s; config file not modified",
-			res.Data.Name, res.Data.Email, config.EnvToken))
+			res.Data.Name, res.Data.Email, active.EnvVar))
 		return nil
 	}
 
