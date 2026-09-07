@@ -161,7 +161,7 @@ func TestContractCommandsDumpIsUsableAndStable(t *testing.T) {
 			names[sm["name"].(string)] = true
 		}
 	}
-	for _, want := range []string{"scan", "cpe", "purl", "auth", "token", "indices", "index", "offline", "backup", "version"} {
+	for _, want := range []string{"scan", "cpe", "purl", "auth", "token", "indices", "index", "advisory", "offline", "backup", "version"} {
 		if !names[want] {
 			t.Errorf("commands dump missing top-level %q; got %v", want, names)
 		}
