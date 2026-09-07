@@ -82,6 +82,10 @@ func fromReqError(r sdk.ReqError) *Error {
 		e := Wrap(KindAuthInvalid, r, "%s", msg)
 		e.HTTPStatus = 401
 		return e
+	case 402:
+		e := Wrap(KindAuthInvalid, r, "%s", msg)
+		e.HTTPStatus = 402
+		return e
 	case 403:
 		e := Wrap(KindAuthInvalid, r, "%s", msg)
 		e.HTTPStatus = 403
@@ -112,6 +116,8 @@ func defaultMessageFor(r sdk.ReqError) string {
 	switch r.StatusCode {
 	case 401:
 		return "unauthorized: token is missing or invalid"
+	case 402:
+		return "payment required: this endpoint is not included in your subscription"
 	case 403:
 		return "forbidden: token lacks permission for this resource"
 	case 404:
