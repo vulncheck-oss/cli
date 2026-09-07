@@ -11,7 +11,7 @@ small, seeded fixture set so regressions get caught at PR time.
 
 ```sh
 # Auth (same env var the CLI itself reads via config.Token()).
-export VC_TOKEN=...
+export VULNCHECK_API_TOKEN=...
 
 # Sync every index the fixtures reference.
 vulncheck offline sync --add cpecve

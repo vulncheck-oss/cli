@@ -19,23 +19,24 @@ func Command() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			res := config.Resolve()
 
-			// Logout can only clear the config file. When VC_TOKEN supplies the
-			// active token, proceeding would revoke the *environment* token
-			// server-side (config.Token() returns it) while deleting a
-			// different token from disk, then report success even though
-			// CheckAuth still passes off the env var. Refuse instead.
+			// Logout can only clear the config file. When a token environment
+			// variable supplies the active token, proceeding would revoke the
+			// *environment* token server-side (config.Token() returns it)
+			// while deleting a different token from disk, then report success
+			// even though CheckAuth still passes off the env var. Refuse
+			// instead.
 			if res.FromEnv() {
 				e := errs.Validation(
 					"%s is set; `auth logout` cannot unset an environment variable",
-					config.EnvToken)
+					res.EnvVar)
 				if res.Shadowed {
 					return e.WithHint(
-						"run `unset %s`, then `vulncheck auth logout` again to revoke and remove the token saved in your config file.",
-						config.EnvToken)
+						"to revoke and remove the token saved in your config file, %s, then run `vulncheck auth logout` again.",
+						res.UnsetHint())
 				}
 				return e.WithHint(
-					"run `unset %s` to stop using it, and revoke it with `vulncheck token remove <id>` if it should no longer work.",
-					config.EnvToken)
+					"to stop using it, %s; revoke it with `vulncheck token remove <id>` if it should no longer work.",
+					res.UnsetHint())
 			}
 
 			if res.ConfigToken == "" {

@@ -62,13 +62,16 @@ You should see the version, build date, and changelog URL. If you get "command n
 
 ## Configuration
 * Run `vulncheck auth login` to authenticate with your VulnCheck account.
-* Alternatively `vulncheck` will respect the `VC_TOKEN` environment variable.
+* Alternatively `vulncheck` will respect the `VULNCHECK_API_TOKEN` environment
+  variable — the same name used by the VulnCheck SDKs and MCP server. The
+  legacy `VC_TOKEN` also still works, and **takes precedence when both are
+  set**.
 * `vulncheck auth` by itself will show other options like checking your status and logging out.
 
-`VC_TOKEN` wins over the saved config file. Because of that, `auth login` and
-`auth logout` refuse while it is set — otherwise they would report success
-having changed nothing that takes effect. Run `vulncheck auth status` to see
-which of the two sources the active token came from.
+Either environment variable wins over the saved config file. Because of that,
+`auth login` and `auth logout` refuse while one is set — otherwise they would
+report success having changed nothing that takes effect. Run `vulncheck auth
+status` to see which source, and which variable, the active token came from.
 
 
 ## Agentic / scripted usage
@@ -88,7 +91,8 @@ The CLI is designed to be safe to drive from scripts and AI agents. This section
 
 | Variable                                   | Effect |
 |--------------------------------------------|--------|
-| `VC_TOKEN`                                 | API token. Takes precedence over `~/.config/vulncheck/vulncheck.yaml`. While it is set, `auth login` and `auth logout` refuse rather than writing a config file that would be ignored — `unset VC_TOKEN` first. |
+| `VULNCHECK_API_TOKEN`                      | API token, and the recommended name — shared with the VulnCheck SDKs and MCP server. Takes precedence over `~/.config/vulncheck/vulncheck.yaml`; while set, `auth login` and `auth logout` refuse rather than writing a file that would be ignored. |
+| `VC_TOKEN`                                 | Legacy alias, still fully supported and **taking precedence over `VULNCHECK_API_TOKEN` when both are set**, so no existing setup changes credential. Clear both to fall back to the config file. `auth status` reports which is in use. |
 | `NO_COLOR`                                 | Any non-empty value disables ANSI styling. |
 | `CI` / `BUILD_NUMBER` / `RUN_ID`           | Any of these set implies non-interactive mode (no prompts). |
 
@@ -121,7 +125,7 @@ In `--json` mode, errors are emitted to **stdout** as:
 }
 ```
 
-`code` is one of: `internal`, `validation`, `auth_required`, `auth_invalid`, `not_found`, `rate_limited`, `network`, `bad_request`, `cancelled`. `http_status` is omitted for non-HTTP errors. `hint` is optional remediation context — present only when the message alone isn't actionable (e.g. naming `VC_TOKEN` as the source of a rejected token) — and is rendered on stderr as `hint: ...` outside `--json` mode.
+`code` is one of: `internal`, `validation`, `auth_required`, `auth_invalid`, `not_found`, `rate_limited`, `network`, `bad_request`, `cancelled`. `http_status` is omitted for non-HTTP errors. `hint` is optional remediation context, present only when the message alone isn't actionable (e.g. naming the variable that supplied a rejected token). Rendered on stderr as `hint: ...` outside `--json` mode.
 
 ### Probe commands
 
@@ -132,12 +136,16 @@ vulncheck version --json
 # {"schema_version": 1, "version": "...", "build_date": "...", "changelog_url": "..."}
 
 vulncheck auth status --json
-# {"schema_version": 1, "authenticated": true, "token_source": "env", "user": "...", "email": "..."}
+# {"schema_version": 1, "authenticated": true, "token_source": "env",
+#  "token_env_var": "VC_TOKEN", "user": "...", "email": "..."}
 # Exit 0 even when authenticated=false — agents dispatch on the bool.
-# token_shadowed: true is added when VC_TOKEN is overriding a *different*
-# token saved in vulncheck.yaml — the usual cause of "I logged in but
-# nothing changed". Omitted otherwise, so the CI shape (VC_TOKEN only,
-# no config file) never reports shadowing.
+# token_env_var names which variable supplied the token when token_source is
+# "env"; omitted otherwise. Set when authenticated=false too, so a rejected
+# token can be traced to the variable holding it.
+# token_shadowed: true is added when an environment token is overriding a
+# *different* token saved in vulncheck.yaml — the usual cause of "I logged
+# in but nothing changed". Omitted otherwise, so the CI shape (env token
+# only, no config file) never reports shadowing.
 
 vulncheck commands
 # {"schema_version": 1, "root": {"name":"vulncheck", "subcommands":[...]}, ...}

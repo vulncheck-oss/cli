@@ -27,12 +27,15 @@ func Command() *cobra.Command {
 		Example: i18n.C.AuthLoginExample,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			r := output.FromCmd(cmd)
-			if !r.Interactive() {
-				return errs.Validation("%s", i18n.C.AuthLoginErrorCI)
-			}
-
+			// Before the interactivity check: in CI with a token already
+			// exported, AuthLoginErrorCI advises setting the variable that is
+			// set, where GuardEnvToken says the CLI already uses it.
 			if err := pkgLogin.GuardEnvToken(); err != nil {
 				return err
+			}
+
+			if !r.Interactive() {
+				return errs.Validation("%s", i18n.C.AuthLoginErrorCI)
 			}
 
 			if config.HasConfig() && config.HasToken() {

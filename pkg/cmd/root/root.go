@@ -166,10 +166,10 @@ type errorBody struct {
 }
 
 // authHint explains which token source produced the credential that just
-// failed. Without this, a user with a stale VC_TOKEN shadowing a freshly
-// saved config token sees "unauthorized", re-runs `auth login`, is told it
-// succeeded, and hits the same error forever — the CLI never mentions that
-// the token in play came from the environment.
+// failed. Without this, a user with a stale environment token shadowing a
+// freshly saved config token sees "unauthorized", re-runs `auth login`, is
+// told it succeeded, and hits the same error forever — the CLI never mentions
+// that the token in play came from the environment.
 func authHint(kind errs.Kind) string {
 	if kind != errs.KindAuthInvalid && kind != errs.KindAuthRequired {
 		return ""
@@ -178,10 +178,14 @@ func authHint(kind errs.Kind) string {
 	switch {
 	case res.Shadowed:
 		return fmt.Sprintf(
-			"the token in use came from %s, which overrides the different token saved in your config file. Run `unset %s` to use the saved one.",
-			config.EnvToken, config.EnvToken)
+			"the token in use came from %s, which overrides the different token saved in your config file. To use the saved one, %s.",
+			res.EnvVar, res.UnsetHint())
+	case res.FromEnv() && res.ConfigToken != "":
+		return fmt.Sprintf("the token in use came from %s, not your config file.", res.EnvVar)
 	case res.FromEnv():
-		return fmt.Sprintf("the token in use came from %s, not your config file.", config.EnvToken)
+		// No config file to contrast with — saying "not your config file"
+		// here sends the user looking for one that was never written.
+		return fmt.Sprintf("the token in use came from %s.", res.EnvVar)
 	default:
 		return ""
 	}
