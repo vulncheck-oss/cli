@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -197,16 +198,29 @@ func (c *Client) GetAdvisories(q AdvisoryQueryParameters) (responseJSON *Advisor
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
+	// A decode failure is the only evidence that the body was not the one we
+	// asked for. Discarding it -- as the v3 methods do -- leaves a truncated or
+	// tampered response indistinguishable from "no matches", which is the same
+	// silent zero this package refuses elsewhere.
+	if err := json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON); err != nil {
+		return nil, fmt.Errorf("decoding /v4/advisory response: %w", err)
+	}
 	return responseJSON, nil
 }
+
+// ErrEmptyAdvisoryResponse reports a 200 whose body decoded cleanly to nothing
+// at all -- a literal `null`. It is never a legitimate empty result: the API
+// spells that {"data":[],"_meta":{...}}.
+var ErrEmptyAdvisoryResponse = errors.New("empty response from /v4/advisory")
 
 // GetAllAdvisories walks every page via cursor pagination, returning the
 // combined records and the number of pages fetched.
 //
 // Cursor mode is the only way past the API's result window, and termination is
 // not signalled by an empty next_cursor -- it stays populated on the final page
-// of content. We stop on an empty page or a cursor that stops advancing.
+// of content. We stop on an empty page or a cursor that stops advancing -- but
+// an *absent* page is a fault, not a stopping point, or a walk cut short by a
+// bad response would look like one that finished.
 //
 // The page count is returned because it is the one fact about the walk that the
 // combined result cannot express; the per-page metadata is deliberately not,
@@ -231,7 +245,7 @@ func (c *Client) GetAllAdvisories(q AdvisoryQueryParameters) ([]json.RawMessage,
 		return nil, 0, err
 	}
 	if response == nil {
-		return []json.RawMessage{}, 0, nil
+		return nil, 0, ErrEmptyAdvisoryResponse
 	}
 
 	combined := append([]json.RawMessage{}, response.Data...)
@@ -247,8 +261,11 @@ func (c *Client) GetAllAdvisories(q AdvisoryQueryParameters) ([]json.RawMessage,
 		if err != nil {
 			return nil, 0, err
 		}
+		if page == nil {
+			return nil, 0, ErrEmptyAdvisoryResponse
+		}
 		pages++
-		if page == nil || len(page.Data) == 0 {
+		if len(page.Data) == 0 {
 			break
 		}
 		combined = append(combined, page.Data...)

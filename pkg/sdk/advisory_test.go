@@ -251,6 +251,70 @@ func TestGetAllAdvisoriesStopsOnARepeatedCursor(t *testing.T) {
 	assert.Equal(t, 2, calls)
 }
 
+// A body that does not decode is the only evidence that the response was not
+// the one we asked for. Returning it as a nil result with a nil error would
+// make a truncated page indistinguishable from "no matches".
+func TestGetAdvisoriesSurfacesADecodeFailure(t *testing.T) {
+	srv := advisoryStub(t, `{"data":[{"a":1}`, nil)
+
+	response, err := Connect(srv.URL, "tok").GetAdvisories(AdvisoryQueryParameters{Name: "ghsa"})
+	assert.Nil(t, response)
+	assert.ErrorContains(t, err, "decoding /v4/advisory response")
+}
+
+// --all is the one path where a broken response used to be invisible: the walk
+// read a nil page as end-of-walk and reported a clean run of zero records.
+func TestGetAllAdvisoriesFailsOnATruncatedFirstPage(t *testing.T) {
+	srv := advisoryStub(t, `{"data":[{"a":1}`, nil)
+
+	records, walked, err := Connect(srv.URL, "tok").GetAllAdvisories(AdvisoryQueryParameters{Name: "ghsa"})
+	assert.ErrorContains(t, err, "decoding /v4/advisory response")
+	assert.Nil(t, records)
+	assert.Zero(t, walked)
+}
+
+// Mid-walk the stakes are higher still: page 1 decoded, so without this the
+// caller receives a genuine but silently incomplete slice.
+func TestGetAllAdvisoriesFailsOnATruncatedPageMidWalk(t *testing.T) {
+	call := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		call++
+		if call == 1 {
+			_, _ = fmt.Fprint(w, `{"data":[{"a":1}],"_meta":{"next_cursor":"c1"}}`)
+			return
+		}
+		_, _ = fmt.Fprint(w, `{"data":[{"a":2}`)
+	}))
+	defer srv.Close()
+
+	records, walked, err := Connect(srv.URL, "tok").GetAllAdvisories(AdvisoryQueryParameters{Name: "ghsa"})
+	assert.ErrorContains(t, err, "decoding /v4/advisory response")
+	assert.Nil(t, records, "a partial walk must not be returned as a complete one")
+	assert.Zero(t, walked)
+}
+
+// A literal `null` decodes cleanly to no response at all. It is never a real
+// empty result -- the API spells that {"data":[],"_meta":{...}}.
+func TestGetAllAdvisoriesFailsOnANullBody(t *testing.T) {
+	for _, page := range []string{"first", "mid-walk"} {
+		call := 0
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			call++
+			if page == "mid-walk" && call == 1 {
+				_, _ = fmt.Fprint(w, `{"data":[{"a":1}],"_meta":{"next_cursor":"c1"}}`)
+				return
+			}
+			_, _ = fmt.Fprint(w, `null`)
+		}))
+
+		records, walked, err := Connect(srv.URL, "tok").GetAllAdvisories(AdvisoryQueryParameters{Name: "ghsa"})
+		assert.ErrorIs(t, err, ErrEmptyAdvisoryResponse, "%s page", page)
+		assert.Nil(t, records)
+		assert.Zero(t, walked)
+		srv.Close()
+	}
+}
+
 func TestGetAdvisoryFeedsDecodesTheCatalogue(t *testing.T) {
 	srv := advisoryStub(t, `{"data":[{"name":"epss","href":"http://api.vulncheck.com/v4/advisory?name=epss"},{"name":"ghsa","href":"x"}]}`, nil)
 

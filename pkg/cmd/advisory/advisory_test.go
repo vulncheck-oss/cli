@@ -41,6 +41,38 @@ func TestCommandStructure(t *testing.T) {
 	}
 }
 
+// `index list <index> --cve X` is the shape a v3 user translates from, and
+// cobra's default accepts a positional and then ignores it -- so the feed name
+// was dropped and the query answered across every feed, at exit 0.
+func TestPositionalArgumentsAreValidated(t *testing.T) {
+	cases := []struct {
+		cmd        *cobra.Command
+		wantReject []string
+		wantAccept [][]string
+	}{
+		{List(), []string{"ghsa"}, [][]string{nil}},
+		{Browse(), []string{"ghsa"}, [][]string{nil}},
+		// feeds takes an optional search term, so one is fine and two are not.
+		{Feeds(), []string{"a", "b"}, [][]string{nil, {"ghsa"}}},
+	}
+
+	for _, tt := range cases {
+		name := tt.cmd.Name()
+		if tt.cmd.Args == nil {
+			t.Errorf("%s: no Args validator; cobra would accept and silently drop positionals", name)
+			continue
+		}
+		if err := tt.cmd.ValidateArgs(tt.wantReject); err == nil {
+			t.Errorf("%s: accepted %v", name, tt.wantReject)
+		}
+		for _, args := range tt.wantAccept {
+			if err := tt.cmd.ValidateArgs(args); err != nil {
+				t.Errorf("%s: rejected %v: %v", name, args, err)
+			}
+		}
+	}
+}
+
 // The flag set is the CLI half of a closed contract: /v4/advisory answers an
 // unrecognised parameter with an empty result set rather than an error, so a
 // flag that no longer maps to a parameter is silent data loss. Pin it.

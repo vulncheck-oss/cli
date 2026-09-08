@@ -198,6 +198,10 @@ func List() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list [flags]",
 		Short: i18n.C.AdvisoryListShort,
+		// v4 is a single index, so unlike `index list <index>` there is no
+		// positional to take. Accepting one silently would drop it and answer
+		// a broader question than the one asked.
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			r := output.FromCmd(cmd)
 
@@ -255,6 +259,7 @@ func Browse() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "browse [flags]",
 		Short: i18n.C.AdvisoryBrowseShort,
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			r := output.FromCmd(cmd)
 
