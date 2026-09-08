@@ -205,7 +205,8 @@ Every command below accepts the [global flags](#global-flags) (`--json`, `--quie
 - [`token`](#token) — API token management
 - [`indices`](#indices) — list or browse the catalogue of indices
 - [`index`](#index) — query one index
-- [`backup`](#backup) — download or fetch a signed URL for an index backup
+- [`advisory`](#advisory) — query v4 advisories in CVE Record Format 5.2
+- [`backup`](#backup) — download or fetch a signed URL for an index or advisory-feed backup
 - [`cpe`](#cpe) — look up CVEs for a CPE (single or batch)
 - [`purl`](#purl) — look up CVEs for a PURL (single or batch)
 - [`tag`](#tag) — look up IP-intelligence tag membership
@@ -264,14 +265,34 @@ vulncheck index browse <index> [query flags]
 `list --all` walks `next_cursor` end-to-end and emits one combined array. `browse` runs an interactive viewport; under `--json` (or `--no-interactive`) it falls back to `list` output. Query flags come from the index's schema (`--cve`, `--alias`, `--limit`, `--cursor`, etc.); see the [API docs](https://docs.vulncheck.com/api/indice) for the full set.
 
 
+### advisory
+
+```
+vulncheck advisory feeds [search]                      # GET /v4/advisory/list
+vulncheck advisory list [--full] [--all] [query flags] # GET /v4/advisory
+vulncheck advisory browse [--full] [query flags]
+```
+
+Every record is CVE Record Format 5.2, and there is one record per feed per CVE.
+
+At least one filter is required; see `advisory list --help` for the set (`--feed`, `--cve`, `--vendor`, `--purl`, `--updated-after`, …) and `advisory feeds` for `--feed` values. `--limit` caps at 100 and `--page × --limit` at 10,000 — page past that with `--start-cursor` and `--cursor`, or `--all` to walk it in one call (which buffers every record, so prefer cursors on the largest feeds). `browse` runs an interactive viewport.
+
+
 ### backup
 
 ```
-vulncheck backup url <index>       # signed temporary URL only
-vulncheck backup download <index>  # download the archive
+vulncheck backup list                       # indices with a backup available
+vulncheck backup url <index>                # signed temporary URL only
+vulncheck backup download <index>           # download the archive
+
+vulncheck backup advisory list              # GET /v4/backup
+vulncheck backup advisory url <feed>        # GET /v4/backup/{feed}
+vulncheck backup advisory download <feed>
 ```
 
 `download` picks the bubbletea progress bar for TTYs and a plain SIGINT-safe streaming download (writing to `<name>.part` and renaming on success) for headless callers. `url --json` returns `{filename, sha256, date_added, url}`.
+
+The `advisory` subcommands are a **different corpus, not a newer version** of the same archives, and most feed names are also index names — so the same argument usually addresses both. A v3 zip holds that feed's native records — for `sigmahq-sigma-rules` that includes the Sigma rule itself and its ATT&CK techniques — while the v4 zip holds CVE 5.2 records, one per CVE, dropping both those fields and every advisory with no CVE attached. A feed whose advisories are mostly not CVE-keyed can shrink to a fraction of its v3 record count. The v4 archive is a single `<feed>.jsonl` inside the zip, and its lists are parquet-shaped (`{"list":[{"element":…}]}`), so it is **not** a bulk copy of `advisory list --json`. The v4 object key carries no timestamp, so repeat downloads overwrite rather than accumulate — the command warns when it does. `url`/`download --json` carry `corpus` and `format` fields, because a bare `abbott.zip` on disk records nothing about which corpus produced it, and a `url` field so `jq -r .url` works against both.
 
 
 ### cpe

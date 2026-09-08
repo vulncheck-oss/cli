@@ -19,6 +19,7 @@ import (
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 	"github.com/vulncheck-oss/cli/pkg/cmd/about"
+	"github.com/vulncheck-oss/cli/pkg/cmd/advisory"
 	"github.com/vulncheck-oss/cli/pkg/cmd/auth"
 	"github.com/vulncheck-oss/cli/pkg/cmd/backup"
 	"github.com/vulncheck-oss/cli/pkg/cmd/commands"
@@ -102,6 +103,7 @@ func NewCmdRoot() *cobra.Command {
 	cmd.AddCommand(upgrade.Command())
 	cmd.AddCommand(indices.Command())
 	cmd.AddCommand(index.Command())
+	cmd.AddCommand(advisory.Command())
 	cmd.AddCommand(backup.Command())
 	cmd.AddCommand(cpe.Command())
 	cmd.AddCommand(purl.Command())

@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/spf13/cobra"
+	"github.com/vulncheck-oss/cli/internal/errs"
 	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/config"
 	"github.com/vulncheck-oss/cli/pkg/i18n"
@@ -73,6 +74,31 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "backup <command>",
 		Short: i18n.C.BackupShort,
+		Long:  i18n.C.BackupLong,
+	}
+
+	cmdList := &cobra.Command{
+		Use:   "list",
+		Short: i18n.C.BackupListShort,
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			r := output.FromCmd(cmd)
+
+			response, err := session.ConnectWithContext(cmd.Context(), config.Token()).GetBackups()
+			if err != nil {
+				return err
+			}
+			if response == nil {
+				return errs.New(errs.KindInternal, "empty response from /v3/backup")
+			}
+
+			if r.IsJSON() {
+				return r.JSON(response.GetData())
+			}
+
+			r.Info(i18n.C.BackupListFull, len(response.GetData()))
+			return ui.BackupsList(response.GetData())
+		},
 	}
 
 	cmdUrl := &cobra.Command{
@@ -180,8 +206,10 @@ func Command() *cobra.Command {
 		},
 	}
 
+	cmd.AddCommand(cmdList)
 	cmd.AddCommand(cmdUrl)
 	cmd.AddCommand(cmdDownload)
+	cmd.AddCommand(advisoryCommand())
 
 	return cmd
 }
