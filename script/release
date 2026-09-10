@@ -232,9 +232,15 @@ else
   for i in "${!ARCHES[@]}"; do
     arch="${ARCHES[$i]}"
 
+    zipname="vulncheck_${VERSION}_windows_${arch}.zip"
+    [ -f "dist/$zipname" ] || die "GoReleaser did not produce dist/$zipname"
+
+    # Start from the archive GoReleaser already built and swap in the signed executable, rather
+    # than assembling one here. Anything else the archive is meant to carry — the licence, the
+    # PowerShell completion — comes along without this having to know about it, so the contents
+    # cannot drift out of step with .goreleaser.yml.
     stage="$(mktemp -d)"
-    mkdir -p "$stage/bin"
-    cp LICENSE "$stage/LICENSE"
+    ( cd "$stage" && unzip -q "$OLDPWD/dist/$zipname" )
     cp "${SRC[$i]}" "$stage/bin/vulncheck.exe"
 
     # Timestamp the staged copy, leaving the operator's originals untouched. script/sign refuses
@@ -242,12 +248,10 @@ else
     # validating the day the certificate expires, including binaries released years earlier.
     script/sign "$stage/bin/vulncheck.exe"
 
-    zipname="vulncheck_${VERSION}_windows_${arch}.zip"
     rm -f "dist/$zipname"
-    # wrap_in_directory is false for the Windows archives, so LICENSE and bin/ sit at the root.
-    ( cd "$stage" && zip -qr "$OLDPWD/dist/$zipname" LICENSE bin )
+    ( cd "$stage" && zip -qr "$OLDPWD/dist/$zipname" -- * )
     rm -rf "$stage"
-    info "$zipname"
+    info "$zipname ($(unzip -Z1 "dist/$zipname" | grep -c . ) entries)"
   done
 fi
 
