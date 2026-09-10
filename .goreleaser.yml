@@ -83,6 +83,9 @@ archives:
     formats: [zip]
     files:
       - LICENSE
+      # The other shells' completions are Unix-only, so Windows ships the PowerShell one.
+      # Man pages are omitted deliberately: there is no man on Windows.
+      - ./share/powershell/vulncheck.ps1
 
 # script/release and script/verify-release both depend on this exact filename.
 checksum:
