@@ -68,12 +68,33 @@ type Copy struct {
 	IndexErrorRequired    string
 	IndexFlagFullResponse string
 
+	AdvisoryShort       string
+	AdvisoryFeedsShort  string
+	AdvisoryFeedsSearch string
+	AdvisoryFeedsFull   string
+	AdvisoryListShort   string
+	AdvisoryBrowseShort string
+	AdvisoryFound       string
+
 	BackupShort            string
+	BackupLong             string
+	BackupListShort        string
+	BackupListFull         string
 	BackupUrlShort         string
 	BackupDownloadShort    string
 	BackupDownloadInfo     string
 	BackupDownloadProgress string
 	BackupDownloadComplete string
+
+	BackupAdvisoryShort         string
+	BackupAdvisoryOverwrite     string
+	BackupAdvisoryListShort     string
+	BackupAdvisoryListFull      string
+	BackupAdvisoryUrlShort      string
+	BackupAdvisoryDownloadShort string
+	BackupAdvisoryDownloadInfo  string
+	BackupAdvisoryErrorRequired string
+	BackupAdvisoryUnavailable   string
 
 	CpeShort               string
 	CpeExample             string
@@ -168,7 +189,7 @@ var En = Copy{
 
 			Alternatively, use %[1]stoken%[1]s to specify an issued token directly.
 
-			Alternatively, vulncheck will use the authentication token found in the %[1]sVC_TOKEN%[1]s environment variable.
+			Alternatively, vulncheck will use the authentication token found in the %[1]sVULNCHECK_API_TOKEN%[1]s environment variable.
 			This method is most suitable for "headless" use of vulncheck such as in automation.
 		`, "`"),
 	AuthLoginExample: heredoc.Doc(`
@@ -178,7 +199,7 @@ var En = Copy{
 			# Authenticate with vulncheck.com by passing in a token
 			$ vulncheck auth login token vulncheck_******************
 	`),
-	AuthLoginErrorCI: "This command is interactive and cannot be run in a CI environment, use the VC_TOKEN environment variable instead",
+	AuthLoginErrorCI: "This command is interactive and cannot be run in a CI environment, use the VULNCHECK_API_TOKEN environment variable instead",
 
 	AuthLoginToken: "Connect a VulnCheck account using an authentication token",
 	AuthLoginWeb:   "Log in with a VulnCheck account using a web browser",
@@ -231,13 +252,39 @@ var En = Copy{
 	IndexErrorRequired:    "index name is required",
 	IndexFlagFullResponse: "Output full response",
 
-	BackupShort:         "Download a backup of a specified index",
+	AdvisoryShort:       "Query advisories in CVE Record Format 5.2 (api /v4)",
+	AdvisoryFeedsShort:  "List the advisory feeds available to filter by (GET /v4/advisory/list)",
+	AdvisoryFeedsSearch: "Listing %d advisory feeds searching for \"%s\"",
+	AdvisoryFeedsFull:   "Listing %d advisory feeds",
+	AdvisoryListShort:   "List advisory records (GET /v4/advisory)",
+	AdvisoryBrowseShort: "Browse advisory records interactively (GET /v4/advisory)",
+	AdvisoryFound:       "%d of %d advisory records",
+
+	BackupShort: "Fetch or download a bulk archive",
+	BackupLong: heredoc.Doc(`
+		Fetch or download a bulk archive.
+
+		  backup url|download <index>           v3, the index's native records
+		  backup advisory url|download <feed>   v4, CVE 5.2 records, one per CVE
+	`),
+	BackupListShort:     "List indices that have a backup available",
+	BackupListFull:      "Listing %d backups",
 	BackupUrlShort:      "Get the temporary signed URL of the backup of an index",
 	BackupDownloadShort: "Download the backup of an index",
 
 	BackupDownloadInfo:     "Downloading backup of %s, created on %s",
 	BackupDownloadProgress: "Downloading backup as %s",
 	BackupDownloadComplete: "Backup downloaded successfully",
+
+	BackupAdvisoryShort:         "Download a v4 advisory feed backup",
+	BackupAdvisoryOverwrite:     "%s has no timestamp in its name; a repeat download replaces it in place",
+	BackupAdvisoryListShort:     "List advisory feeds that have a backup available (GET /v4/backup)",
+	BackupAdvisoryListFull:      "Listing %d advisory feed backups",
+	BackupAdvisoryUrlShort:      "Get the temporary signed URL of an advisory feed backup (GET /v4/backup/{feed})",
+	BackupAdvisoryDownloadShort: "Download an advisory feed backup (GET /v4/backup/{feed})",
+	BackupAdvisoryDownloadInfo:  "Downloading advisory feed backup of %s",
+	BackupAdvisoryErrorRequired: "feed name is required",
+	BackupAdvisoryUnavailable:   "no backup is currently available for feed '%s'",
 
 	CpeShort:               "Look up a specified cpe for any related CVEs",
 	CpeExample:             "vulncheck cpe \"%s\"",
@@ -313,7 +360,7 @@ var En = Copy{
 	UpgradeStatusLong:  "Check if a new version of the CLI is available.",
 
 	ErrorUnauthorized: "Error: Unauthorized, Try authenticating with: vulncheck auth login",
-	ErrorNoToken:      "No token found. Please run `vulncheck auth login` to authenticate or populate the environment variable `VC_TOKEN`.",
+	ErrorNoToken:      "No token found. Please run `vulncheck auth login` to authenticate or populate the environment variable `VULNCHECK_API_TOKEN`.",
 
 	OfflineStatusShort: "Check the status of the offline database",
 	OfflineStatusLong:  "Check the status of the offline database",

@@ -8,20 +8,22 @@ import (
 func authHelp() string {
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
 		return heredoc.Doc(`
-			vulncheck: To use VulnCheck CLI in a GitHub Actions workflow, set the VC_TOKEN environment variable. Example:
+			vulncheck: To use VulnCheck CLI in a GitHub Actions workflow, set the VULNCHECK_API_TOKEN environment variable. Example:
 			  env:
-			    VC_TOKEN: ${{ secrets.VC_TOKEN }}
+			    VULNCHECK_API_TOKEN: ${{ secrets.VULNCHECK_API_TOKEN }}
+			Substitute your own secret name; vulncheck-oss/action uses VC_TOKEN, which is also still accepted.
+			Note that a secret that does not exist expands to an empty string, which reads here as no token at all.
 		`)
 	}
 
 	if os.Getenv("CI") != "" {
 		return heredoc.Doc(`
-			vulncheck: To use VulnCheck CLI in automation, set the VC_TOKEN environment variable.
+			vulncheck: To use VulnCheck CLI in automation, set the VULNCHECK_API_TOKEN environment variable.
 		`)
 	}
 
 	return heredoc.Doc(`
 		To get started with VulnCheck CLI, please run: vulncheck auth login
-		Alternatively, populate the VC_TOKEN environment variable with a VulnCheck token acquired from the portal at https://console.vulncheck.com/token.
+		Alternatively, populate the VULNCHECK_API_TOKEN environment variable with a VulnCheck token acquired from the portal at https://console.vulncheck.com/token.
 	`)
 }

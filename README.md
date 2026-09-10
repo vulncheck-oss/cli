@@ -68,13 +68,16 @@ You should see the version, build date, and changelog URL. If you get "command n
 
 ## Configuration
 * Run `vulncheck auth login` to authenticate with your VulnCheck account.
-* Alternatively `vulncheck` will respect the `VC_TOKEN` environment variable.
+* Alternatively `vulncheck` will respect the `VULNCHECK_API_TOKEN` environment
+  variable — the same name used by the VulnCheck SDKs and MCP server. The
+  legacy `VC_TOKEN` also still works, and **takes precedence when both are
+  set**.
 * `vulncheck auth` by itself will show other options like checking your status and logging out.
 
-`VC_TOKEN` wins over the saved config file. Because of that, `auth login` and
-`auth logout` refuse while it is set — otherwise they would report success
-having changed nothing that takes effect. Run `vulncheck auth status` to see
-which of the two sources the active token came from.
+Either environment variable wins over the saved config file. Because of that,
+`auth login` and `auth logout` refuse while one is set — otherwise they would
+report success having changed nothing that takes effect. Run `vulncheck auth
+status` to see which source, and which variable, the active token came from.
 
 
 ## Agentic / scripted usage
@@ -94,7 +97,8 @@ The CLI is designed to be safe to drive from scripts and AI agents. This section
 
 | Variable                                   | Effect |
 |--------------------------------------------|--------|
-| `VC_TOKEN`                                 | API token. Takes precedence over `~/.config/vulncheck/vulncheck.yaml`. While it is set, `auth login` and `auth logout` refuse rather than writing a config file that would be ignored — `unset VC_TOKEN` first. |
+| `VULNCHECK_API_TOKEN`                      | API token, and the recommended name — shared with the VulnCheck SDKs and MCP server. Takes precedence over `~/.config/vulncheck/vulncheck.yaml`; while set, `auth login` and `auth logout` refuse rather than writing a file that would be ignored. |
+| `VC_TOKEN`                                 | Legacy alias, still fully supported and **taking precedence over `VULNCHECK_API_TOKEN` when both are set**, so no existing setup changes credential. Clear both to fall back to the config file. `auth status` reports which is in use. |
 | `NO_COLOR`                                 | Any non-empty value disables ANSI styling. |
 | `CI` / `BUILD_NUMBER` / `RUN_ID`           | Any of these set implies non-interactive mode (no prompts). |
 
@@ -127,7 +131,7 @@ In `--json` mode, errors are emitted to **stdout** as:
 }
 ```
 
-`code` is one of: `internal`, `validation`, `auth_required`, `auth_invalid`, `not_found`, `rate_limited`, `network`, `bad_request`, `cancelled`. `http_status` is omitted for non-HTTP errors. `hint` is optional remediation context — present only when the message alone isn't actionable (e.g. naming `VC_TOKEN` as the source of a rejected token) — and is rendered on stderr as `hint: ...` outside `--json` mode.
+`code` is one of: `internal`, `validation`, `auth_required`, `auth_invalid`, `not_found`, `rate_limited`, `network`, `bad_request`, `cancelled`. `http_status` is omitted for non-HTTP errors. `hint` is optional remediation context, present only when the message alone isn't actionable (e.g. naming the variable that supplied a rejected token). Rendered on stderr as `hint: ...` outside `--json` mode.
 
 ### Probe commands
 
@@ -138,12 +142,16 @@ vulncheck version --json
 # {"schema_version": 1, "version": "...", "build_date": "...", "changelog_url": "..."}
 
 vulncheck auth status --json
-# {"schema_version": 1, "authenticated": true, "token_source": "env", "user": "...", "email": "..."}
+# {"schema_version": 1, "authenticated": true, "token_source": "env",
+#  "token_env_var": "VC_TOKEN", "user": "...", "email": "..."}
 # Exit 0 even when authenticated=false — agents dispatch on the bool.
-# token_shadowed: true is added when VC_TOKEN is overriding a *different*
-# token saved in vulncheck.yaml — the usual cause of "I logged in but
-# nothing changed". Omitted otherwise, so the CI shape (VC_TOKEN only,
-# no config file) never reports shadowing.
+# token_env_var names which variable supplied the token when token_source is
+# "env"; omitted otherwise. Set when authenticated=false too, so a rejected
+# token can be traced to the variable holding it.
+# token_shadowed: true is added when an environment token is overriding a
+# *different* token saved in vulncheck.yaml — the usual cause of "I logged
+# in but nothing changed". Omitted otherwise, so the CI shape (env token
+# only, no config file) never reports shadowing.
 
 vulncheck commands
 # {"schema_version": 1, "root": {"name":"vulncheck", "subcommands":[...]}, ...}
@@ -203,7 +211,8 @@ Every command below accepts the [global flags](#global-flags) (`--json`, `--quie
 - [`token`](#token) — API token management
 - [`indices`](#indices) — list or browse the catalogue of indices
 - [`index`](#index) — query one index
-- [`backup`](#backup) — download or fetch a signed URL for an index backup
+- [`advisory`](#advisory) — query v4 advisories in CVE Record Format 5.2
+- [`backup`](#backup) — download or fetch a signed URL for an index or advisory-feed backup
 - [`cpe`](#cpe) — look up CVEs for a CPE (single or batch)
 - [`purl`](#purl) — look up CVEs for a PURL (single or batch)
 - [`tag`](#tag) — look up IP-intelligence tag membership
@@ -262,14 +271,34 @@ vulncheck index browse <index> [query flags]
 `list --all` walks `next_cursor` end-to-end and emits one combined array. `browse` runs an interactive viewport; under `--json` (or `--no-interactive`) it falls back to `list` output. Query flags come from the index's schema (`--cve`, `--alias`, `--limit`, `--cursor`, etc.); see the [API docs](https://docs.vulncheck.com/api/indice) for the full set.
 
 
+### advisory
+
+```
+vulncheck advisory feeds [search]                      # GET /v4/advisory/list
+vulncheck advisory list [--full] [--all] [query flags] # GET /v4/advisory
+vulncheck advisory browse [--full] [query flags]
+```
+
+Every record is CVE Record Format 5.2, and there is one record per feed per CVE.
+
+At least one filter is required; see `advisory list --help` for the set (`--feed`, `--cve`, `--vendor`, `--purl`, `--updated-after`, …) and `advisory feeds` for `--feed` values. `--limit` caps at 100 and `--page × --limit` at 10,000 — page past that with `--start-cursor` and `--cursor`, or `--all` to walk it in one call (which buffers every record, so prefer cursors on the largest feeds). `browse` runs an interactive viewport.
+
+
 ### backup
 
 ```
-vulncheck backup url <index>       # signed temporary URL only
-vulncheck backup download <index>  # download the archive
+vulncheck backup list                       # indices with a backup available
+vulncheck backup url <index>                # signed temporary URL only
+vulncheck backup download <index>           # download the archive
+
+vulncheck backup advisory list              # GET /v4/backup
+vulncheck backup advisory url <feed>        # GET /v4/backup/{feed}
+vulncheck backup advisory download <feed>
 ```
 
 `download` picks the bubbletea progress bar for TTYs and a plain SIGINT-safe streaming download (writing to `<name>.part` and renaming on success) for headless callers. `url --json` returns `{filename, sha256, date_added, url}`.
+
+The `advisory` subcommands are a **different corpus, not a newer version** of the same archives, and most feed names are also index names — so the same argument usually addresses both. A v3 zip holds that feed's native records — for `sigmahq-sigma-rules` that includes the Sigma rule itself and its ATT&CK techniques — while the v4 zip holds CVE 5.2 records, one per CVE, dropping both those fields and every advisory with no CVE attached. A feed whose advisories are mostly not CVE-keyed can shrink to a fraction of its v3 record count. The v4 archive is a single `<feed>.jsonl` inside the zip, and its lists are parquet-shaped (`{"list":[{"element":…}]}`), so it is **not** a bulk copy of `advisory list --json`. The v4 object key carries no timestamp, so repeat downloads overwrite rather than accumulate — the command warns when it does. `url`/`download --json` carry `corpus` and `format` fields, because a bare `abbott.zip` on disk records nothing about which corpus produced it, and a `url` field so `jq -r .url` works against both.
 
 
 ### cpe

@@ -2,7 +2,9 @@ package errs
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/vulncheck-oss/cli/pkg/sdk"
@@ -68,6 +70,7 @@ func TestClassifyMapsReqErrorByStatus(t *testing.T) {
 		want   Kind
 	}{
 		{401, KindAuthInvalid},
+		{402, KindAuthInvalid},
 		{403, KindAuthInvalid},
 		{404, KindNotFound},
 		{429, KindRateLimited},
@@ -112,5 +115,77 @@ func TestValidationHelperFormats(t *testing.T) {
 	}
 	if e.Error() != "need input" {
 		t.Errorf("message = %q, want %q", e.Error(), "need input")
+	}
+}
+
+// The v4 endpoints answer an unentitled token with 402 and a route-specific
+// message. That message is more precise than anything we could substitute, so
+// it must reach the user verbatim rather than being replaced by a generic hint.
+func TestClassifyPreservesEntitlementMessages(t *testing.T) {
+	cases := []struct {
+		name string
+		msg  string
+	}{
+		{"advisory", "This endpoint requires a valid trial or paid subscription"},
+		{"backup", "V4 backups require the Exploit & Vulnerability Intelligence subscription"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			err := sdk.ReqError{StatusCode: 402, Reason: sdk.MetaError{Error: true, Errors: []string{c.msg}}}
+			got := Classify(err)
+			if got == nil {
+				t.Fatal("Classify returned nil")
+			}
+			if got.Kind != KindAuthInvalid {
+				t.Errorf("kind = %s, want %s", got.Kind, KindAuthInvalid)
+			}
+			if got.HTTPStatus != 402 {
+				t.Errorf("HTTPStatus = %d, want 402", got.HTTPStatus)
+			}
+			if !strings.Contains(got.Error(), c.msg) {
+				t.Errorf("message %q does not carry the server's wording %q", got.Error(), c.msg)
+			}
+			// Exit 3 is the point of the 402 case: without it a 402 falls to
+			// the default 4xx branch and reports exit 2, telling a script to
+			// fix its query when the problem is its entitlement.
+			if code := got.Kind.ExitCode(); code != 3 {
+				t.Errorf("exit code = %d, want 3 (auth, not bad request)", code)
+			}
+		})
+	}
+}
+
+// Every status with a case in fromReqError needs a fallback message for a body
+// that does not decode, or the user sees "errors: []".
+func TestClassifyHasAFallbackMessageForEveryMappedStatus(t *testing.T) {
+	for _, status := range []int{401, 402, 403, 404, 429} {
+		got := Classify(sdk.ReqError{StatusCode: status})
+		if got == nil {
+			t.Fatalf("status=%d: Classify returned nil", status)
+		}
+		if got.Error() == "" || strings.Contains(got.Error(), "[]") {
+			t.Errorf("status=%d: message = %q, want a human fallback", status, got.Error())
+		}
+	}
+}
+
+// A v4 string-shaped error body must survive decoding all the way to the
+// surfaced message; before MetaError.UnmarshalJSON it arrived as an empty slice.
+func TestClassifySurfacesV4StringShapedErrors(t *testing.T) {
+	var metaError sdk.MetaError
+	body := `{"error":"feed not found: \"nosuchfeed\""}`
+	if err := json.Unmarshal([]byte(body), &metaError); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	got := Classify(sdk.ReqError{StatusCode: 404, Reason: metaError})
+	if got == nil {
+		t.Fatal("Classify returned nil")
+	}
+	if got.Kind != KindNotFound {
+		t.Errorf("kind = %s, want %s", got.Kind, KindNotFound)
+	}
+	if !strings.Contains(got.Error(), "nosuchfeed") {
+		t.Errorf("message %q lost the feed name", got.Error())
 	}
 }

@@ -136,8 +136,12 @@ func HasConfig() bool {
 	return err == nil
 }
 
-// EnvToken is the environment variable consulted before the config file.
+// EnvToken is the legacy token variable, consulted first. See Resolve.
 const EnvToken = "VC_TOKEN"
+
+// EnvTokenAPI is the name shared with the VulnCheck SDKs and MCP server, and the
+// one user-facing copy should teach. EnvToken keeps precedence over it.
+const EnvTokenAPI = "VULNCHECK_API_TOKEN"
 
 // TokenSource identifies where the active token came from. The string values
 // are the agent-facing contract emitted by `auth status --json`.
@@ -146,7 +150,8 @@ type TokenSource string
 const (
 	// SourceNone means no usable token was found in either location.
 	SourceNone TokenSource = ""
-	// SourceEnv means the token came from the VC_TOKEN environment variable.
+	// SourceEnv means the token came from one of the token environment
+	// variables; Resolution.EnvVar reports which.
 	SourceEnv TokenSource = "env"
 	// SourceConfig means the token came from vulncheck.yaml.
 	SourceConfig TokenSource = "config"
@@ -160,34 +165,70 @@ type Resolution struct {
 	Token string
 	// Source says which location Token came from.
 	Source TokenSource
-	// Shadowed reports that VC_TOKEN is overriding a *different* token saved
-	// in vulncheck.yaml. Only true when both are present and their values
-	// differ — identical values cannot confuse anyone, and CI (env set, no
-	// config file) is never shadowed, so this stays quiet in automation.
+	// Shadowed reports that a token environment variable is overriding a
+	// *different* token saved in vulncheck.yaml. Only true when both are
+	// present and their values differ — identical values cannot confuse
+	// anyone, and CI (env set, no config file) is never shadowed, so this
+	// stays quiet in automation.
 	Shadowed bool
 	// ConfigToken is the token stored in vulncheck.yaml, whether or not it
 	// won. Used to report shadowing; never render it to the user.
 	ConfigToken string
+	// EnvVar names the variable Token came from, or "" when Source is not
+	// SourceEnv. Messages must use this rather than a fixed constant, or they
+	// will name the wrong variable to half the users who see them.
+	EnvVar string
+	// EnvVarsSet names every token variable holding a usable value, in
+	// precedence order; EnvVarsSet[0] == EnvVar. Hints must clear all of them —
+	// clearing only the winner hands the win to the next.
+	EnvVarsSet []string
 }
 
 // FromEnv reports whether the active token came from the environment.
 func (r Resolution) FromEnv() bool { return r.Source == SourceEnv }
 
-// Resolve determines the active token. Precedence: VC_TOKEN, then the
-// token in vulncheck.yaml. A value that fails ValidToken is treated as absent
-// in both positions, so a blank or whitespace entry in either place falls
-// through to the next source rather than being sent to the API.
+// UnsetHint names every variable to clear, as an embeddable fragment. Shell
+// neutral: `unset` is not a command on Windows, which the CLI ships binaries for.
+func (r Resolution) UnsetHint() string {
+	switch n := len(r.EnvVarsSet); n {
+	case 0:
+		return ""
+	case 1:
+		return "clear " + r.EnvVarsSet[0] + " from your environment"
+	default:
+		return "clear " + strings.Join(r.EnvVarsSet[:n-1], ", ") +
+			" and " + r.EnvVarsSet[n-1] + " from your environment"
+	}
+}
+
+// Resolve determines the active token. Precedence: EnvToken, EnvTokenAPI, then
+// vulncheck.yaml; a value failing ValidToken is absent in every position.
+// Values are trimmed as captured — net/http rejects an Authorization header
+// containing a newline, and a trailing space returns a plain 401.
+//
+// The only place the CLI reads a token environment variable. Reading one
+// elsewhere duplicates the ValidToken rule and the precedence order.
 func Resolve() Resolution {
 	var res Resolution
 
 	if config, err := loadConfig(); err == nil && ValidToken(config.Token) {
-		res.ConfigToken = config.Token
+		res.ConfigToken = strings.TrimSpace(config.Token)
 	}
 
-	if env := os.Getenv(EnvToken); ValidToken(env) {
-		res.Token = env
-		res.Source = SourceEnv
+	// Keep scanning past the winner — see EnvVarsSet.
+	for _, name := range []string{EnvToken, EnvTokenAPI} {
+		env := strings.TrimSpace(os.Getenv(name))
+		if !ValidToken(env) {
+			continue
+		}
+		res.EnvVarsSet = append(res.EnvVarsSet, name)
+		if res.Source == SourceEnv {
+			continue
+		}
+		res.Token, res.Source, res.EnvVar = env, SourceEnv, name
 		res.Shadowed = res.ConfigToken != "" && res.ConfigToken != env
+	}
+	if res.Source == SourceEnv {
 		return res
 	}
 
@@ -211,13 +252,15 @@ func HasToken() bool {
 }
 
 // SaveToken writes token to vulncheck.yaml, preserving every other setting.
+// Trimmed first: a padded paste saved verbatim fails every later run.
 func SaveToken(token string) error {
-	return mutateConfig(func(c *Config) { c.Token = token })
+	return mutateConfig(func(c *Config) { c.Token = strings.TrimSpace(token) })
 }
 
 // RemoveToken clears the saved token, preserving every other setting.
-// Note this only clears the *config file*; if VC_TOKEN is set the caller
-// remains authenticated. Check Resolve().FromEnv() before claiming otherwise.
+// Note this only clears the *config file*; if a token environment variable is
+// set the caller remains authenticated. Check Resolve().FromEnv() before
+// claiming otherwise.
 func RemoveToken() error {
 	return mutateConfig(func(c *Config) { c.Token = "" })
 }

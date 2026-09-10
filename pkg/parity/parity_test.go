@@ -13,7 +13,7 @@
 //
 // Run with:
 //
-//	VC_TOKEN=... go test -tags=parity ./pkg/parity/...
+//	VULNCHECK_API_TOKEN=... go test -tags=parity ./pkg/parity/...
 //
 // The build tag keeps this out of the default `go test ./...` run because it
 // needs a live token and locally synced indices; the test skips gracefully if
@@ -47,7 +47,7 @@ func noopProgress(int, int) {}
 func preflight(t *testing.T) cache.InfoFile {
 	t.Helper()
 	if config.Token() == "" {
-		t.Skip("parity test requires VC_TOKEN in env (or a logged-in CLI config)")
+		t.Skip("parity test requires VULNCHECK_API_TOKEN or VC_TOKEN in env (or a logged-in CLI config)")
 	}
 	indices, err := cache.Indices()
 	if err != nil {

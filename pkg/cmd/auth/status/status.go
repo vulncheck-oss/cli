@@ -24,9 +24,12 @@ type authStatus struct {
 	SchemaVersion int    `json:"schema_version"`
 	Authenticated bool   `json:"authenticated"`
 	TokenSource   string `json:"token_source,omitempty"` // "env" | "config" | ""
-	// TokenShadowed reports that VC_TOKEN is overriding a different token
-	// saved in the config file. Agents can key off this to explain why a
-	// freshly saved credential appears to have no effect.
+	// TokenEnvVar names the variable that supplied the token when TokenSource
+	// is "env". Additive: callers that only know token_source keep working.
+	TokenEnvVar string `json:"token_env_var,omitempty"` // "VC_TOKEN" | "VULNCHECK_API_TOKEN"
+	// TokenShadowed reports that a token environment variable is overriding a
+	// different token saved in the config file. Agents can key off this to
+	// explain why a freshly saved credential appears to have no effect.
 	TokenShadowed bool   `json:"token_shadowed,omitempty"`
 	User          string `json:"user,omitempty"`
 	Email         string `json:"email,omitempty"`
@@ -37,7 +40,7 @@ type authStatus struct {
 // naming the concrete location so the user knows where to go and change it.
 func tokenSourceLabel(res config.Resolution) string {
 	if res.FromEnv() {
-		return config.EnvToken + " environment variable"
+		return res.EnvVar + " environment variable"
 	}
 	if dir, err := config.Dir(); err == nil {
 		return dir + "/vulncheck.yaml"
@@ -80,6 +83,7 @@ func Command() *cobra.Command {
 					s := newAuthStatus()
 					s.Authenticated = false
 					s.TokenSource = string(res.Source)
+					s.TokenEnvVar = res.EnvVar
 					s.TokenShadowed = res.Shadowed
 					s.Reason = reason
 					return r.JSON(s)
@@ -91,20 +95,19 @@ func Command() *cobra.Command {
 				s := newAuthStatus()
 				s.Authenticated = true
 				s.TokenSource = string(res.Source)
+				s.TokenEnvVar = res.EnvVar
 				s.TokenShadowed = res.Shadowed
 				s.User = resp.Data.Name
 				s.Email = resp.Data.Email
 				return r.JSON(s)
 			}
 
-			// Human output: name the source explicitly. Which of the two
-			// places the token came from is the single most useful fact when
-			// an unexpected account or a stale credential is in play, and it
-			// was previously only visible via --json.
+			// The most useful fact when an unexpected account is in play.
 			r.Stat("Token source", tokenSourceLabel(res))
+			// Reported, not instructed: nothing failed, and an environment
+			// token winning is usually deliberate.
 			if res.Shadowed {
-				r.Warn("%s is overriding a different token saved in your config file; run `unset %s` to use the saved one.",
-					config.EnvToken, config.EnvToken)
+				r.Warn("%s is overriding a different token saved in your config file.", res.EnvVar)
 			}
 
 			return login.SaveToken(res.Token)
