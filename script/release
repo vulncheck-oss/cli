@@ -1,115 +1,304 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+# usage: script/release [--dry-run] [--skip-windows] [--signed-dir <dir>] <tag>
+#
+# Cuts a release, start to finish, on this machine.
+#
+#   script/release v1.2.0
+#
+# Runs on macOS only: codesign, notarytool and spctl are the only way to sign and then confirm
+# notarization, and there is no cross-platform substitute.
+#
+# Windows binaries are signed out of band — the key is held in hardware and cannot be reached from
+# here. The script pauses at that point, hands you the three executables and their hashes, and
+# waits. Sign them per the release runbook, drop the results in the directory it names, and it
+# carries on: countersigning, repackaging, checksumming, verifying and publishing.
+#
+# Nothing is pushed or published until every artifact has passed verification. Use --dry-run to
+# rehearse: it does the full build, signing and verification and stops before the tag is pushed.
+set -euo pipefail
 
-print_help() {
-    cat <<EOF
-To tag a new release:
-  script/release [--staging] <tag-name> [--platform {linux|macos|windows}] [--branch <branch>]
+cd "$(dirname "$0")/.."
 
-To build staging binaries from the current branch:
-  script/release --current [--platform {linux|macos|windows}]
+REPO="${REPO:-vulncheck-oss/cli}"
+EXPECTED_SIGNER="${EXPECTED_SIGNER:-VULNCHECK INC.}"
+ARCHES=(386 amd64 arm64)
 
-To build binaries locally with goreleaser:
-  script/release --local --platform {linux|macos|windows}
+DRY_RUN=false
+SKIP_WINDOWS=false
+SIGNED_DIR=""
+TAG=""
+
+usage() {
+  cat >&2 <<'EOF'
+Usage: script/release [--dry-run] [--skip-windows] [--signed-dir <dir>] <tag>
+
+  e.g. script/release v1.2.0
+       script/release --dry-run v1.2.0
+       script/release --signed-dir ~/signing/out v1.2.0
+
+  --dry-run        build, sign and verify, but do not push the tag or publish
+  --skip-windows   release Linux and macOS only, omitting the Windows archives
+  --signed-dir     where the signed Windows executables will be; if omitted the
+                   script prompts for it when it gets there (default dist/signed)
 EOF
-}
-
-if [ $# -eq 0 ]; then
-  print_help >&2
   exit 1
-fi
-
-tag_name=""
-is_local=""
-do_push=""
-platform=""
-branch="main"
-deploy_env="production"
+}
 
 while [ $# -gt 0 ]; do
   case "$1" in
-  -h | --help )
-    print_help
-    exit 0
-    ;;
-  -b | --branch )
-    branch="$2"
-    shift 2
-    ;;
-  -p | --platform )
-    platform="$2"
-    shift 2
-    ;;
-  --local )
-    is_local=1
-    shift 1
-    ;;
-  --staging )
-    deploy_env="staging"
-    shift 1
-    ;;
-  --current )
-    deploy_env="staging"
-    tag_name="$(git describe --tags --abbrev=0)"
-    branch="$(git rev-parse --symbolic-full-name '@{upstream}' 2>/dev/null || git branch --show-current)"
-    branch="${branch#refs/remotes/*/}"
-    do_push=1
-    shift 1
-    ;;
-  -* )
-    printf "unrecognized flag: %s\n" "$1" >&2
-    exit 1
-    ;;
-  * )
-    tag_name="$1"
-    shift 1
-    ;;
+  --dry-run) DRY_RUN=true; shift ;;
+  --skip-windows) SKIP_WINDOWS=true; shift ;;
+  --signed-dir) SIGNED_DIR="${2:-}"; shift 2 ;;
+  -h | --help) usage ;;
+  v*) TAG="$1"; shift ;;
+  *) usage ;;
   esac
 done
 
-announce() {
-  local tmpdir="${TMPDIR:-/tmp}"
-  echo "$*" | sed "s:${tmpdir%/}:\$TMPDIR:"
-  "$@"
-}
+[ -n "$TAG" ] || usage
 
-trigger_deployment() {
-  announce gh workflow -R vulncheck-oss/cli run deployment.yml --ref "$branch" -f tag_name="$tag_name" -f environment="$deploy_env"
-}
-
-build_local() {
-  local goreleaser_config=".goreleaser.yml"
-  case "$platform" in
-  linux )
-    sed '/#build:windows/,/^$/d; /#build:macos/,/^$/d' .goreleaser.yml >.goreleaser.generated.yml
-    goreleaser_config=".goreleaser.generated.yml"
-    ;;
-  macos )
-    sed '/#build:windows/,/^$/d; /#build:linux/,/^$/d' .goreleaser.yml >.goreleaser.generated.yml
-    goreleaser_config=".goreleaser.generated.yml"
-    ;;
-  windows )
-    sed '/#build:linux/,/^$/d; /#build:macos/,/^$/d' .goreleaser.yml >.goreleaser.generated.yml
-    goreleaser_config=".goreleaser.generated.yml"
-    ;;
-  esac
-  [ -z "$tag_name" ] || export GORELEASER_CURRENT_TAG="$tag_name"
-  announce goreleaser release -f "$goreleaser_config" --clean --skip=validate --skip=publish --release-notes="$(mktemp)"
-}
-
-if [ -n "$is_local" ]; then
-  build_local
-else
-  if [ -n "$do_push" ]; then
-    if ! git diff --quiet || ! git diff --cached --quiet; then
-      echo "refusing to continue due to uncommitted local changes" >&2
-      exit 1
-    fi
-    announce git push
-  fi
-  trigger_deployment
-  if [ "$deploy_env" = "production" ]; then
-    echo
-    echo "Go to Slack to manually approve this production deployment."
-  fi
+if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+  echo "error: tag must match vMAJOR.MINOR.PATCH[-prerelease] (got: $TAG)" >&2
+  exit 1
 fi
+
+VERSION="${TAG#v}"
+UNSIGNED_DIR="dist/unsigned"
+
+step() { printf '\n\033[1m==> %s\033[0m\n' "$1"; }
+info() { printf '    %s\n' "$1"; }
+warn() { printf '\033[33mwarning:\033[0m %s\n' "$1" >&2; }
+die()  { printf '\033[31merror:\033[0m %s\n' "$1" >&2; exit 1; }
+
+# Repository-state checks that only matter because a release gets published. A dry run is a
+# rehearsal, so they warn rather than stop — which is what makes it possible to rehearse from a
+# feature branch. A dry run cannot publish regardless: it exits before the tag is pushed.
+gate() { if [ "$DRY_RUN" = "true" ]; then warn "$1"; else die "$1"; fi; }
+
+# ---------------------------------------------------------------------------
+step "Pre-flight"
+# ---------------------------------------------------------------------------
+[ "$(uname -s)" = "Darwin" ] || die "must run on macOS (codesign/notarytool/spctl are required)"
+
+# Signing credentials normally live in a gitignored .env. Load it so the operator does not have to
+# remember to, and so a missing value is reported here rather than mid-build.
+if [ -f .env ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . ./.env
+  set +a
+  info ".env loaded"
+fi
+
+needed=(goreleaser gh git shasum zip unzip openssl)
+[ "$SKIP_WINDOWS" = "true" ] || needed+=(osslsigncode)
+for tool in "${needed[@]}"; do
+  command -v "$tool" >/dev/null 2>&1 || die "$tool not found in PATH"
+done
+info "tools present: ${needed[*]}"
+
+gh auth status >/dev/null 2>&1 || die "gh is not authenticated (gh auth login)"
+
+: "${APPLE_DEVELOPER_ID:?APPLE_DEVELOPER_ID not set — needed to codesign}"
+: "${APPLE_ID:?APPLE_ID not set — needed to notarize}"
+: "${APPLE_ID_PASSWORD:?APPLE_ID_PASSWORD not set — needed to notarize}"
+security find-identity -v -p codesigning 2>/dev/null | grep -q "$APPLE_DEVELOPER_ID" \
+  || die "no codesigning identity matching '$APPLE_DEVELOPER_ID' in the keychain"
+info "signing identity: $(security find-identity -v -p codesigning | sed -n 's/.*"\(.*\)".*/\1/p' | head -1)"
+
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+[ "$BRANCH" = "main" ] || gate "must be on main (currently on '$BRANCH')"
+[ -z "$(git status --porcelain)" ] || gate "working tree is dirty — commit or stash first"
+
+git fetch origin main --quiet
+[ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] \
+  || gate "local main is out of sync with origin/main — pull first"
+
+git rev-parse "$TAG" >/dev/null 2>&1 && die "tag $TAG already exists locally"
+git ls-remote --exit-code --tags origin "$TAG" >/dev/null 2>&1 && die "tag $TAG already exists on origin"
+gh release view "$TAG" -R "$REPO" >/dev/null 2>&1 && die "a release for $TAG already exists"
+
+info "branch: $BRANCH @ $(git rev-parse --short HEAD)"
+
+echo ""
+info "  version: $TAG"
+info "     repo: $REPO"
+info "  windows: $([ "$SKIP_WINDOWS" = "true" ] && echo "SKIPPED" || echo "signed out of band")"
+info " dry-run?: $DRY_RUN"
+echo ""
+read -r -p "Build and sign $TAG? [y/N] " confirm
+[[ "$confirm" =~ ^[Yy]$ ]] || exit 0
+
+# The tag is created locally so GoReleaser embeds the right version, and pushed only at the very
+# end. A failure anywhere below leaves nothing on the remote to clean up.
+git tag -a "$TAG" -m "Release $TAG"
+trap 'if [ "${PUSHED:-false}" = "false" ]; then git tag -d "$TAG" >/dev/null 2>&1 || true; fi' EXIT
+
+# ---------------------------------------------------------------------------
+step "Building all nine artifacts"
+# ---------------------------------------------------------------------------
+# script/sign runs as a post-build hook on each macOS binary. Windows has no hook.
+GORELEASER_CURRENT_TAG="$TAG" REQUIRE_SIGNING=1 \
+  goreleaser release --clean --skip=publish
+
+# ---------------------------------------------------------------------------
+step "Notarizing macOS archives"
+# ---------------------------------------------------------------------------
+# Blocks until Apple returns a verdict, and fails on anything but Accepted.
+REQUIRE_SIGNING=1 script/sign dist/vulncheck_"${VERSION}"_macOS_*.zip
+
+# ---------------------------------------------------------------------------
+if [ "$SKIP_WINDOWS" = "true" ]; then
+  step "Windows"
+  info "skipped — removing the unsigned Windows archives so they cannot be published"
+  rm -f dist/vulncheck_"${VERSION}"_windows_*.zip
+else
+  # -------------------------------------------------------------------------
+  step "Handing off the Windows executables for signing"
+  # -------------------------------------------------------------------------
+  rm -rf "$UNSIGNED_DIR"
+  mkdir -p "$UNSIGNED_DIR"
+
+  # Named by architecture so the signing step, which writes signed-<name>.exe, produces
+  # distinguishable outputs for all three.
+  for arch in "${ARCHES[@]}"; do
+    src="$(ls -d dist/windows_windows_"${arch}"*/bin/vulncheck.exe 2>/dev/null | head -1)"
+    [ -n "$src" ] || die "no built Windows executable for $arch"
+    cp "$src" "$UNSIGNED_DIR/vulncheck_${arch}.exe"
+  done
+
+  echo ""
+  info "Unsigned executables are in $UNSIGNED_DIR:"
+  echo ""
+  ( cd "$UNSIGNED_DIR" && shasum -a 256 ./*.exe | sed 's/^/    /' )
+  echo ""
+  info "Signing attests to whatever bytes are in the file — check these hashes against"
+  info "what the signing host reports before you approve anything."
+  echo ""
+
+  if [ -z "$SIGNED_DIR" ]; then
+    read -r -p "Where will the signed executables be? [dist/signed] " SIGNED_DIR
+    SIGNED_DIR="${SIGNED_DIR:-dist/signed}"
+  fi
+  mkdir -p "$SIGNED_DIR"
+
+  info "Sign the three executables per the release runbook, then put the results in:"
+  info "  $SIGNED_DIR"
+  info "named signed-vulncheck_<arch>.exe or vulncheck_<arch>.exe"
+
+  # Wait rather than exit, so one invocation carries the release from build to publish.
+  declare -a SRC
+  while true; do
+    echo ""
+    read -r -p "Press enter once they are in place (or 'q' to abort) " answer
+    [ "$answer" = "q" ] && die "aborted before signing completed"
+
+    SRC=()
+    missing=()
+    for arch in "${ARCHES[@]}"; do
+      found=""
+      for candidate in "$SIGNED_DIR/signed-vulncheck_${arch}.exe" "$SIGNED_DIR/vulncheck_${arch}.exe"; do
+        [ -f "$candidate" ] && { found="$candidate"; break; }
+      done
+      if [ -n "$found" ]; then SRC+=("$found"); else missing+=("$arch"); fi
+    done
+
+    [ "${#missing[@]}" -eq 0 ] && break
+    info "still missing: ${missing[*]}"
+  done
+
+  # -------------------------------------------------------------------------
+  step "Checking the signatures"
+  # -------------------------------------------------------------------------
+  for i in "${!ARCHES[@]}"; do
+    arch="${ARCHES[$i]}"
+    out="$(osslsigncode verify "${SRC[$i]}" 2>&1 || true)"
+
+    current="$(sed -n 's/^Current message digest *: *//p' <<<"$out" | head -1)"
+    calculated="$(sed -n 's/^Calculated message digest *: *//p' <<<"$out" | head -1)"
+    [ -n "$current" ] && [ "$current" = "$calculated" ] \
+      || die "$arch carries no valid signature — was it actually signed?"
+
+    # The digest check alone would not catch signing with the wrong certificate. The chain itself
+    # cannot be validated here without a local CA bundle.
+    grep -q "$EXPECTED_SIGNER" <<<"$out" || die "$arch was not signed by '$EXPECTED_SIGNER'"
+
+    info "$arch: signed by $EXPECTED_SIGNER, digest matches"
+  done
+
+  # -------------------------------------------------------------------------
+  step "Countersigning and repackaging"
+  # -------------------------------------------------------------------------
+  for i in "${!ARCHES[@]}"; do
+    arch="${ARCHES[$i]}"
+
+    zipname="vulncheck_${VERSION}_windows_${arch}.zip"
+    [ -f "dist/$zipname" ] || die "GoReleaser did not produce dist/$zipname"
+
+    # Start from the archive GoReleaser already built and swap in the signed executable, rather
+    # than assembling one here. Anything else the archive is meant to carry — the licence, the
+    # PowerShell completion — comes along without this having to know about it, so the contents
+    # cannot drift out of step with .goreleaser.yml.
+    stage="$(mktemp -d)"
+    ( cd "$stage" && unzip -q "$OLDPWD/dist/$zipname" )
+    cp "${SRC[$i]}" "$stage/bin/vulncheck.exe"
+
+    # Timestamp the staged copy, leaving the operator's originals untouched. script/sign refuses
+    # to emit an untimestamped signature: without the countersignature every signature stops
+    # validating the day the certificate expires, including binaries released years earlier.
+    script/sign "$stage/bin/vulncheck.exe"
+
+    rm -f "dist/$zipname"
+    ( cd "$stage" && zip -qr "$OLDPWD/dist/$zipname" -- * )
+    rm -rf "$stage"
+    info "$zipname ($(unzip -Z1 "dist/$zipname" | grep -c . ) entries)"
+  done
+fi
+
+# ---------------------------------------------------------------------------
+step "Regenerating the checksum manifest"
+# ---------------------------------------------------------------------------
+# GoReleaser's manifest covered the unsigned Windows archives, so it is rebuilt over what is
+# actually about to be published. `shasum -a 256` output is byte-identical to its format.
+( cd dist && shasum -a 256 \
+    vulncheck_"${VERSION}"_*.tar.gz \
+    vulncheck_"${VERSION}"_*.zip > "vulncheck_${VERSION}_checksums.txt" )
+info "vulncheck_${VERSION}_checksums.txt ($(grep -c . "dist/vulncheck_${VERSION}_checksums.txt") entries)"
+
+# ---------------------------------------------------------------------------
+step "Verifying everything"
+# ---------------------------------------------------------------------------
+if [ "$SKIP_WINDOWS" = "true" ]; then
+  script/verify-release --no-windows "$TAG"
+else
+  script/verify-release "$TAG"
+fi
+
+# ---------------------------------------------------------------------------
+if [ "$DRY_RUN" = "true" ]; then
+  step "Dry run complete"
+  info "Everything built, signed and verified. Nothing pushed or published."
+  info "Artifacts are in dist/. Re-run without --dry-run to release $TAG."
+  exit 0
+fi
+
+step "Publishing"
+echo ""
+read -r -p "Push $TAG and publish the release? [y/N] " confirm
+[[ "$confirm" =~ ^[Yy]$ ]] || exit 0
+
+git push origin "$TAG"
+PUSHED=true
+
+release_args=("$TAG" --title "VulnCheck CLI ${VERSION}" --generate-notes)
+[[ "$TAG" == *-* ]] && release_args+=(--prerelease)
+
+gh release create "${release_args[@]}" -R "$REPO" \
+  dist/vulncheck_"${VERSION}"_*.tar.gz \
+  dist/vulncheck_"${VERSION}"_*.zip \
+  "dist/vulncheck_${VERSION}_checksums.txt"
+
+echo ""
+info "Done. https://github.com/$REPO/releases/tag/$TAG"
+[ "$SKIP_WINDOWS" = "true" ] && info "Note: released without Windows archives."
+exit 0

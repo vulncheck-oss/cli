@@ -28,10 +28,11 @@ manpages: script/build$(EXE)
 
 .PHONY: completions
 completions: bin/vulncheck$(EXE)
-	mkdir -p ./share/bash-completion/completions ./share/fish/vendor_completions.d ./share/zsh/site-functions
+	mkdir -p ./share/bash-completion/completions ./share/fish/vendor_completions.d ./share/zsh/site-functions ./share/powershell
 	bin/vulncheck$(EXE) completion bash > ./share/bash-completion/completions/vulncheck
 	bin/vulncheck$(EXE) completion fish > ./share/fish/vendor_completions.d/vulncheck.fish
 	bin/vulncheck$(EXE) completion zsh  > ./share/zsh/site-functions/_vulncheck
+	bin/vulncheck$(EXE) completion powershell > ./share/powershell/vulncheck.ps1
 
 # just a convenience task around `go test`
 .PHONY: test

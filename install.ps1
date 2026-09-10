@@ -40,6 +40,17 @@ New-Item -ItemType Directory -Path $installPath -Force | Out-Null
 
 Move-Item -Path $exePath -Destination $installPath -Force
 
+# The archive also carries the PowerShell completion script under share\. Install it alongside the
+# binary: without this it ships in the zip, is left behind in TEMP, and the completion path the
+# README documents never exists.
+$shareSrc = Get-ChildItem -Path $extractPath -Directory -Filter "share" -Recurse |
+    Select-Object -First 1 -ExpandProperty FullName
+if ($shareSrc) {
+    $shareDest = Join-Path $installPath "share"
+    if (Test-Path $shareDest) { Remove-Item -Path $shareDest -Recurse -Force }
+    Copy-Item -Path $shareSrc -Destination $shareDest -Recurse -Force
+}
+
 $envPath = [Environment]::GetEnvironmentVariable("Path", "User")
 if ($envPath -notlike "*$installPath*") {
     [Environment]::SetEnvironmentVariable("Path", "$envPath;$installPath", "User")
@@ -47,3 +58,10 @@ if ($envPath -notlike "*$installPath*") {
 
 Write-Host "Vulncheck CLI has been installed to $installPath"
 Write-Host "You may need to restart your shell for the changes to take effect"
+
+$completion = Join-Path $installPath "share\powershell\vulncheck.ps1"
+if (Test-Path $completion) {
+    Write-Host ""
+    Write-Host "To enable tab completion, add this to your PowerShell profile:"
+    Write-Host "  Add-Content -Path `$PROFILE -Value `". '$completion'`""
+}

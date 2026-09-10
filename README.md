@@ -48,6 +48,12 @@ Open PowerShell and run:
 iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/vulncheck-oss/cli/main/install.ps1'))
 ```
 
+To enable tab completion, dot-source the bundled script from your PowerShell profile:
+
+```powershell
+Add-Content -Path $PROFILE -Value ". '$env:LOCALAPPDATA\Programs\vulncheck\share\powershell\vulncheck.ps1'"
+```
+
 `vulncheck` binaries are also available for MacOS, Linux, and Windows. You can download precompiled binaries from our [releases page](https://github.com/vulncheck-oss/cli/releases/latest)
 
 ### Verify the installation

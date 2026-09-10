@@ -1,9 +1,12 @@
+version: 2
+
 project_name: vulncheck
 
+# Publishing is handled by script/release, which runs `goreleaser release --skip=publish` and
+# only creates the GitHub release once signing, notarization and verification have all passed.
+# Disabling it here means a stray `goreleaser release` cannot publish anything by accident.
 release:
-  prerelease: auto
-  draft: true # we only publish after the Windows MSI gets uploaded
-  name_template: "VulnCheck CLI {{.Version}}"
+  disable: true
 
 before:
   hooks:
@@ -15,9 +18,11 @@ before:
       {{ if eq .Runtime.Goos "windows" }}echo{{ end }} make completions
 
 builds:
-  - id: macos #build:macos
+  - id: macos
     goos: [darwin]
     goarch: [amd64, arm64]
+    env:
+      - CGO_ENABLED=0
     hooks:
       post:
         - cmd: ./script/sign '{{ .Path }}'
@@ -27,7 +32,7 @@ builds:
     ldflags:
       - -s -w -X github.com/vulncheck-oss/cli/internal/build.Version={{.Version}} -X github.com/vulncheck-oss/cli/internal/build.Date={{time "2006-01-02"}}
 
-  - id: linux #build:linux
+  - id: linux
     goos: [linux]
     goarch: [386, arm, amd64, arm64]
     env:
@@ -37,14 +42,12 @@ builds:
     ldflags:
       - -s -w -X github.com/vulncheck-oss/cli/internal/build.Version={{.Version}} -X github.com/vulncheck-oss/cli/internal/build.Date={{time "2006-01-02"}}
 
-  - id: windows #build:windows
+  # No signing hook: Windows binaries are signed out of band. See script/release.
+  - id: windows
     goos: [windows]
     goarch: [386, amd64, arm64]
-    hooks:
-      post:
-        - cmd: >-
-            {{ if eq .Runtime.Goos "windows" }}pwsh .\script\sign.ps1{{ else }}./script/sign{{ end }} '{{ .Path }}'
-          output: true
+    env:
+      - CGO_ENABLED=0
     binary: bin/vulncheck
     main: ./cmd/vulncheck
     ldflags:
@@ -52,10 +55,10 @@ builds:
 
 archives:
   - id: linux-archive
-    builds: [linux]
+    ids: [linux]
     name_template: "vulncheck_{{ .Version }}_linux_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     wrap_in_directory: true
-    format: tar.gz
+    formats: [tar.gz]
     files:
       - LICENSE
       - ./share/man/man1/vulncheck*.1
@@ -63,10 +66,10 @@ archives:
       - ./share/fish/vendor_completions.d/vulncheck.fish
       - ./share/zsh/site-functions/_vulncheck
   - id: macos-archive
-    builds: [macos]
+    ids: [macos]
     name_template: "vulncheck_{{ .Version }}_macOS_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     wrap_in_directory: true
-    format: zip
+    formats: [zip]
     files:
       - LICENSE
       - ./share/man/man1/vulncheck*.1
@@ -74,30 +77,16 @@ archives:
       - ./share/fish/vendor_completions.d/vulncheck.fish
       - ./share/zsh/site-functions/_vulncheck
   - id: windows-archive
-    builds: [windows]
+    ids: [windows]
     name_template: "vulncheck_{{ .Version }}_windows_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     wrap_in_directory: false
-    format: zip
+    formats: [zip]
     files:
       - LICENSE
+      # The other shells' completions are Unix-only, so Windows ships the PowerShell one.
+      # Man pages are omitted deliberately: there is no man on Windows.
+      - ./share/powershell/vulncheck.ps1
 
-nfpms: #build:linux
-  - license: MIT
-    maintainer: GitHub
-    homepage: https://github.com/vulncheck-oss/cli
-    bindir: /usr
-    dependencies:
-      - git
-    description: VulnCheck's official command line tool.
-    formats:
-      - deb
-      - rpm
-    contents:
-      - src: "./share/man/man1/vulncheck*.1"
-        dst: "/usr/share/man/man1"
-      - src: "./share/bash-completion/completions/vulncheck"
-        dst: "/usr/share/bash-completion/completions/vulncheck"
-      - src: "./share/fish/vendor_completions.d/vulncheck.fish"
-        dst: "/usr/share/fish/vendor_completions.d/vulncheck.fish"
-      - src: "./share/zsh/site-functions/_vulncheck"
-        dst: "/usr/share/zsh/site-functions/_vulncheck"
+# script/release and script/verify-release both depend on this exact filename.
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
