@@ -177,14 +177,17 @@ else
   echo ""
 
   if [ -z "$SIGNED_DIR" ]; then
-    read -r -p "Where will the signed executables be? [dist/signed] " SIGNED_DIR
-    SIGNED_DIR="${SIGNED_DIR:-dist/signed}"
+    # Defaults to the directory the unsigned executables are in, because the signing step writes
+    # its output alongside its input. Signing them where they sit means nothing has to be copied.
+    read -r -p "Where will the signed executables be? [$UNSIGNED_DIR] " SIGNED_DIR
+    SIGNED_DIR="${SIGNED_DIR:-$UNSIGNED_DIR}"
   fi
   mkdir -p "$SIGNED_DIR"
 
-  info "Sign the three executables per the release runbook, then put the results in:"
+  info "Sign those executables per the release runbook. The signing step writes its output"
+  info "next to its input, so pointing it at the files above leaves the results here:"
   info "  $SIGNED_DIR"
-  info "named signed-vulncheck_<arch>.exe or vulncheck_<arch>.exe"
+  info "as signed-vulncheck_<arch>.exe. Nothing needs copying."
 
   # Wait rather than exit, so one invocation carries the release from build to publish.
   declare -a SRC
@@ -197,7 +200,16 @@ else
     missing=()
     for arch in "${ARCHES[@]}"; do
       found=""
-      for candidate in "$SIGNED_DIR/signed-vulncheck_${arch}.exe" "$SIGNED_DIR/vulncheck_${arch}.exe"; do
+      # signed-<name>.exe is what the signing step writes. The bare name is also accepted, but
+      # only when the signed files are somewhere other than where the unsigned ones were put --
+      # in that directory the bare name IS the unsigned file, and picking it up would package an
+      # unsigned binary. The signature check downstream would catch it, but with a confusing
+      # error rather than this never happening.
+      candidates=("$SIGNED_DIR/signed-vulncheck_${arch}.exe")
+      if [ "$(cd "$SIGNED_DIR" && pwd)" != "$(cd "$UNSIGNED_DIR" && pwd)" ]; then
+        candidates+=("$SIGNED_DIR/vulncheck_${arch}.exe")
+      fi
+      for candidate in "${candidates[@]}"; do
         [ -f "$candidate" ] && { found="$candidate"; break; }
       done
       if [ -n "$found" ]; then SRC+=("$found"); else missing+=("$arch"); fi
