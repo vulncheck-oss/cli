@@ -220,6 +220,32 @@ else
     chmod +x "$INSTALL_DIR/vulncheck"
 fi
 
+# Install the bundled man pages and shell completions. The archive's share/ tree already mirrors
+# the layout these belong in, so it copies across wholesale. Without this the binary installs
+# fine but `man vulncheck` and tab completion silently do not work, even though the files were
+# sitting in the archive all along.
+SHARE_DIR=""
+if [[ -d "$EXTRACTED_FOLDER/share" ]]; then
+    if [[ "$OS" == "Windows" ]]; then
+        # Alongside the binary, matching install.ps1.
+        SHARE_DIR="$INSTALL_DIR/share"
+        mkdir -p "$SHARE_DIR"
+        cp -R "$EXTRACTED_FOLDER/share/." "$SHARE_DIR/"
+    else
+        # INSTALL_DIR is a bin directory, so these belong one level up beside it:
+        # /usr/local/bin -> /usr/local/share, ~/.local/bin -> ~/.local/share
+        SHARE_DIR="$(dirname "$INSTALL_DIR")/share"
+        echo "Installing man pages and completions to $SHARE_DIR..."
+        if [[ "$SYSTEM_WIDE" == true ]]; then
+            sudo mkdir -p "$SHARE_DIR"
+            sudo cp -R "$EXTRACTED_FOLDER/share/." "$SHARE_DIR/"
+        else
+            mkdir -p "$SHARE_DIR"
+            cp -R "$EXTRACTED_FOLDER/share/." "$SHARE_DIR/"
+        fi
+    fi
+fi
+
 # Clean up
 cd ..
 rm -rf "$TEMP_DIR"
@@ -260,5 +286,16 @@ else
         echo "  $INSTALL_DIR/vulncheck"
     else
         echo "You can now use 'vulncheck' command."
+    fi
+
+    if [[ -n "$SHARE_DIR" ]]; then
+        echo ""
+        echo "Man pages and completions were installed to $SHARE_DIR."
+        if [[ "$SHELL" == *zsh* ]]; then
+            echo ""
+            echo "zsh only loads completions from directories in its fpath. If tab completion"
+            echo "doesn't work, add this to ~/.zshrc before 'compinit':"
+            echo "  fpath=($SHARE_DIR/zsh/site-functions \$fpath)"
+        fi
     fi
 fi
