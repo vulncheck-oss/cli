@@ -2,10 +2,9 @@ version: 2
 
 project_name: vulncheck
 
-# Publishing is handled by .github/workflows/release.yml, which runs
-# `goreleaser release --skip=publish` and only creates the GitHub release once
-# notarization and signature verification have passed. Disabling it here means a
-# stray local `goreleaser release` cannot publish anything by accident.
+# Publishing is handled by script/release, which runs `goreleaser release --skip=publish` and
+# only creates the GitHub release once signing, notarization and verification have all passed.
+# Disabling it here means a stray `goreleaser release` cannot publish anything by accident.
 release:
   disable: true
 
@@ -43,7 +42,7 @@ builds:
     ldflags:
       - -s -w -X github.com/vulncheck-oss/cli/internal/build.Version={{.Version}} -X github.com/vulncheck-oss/cli/internal/build.Date={{time "2006-01-02"}}
 
-  # No signing hook: Windows binaries are signed out of band. See script/finish-windows-release.
+  # No signing hook: Windows binaries are signed out of band. See script/release.
   - id: windows
     goos: [windows]
     goarch: [386, amd64, arm64]
@@ -85,6 +84,6 @@ archives:
     files:
       - LICENSE
 
-# script/verify-release and the release workflow both depend on this exact filename.
+# script/release and script/verify-release both depend on this exact filename.
 checksum:
   name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"

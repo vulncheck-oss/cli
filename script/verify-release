@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# usage: script/verify-release <tag>
+# usage: script/verify-release [--no-windows] <tag>
 #
 # Verifies the artifacts in dist/ before anything is published. This encodes the checks that used
 # to be run by hand after every build:
@@ -17,9 +17,7 @@ TAG=""
 NO_WINDOWS=false
 for arg in "$@"; do
   case "$arg" in
-  # Used by the release workflow, which runs before Windows signing has happened: those keys are
-  # not available to CI. The Windows archives are assembled later by
-  # script/finish-windows-release, which runs these checks in full.
+  # Skips the Windows assertions, for a release that omits the Windows archives entirely.
   --no-windows) NO_WINDOWS=true ;;
   v*) TAG="$arg" ;;
   *)
@@ -132,8 +130,8 @@ for arch in arm64 amd64; do
     fail "macOS $arch: no secure timestamp on signature"
   fi
 
-  # Only execute the slice built for this runner's architecture. Running the other one would
-  # depend on Rosetta, which is not guaranteed to be installed on a CI runner.
+  # Only execute the slice built for this machine's architecture. Running the other one would
+  # depend on Rosetta, which is not guaranteed to be installed.
   if { [ "$arch" = "arm64" ] && [ "$HOST_ARCH" = "arm64" ]; } ||
      { [ "$arch" = "amd64" ] && [ "$HOST_ARCH" = "x86_64" ]; }; then
     reported="$("$bin" version 2>&1 || true)"
@@ -165,7 +163,7 @@ done
 echo ""
 echo "Windows signing"
 if [ "$NO_WINDOWS" = "true" ]; then
-  echo "  skipped — signed out of band, verified by finish-windows-release"
+  echo "  skipped — not part of this release"
 elif ! command -v osslsigncode >/dev/null 2>&1; then
   fail "osslsigncode not installed — cannot verify Windows signatures"
 else
