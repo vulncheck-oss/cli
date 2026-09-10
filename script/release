@@ -67,7 +67,13 @@ UNSIGNED_DIR="dist/unsigned"
 
 step() { printf '\n\033[1m==> %s\033[0m\n' "$1"; }
 info() { printf '    %s\n' "$1"; }
+warn() { printf '\033[33mwarning:\033[0m %s\n' "$1" >&2; }
 die()  { printf '\033[31merror:\033[0m %s\n' "$1" >&2; exit 1; }
+
+# Repository-state checks that only matter because a release gets published. A dry run is a
+# rehearsal, so they warn rather than stop — which is what makes it possible to rehearse from a
+# feature branch. A dry run cannot publish regardless: it exits before the tag is pushed.
+gate() { if [ "$DRY_RUN" = "true" ]; then warn "$1"; else die "$1"; fi; }
 
 # ---------------------------------------------------------------------------
 step "Pre-flight"
@@ -101,18 +107,18 @@ security find-identity -v -p codesigning 2>/dev/null | grep -q "$APPLE_DEVELOPER
 info "signing identity: $(security find-identity -v -p codesigning | sed -n 's/.*"\(.*\)".*/\1/p' | head -1)"
 
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-[ "$BRANCH" = "main" ] || die "must be on main (currently on '$BRANCH')"
-[ -z "$(git status --porcelain)" ] || die "working tree is dirty — commit or stash first"
+[ "$BRANCH" = "main" ] || gate "must be on main (currently on '$BRANCH')"
+[ -z "$(git status --porcelain)" ] || gate "working tree is dirty — commit or stash first"
 
 git fetch origin main --quiet
 [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] \
-  || die "local main is out of sync with origin/main — pull first"
+  || gate "local main is out of sync with origin/main — pull first"
 
 git rev-parse "$TAG" >/dev/null 2>&1 && die "tag $TAG already exists locally"
 git ls-remote --exit-code --tags origin "$TAG" >/dev/null 2>&1 && die "tag $TAG already exists on origin"
 gh release view "$TAG" -R "$REPO" >/dev/null 2>&1 && die "a release for $TAG already exists"
 
-info "branch: main @ $(git rev-parse --short HEAD), clean and in sync"
+info "branch: $BRANCH @ $(git rev-parse --short HEAD)"
 
 echo ""
 info "  version: $TAG"
