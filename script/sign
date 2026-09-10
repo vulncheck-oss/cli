@@ -1,8 +1,13 @@
 #!/bin/bash
 # usage: script/sign <file>...
 #
-# Signs macOS binaries using codesign, notarizes macOS zip archives using notarytool, and signs
-# Windows EXE and MSI files using osslsigncode.
+# macOS binaries      -> codesign
+# macOS zip archives  -> notarytool, blocking until Apple returns a verdict
+# Windows .exe/.msi   -> RFC3161 countersignature only (see below)
+#
+# Windows binaries are NOT signed here; that happens out of band, on a host with no route to the
+# internet. It therefore cannot timestamp, so an exe arrives here already signed and needing only
+# the countersignature — which requires no key and no certificate.
 #
 # Set REQUIRE_SIGNING=1 to turn "credentials missing" from a skip into an error. CI sets this so
 # that a missing secret fails the release rather than silently shipping unsigned binaries.
@@ -12,22 +17,17 @@ set -e
 # RFC3161 timestamp authorities, tried in order until one returns a token.
 #
 # Without a countersignature, Authenticode validates the signing certificate against the current
-# time rather than the signing time, so the signature stops being trusted the moment the
-# certificate expires. Timestamping cannot be self-hosted: Windows only honours a token whose TSA
-# certificate carries the Time Stamping EKU and chains to a root in the Microsoft Trusted Root
-# Program, so it has to come from a publicly trusted authority.
+# time rather than the signing time, so every signature stops validating the day the certificate
+# expires — including binaries released years earlier. Timestamping cannot be self-hosted: Windows
+# only honours a token whose TSA certificate carries the Time Stamping EKU and chains to a root in
+# the Microsoft Trusted Root Program.
 #
-# GlobalSign is first because it issued our signing certificate — using their TSA introduces no
-# trust relationship we do not already depend on. The rest are fallbacks for an outage, since a
-# single authority would otherwise be able to block a release on its own. A TSA only ever receives
-# a hash of the signature, never the key or the binary.
+# GlobalSign is first because it issued our signing certificate, and it is what the signing SOP
+# specifies. The rest are fallbacks, so that one authority's outage cannot block a release. A TSA
+# only ever receives a hash of the signature, never the key or the binary.
 #
 # Set TIMESTAMP_URL to pin a single authority, or TIMESTAMP_URLS to override the whole list.
 TIMESTAMP_URLS="${TIMESTAMP_URLS:-${TIMESTAMP_URL:-http://timestamp.globalsign.com/tsa/r6advanced1 http://timestamp.digicert.com http://timestamp.sectigo.com}}"
-
-has_timestamp() {
-  osslsigncode verify "$1" 2>&1 | grep -q "^Timestamp: "
-}
 
 missing_creds() {
   if [ "${REQUIRE_SIGNING:-}" = "1" ]; then
@@ -38,49 +38,63 @@ missing_creds() {
   return 0
 }
 
-sign_windows() {
-  if [ -z "$CERT_FILE" ]; then
-    missing_creds "Windows code-signing; CERT_FILE not set"
-    return $?
+has_timestamp() {
+  # osslsigncode reports "Timestamp is not available" when there is no countersignature, and
+  # prints an indented "Timestamp time:" line when there is. Require both signals to agree, so
+  # that a change in one of them fails closed rather than silently passing.
+  local out
+  out="$(osslsigncode verify "$1" 2>&1 || true)"
+  if grep -q "Timestamp is not available" <<<"$out"; then
+    return 1
   fi
+  grep -q "Timestamp time:" <<<"$out"
+}
 
-  if [ ! -f "$CERT_FILE" ]; then
-    echo "error Windows code-signing; file '$CERT_FILE' not found" >&2
+has_signature() {
+  local out
+  out="$(osslsigncode verify "$1" 2>&1 || true)"
+  local current calculated
+  current="$(sed -n 's/^Current message digest *: *//p' <<<"$out" | head -1)"
+  calculated="$(sed -n 's/^Calculated message digest *: *//p' <<<"$out" | head -1)"
+  [ -n "$current" ] && [ "$current" = "$calculated" ]
+}
+
+timestamp_windows() {
+  if ! command -v osslsigncode >/dev/null 2>&1; then
+    echo "error Windows timestamping; osslsigncode not installed (brew install osslsigncode)" >&2
     return 1
   fi
 
-  if [ -z "$KEY_FILE" ]; then
-    echo "error Windows code-signing; no value for KEY_FILE" >&2
+  # The countersignature is applied over an existing signature. If the file is unsigned then it
+  # never went through the signing step, and timestamping it would produce something that looks
+  # processed but carries no identity at all.
+  if ! has_signature "$1"; then
+    echo "error Windows timestamping; '$1' carries no valid signature" >&2
+    echo "  Windows binaries must be signed out of band first; see the release runbook." >&2
     return 1
   fi
 
-  # An expired certificate still produces a signature, but Windows will not trust it. Fail loudly
-  # instead of shipping a binary that SmartScreen treats as unsigned.
-  if ! openssl x509 -in "$CERT_FILE" -noout -checkend 0 >/dev/null 2>&1; then
-    echo "error Windows code-signing; certificate '$CERT_FILE' has expired:" >&2
-    openssl x509 -in "$CERT_FILE" -noout -dates >&2 || true
-    return 1
+  if has_timestamp "$1"; then
+    echo "Already timestamped, nothing to do: $1"
+    return 0
   fi
 
-  # Each attempt is only accepted once the timestamp is confirmed present in the output, so a TSA
-  # that answers but returns no usable token falls through to the next one rather than yielding a
-  # signature that dies with the certificate.
-  local url signed=0
+  # Each attempt is only accepted once the timestamp is confirmed present in the output, so an
+  # authority that answers without returning a usable token falls through to the next one rather
+  # than leaving a signature that dies with the certificate.
+  local url stamped=0
   for url in $TIMESTAMP_URLS; do
-    echo "Signing $1 (timestamp authority: $url)"
-    if osslsigncode sign -n "VulnCheck CLI" \
-      -certs "$CERT_FILE" -key "$KEY_FILE" \
-      -ts "$url" \
-      -in "$1" -out "$1"~ && has_timestamp "$1"~; then
-      signed=1
+    echo "Timestamping $1 (authority: $url)"
+    if osslsigncode add -ts "$url" -in "$1" -out "$1"~ 2>&1 && has_timestamp "$1"~; then
+      stamped=1
       break
     fi
     echo "warning: timestamp authority unusable, trying next: $url" >&2
     rm -f "$1"~
   done
 
-  if [ "$signed" -ne 1 ]; then
-    echo "error Windows code-signing; no timestamp authority succeeded for '$1'" >&2
+  if [ "$stamped" -ne 1 ]; then
+    echo "error Windows timestamping; no authority succeeded for '$1'" >&2
     echo "  tried: $TIMESTAMP_URLS" >&2
     return 1
   fi
@@ -140,7 +154,7 @@ platform="$(uname -s)"
 for input_file; do
   case "$input_file" in
   *.exe | *.msi )
-    sign_windows "$input_file"
+    timestamp_windows "$input_file"
     ;;
   * )
     if [ "$platform" = "Darwin" ]; then

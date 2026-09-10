@@ -43,17 +43,12 @@ builds:
     ldflags:
       - -s -w -X github.com/vulncheck-oss/cli/internal/build.Version={{.Version}} -X github.com/vulncheck-oss/cli/internal/build.Date={{time "2006-01-02"}}
 
+  # No signing hook: Windows binaries are signed out of band. See script/finish-windows-release.
   - id: windows
     goos: [windows]
     goarch: [386, amd64, arm64]
     env:
       - CGO_ENABLED=0
-    hooks:
-      post:
-        # Signed with osslsigncode, which runs on the macOS release runner. There is no
-        # Windows-host signing path.
-        - cmd: ./script/sign '{{ .Path }}'
-          output: true
     binary: bin/vulncheck
     main: ./cmd/vulncheck
     ldflags:

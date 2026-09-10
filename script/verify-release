@@ -13,9 +13,24 @@
 # Must run on macOS: codesign and spctl are the only way to confirm notarization.
 set -euo pipefail
 
-TAG="${1:-}"
+TAG=""
+NO_WINDOWS=false
+for arg in "$@"; do
+  case "$arg" in
+  # Used by the release workflow, which runs before Windows signing has happened: those keys are
+  # not available to CI. The Windows archives are assembled later by
+  # script/finish-windows-release, which runs these checks in full.
+  --no-windows) NO_WINDOWS=true ;;
+  v*) TAG="$arg" ;;
+  *)
+    echo "usage: script/verify-release [--no-windows] <tag>" >&2
+    exit 1
+    ;;
+  esac
+done
+
 if [ -z "$TAG" ]; then
-  echo "usage: script/verify-release <tag>" >&2
+  echo "usage: script/verify-release [--no-windows] <tag>" >&2
   exit 1
 fi
 
@@ -48,11 +63,15 @@ expected=(
   "vulncheck_${VERSION}_linux_armv6.tar.gz"
   "vulncheck_${VERSION}_macOS_amd64.zip"
   "vulncheck_${VERSION}_macOS_arm64.zip"
-  "vulncheck_${VERSION}_windows_386.zip"
-  "vulncheck_${VERSION}_windows_amd64.zip"
-  "vulncheck_${VERSION}_windows_arm64.zip"
-  "vulncheck_${VERSION}_checksums.txt"
 )
+if [ "$NO_WINDOWS" = "false" ]; then
+  expected+=(
+    "vulncheck_${VERSION}_windows_386.zip"
+    "vulncheck_${VERSION}_windows_amd64.zip"
+    "vulncheck_${VERSION}_windows_arm64.zip"
+  )
+fi
+expected+=("vulncheck_${VERSION}_checksums.txt")
 for f in "${expected[@]}"; do
   if [ -f "$DIST/$f" ]; then pass "$f"; else fail "$f is missing"; fi
 done
@@ -145,8 +164,9 @@ done
 # ---------------------------------------------------------------------------
 echo ""
 echo "Windows signing"
-# ---------------------------------------------------------------------------
-if ! command -v osslsigncode >/dev/null 2>&1; then
+if [ "$NO_WINDOWS" = "true" ]; then
+  echo "  skipped — signed out of band, verified by finish-windows-release"
+elif ! command -v osslsigncode >/dev/null 2>&1; then
   fail "osslsigncode not installed — cannot verify Windows signatures"
 else
   for arch in 386 amd64 arm64; do
@@ -176,8 +196,11 @@ else
       fail "windows $arch: signature missing or digest mismatch"
     fi
 
-    if grep -q "^Timestamp: " <<<"$out"; then
-      pass "windows $arch: timestamp present"
+    # osslsigncode says "Timestamp is not available" when there is no countersignature, and prints
+    # an indented "Timestamp time:" line when there is. Require both to agree so a change in either
+    # fails closed.
+    if ! grep -q "Timestamp is not available" <<<"$out" && grep -q "Timestamp time:" <<<"$out"; then
+      pass "windows $arch: timestamp present ($(sed -n 's/.*Timestamp time: *//p' <<<"$out" | head -1))"
     else
       fail "windows $arch: no RFC3161 timestamp — signature will break when the cert expires"
     fi

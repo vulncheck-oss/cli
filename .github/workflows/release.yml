@@ -2,7 +2,16 @@ name: Release
 run-name: Release ${{ github.ref_name }}
 
 # Releases are cut with `script/tag-release vX.Y.Z`, which pushes the tag that triggers this
-# workflow. Everything after that point happens here.
+# workflow.
+#
+# This is stage one of two. It builds everything, signs and notarizes macOS, and leaves a DRAFT
+# release containing the Linux and macOS archives. Windows signing keys are not available to CI,
+# so the unsigned Windows executables are attached to this run as an artifact instead. An operator
+# signs them out of band, then runs `script/finish-windows-release`, which timestamps them,
+# assembles the Windows archives, regenerates the checksum manifest over all nine artifacts, and
+# publishes the release.
+#
+# Nothing is public until that second stage completes.
 on:
   push:
     tags:
@@ -19,8 +28,8 @@ permissions:
 
 jobs:
   release:
-    # A single macOS runner builds all nine artifacts. codesign and notarytool are macOS-only, and
-    # osslsigncode runs here too, so there is no need to fan out across three platforms.
+    # codesign and notarytool are macOS-only, and cross-compilation is CGO-free, so one macOS
+    # runner produces all nine binaries.
     runs-on: macos-latest
     timeout-minutes: 90
     steps:
@@ -69,37 +78,12 @@ jobs:
           echo "Available signing identities:"
           security find-identity -v -p codesigning
 
-      - name: Set up Windows signing
-        env:
-          WINDOWS_CERT_PEM: ${{ secrets.WINDOWS_CERT_PEM }}
-          WINDOWS_KEY_PEM: ${{ secrets.WINDOWS_KEY_PEM }}
-        run: |
-          brew install osslsigncode
-
-          printf '%s' "$WINDOWS_CERT_PEM" > "$RUNNER_TEMP/windows-cert.pem"
-          printf '%s' "$WINDOWS_KEY_PEM" > "$RUNNER_TEMP/windows-key.pem"
-          chmod 600 "$RUNNER_TEMP/windows-cert.pem" "$RUNNER_TEMP/windows-key.pem"
-
-          # Fail before building rather than after. An expired certificate still yields a
-          # signature, but Windows treats the result as unsigned.
-          openssl x509 -in "$RUNNER_TEMP/windows-cert.pem" -noout -subject -dates
-          if ! openssl x509 -in "$RUNNER_TEMP/windows-cert.pem" -noout -checkend 0; then
-            echo "::error::Windows signing certificate has expired"
-            exit 1
-          fi
-          # Warn while there is still time to renew.
-          if ! openssl x509 -in "$RUNNER_TEMP/windows-cert.pem" -noout -checkend 2592000; then
-            echo "::warning::Windows signing certificate expires within 30 days"
-          fi
-
-      - name: Build, sign, and archive
+      - name: Build and archive
         env:
           GORELEASER_CURRENT_TAG: ${{ github.ref_name }}
-          # Signing credentials are consumed by script/sign, which GoReleaser invokes as a post
-          # hook on each macOS and Windows binary.
+          # Consumed by script/sign, which GoReleaser invokes as a post-build hook on each macOS
+          # binary. Windows has no hook: it is signed out of band.
           APPLE_DEVELOPER_ID: ${{ vars.APPLE_DEVELOPER_ID }}
-          CERT_FILE: ${{ runner.temp }}/windows-cert.pem
-          KEY_FILE: ${{ runner.temp }}/windows-key.pem
           REQUIRE_SIGNING: "1"
         run: goreleaser release --clean --skip=publish
 
@@ -113,10 +97,57 @@ jobs:
           shopt -s failglob
           script/sign dist/vulncheck_*_macOS_*.zip
 
-      - name: Verify artifacts
-        run: script/verify-release "${{ github.ref_name }}"
+      - name: Verify Linux and macOS artifacts
+        run: script/verify-release --no-windows "${{ github.ref_name }}"
 
-      - name: Create the release
+      - name: Collect unsigned Windows executables
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          shopt -s failglob
+          mkdir -p unsigned
+
+          # Named by architecture so the signing step, which writes signed-<name>.exe, produces
+          # distinguishable outputs for all three.
+          for arch in 386 amd64 arm64; do
+            src="$(ls -d dist/windows_windows_${arch}*/bin/vulncheck.exe | head -1)"
+            cp "$src" "unsigned/vulncheck_${arch}.exe"
+          done
+
+          ( cd unsigned && shasum -a 256 ./*.exe | tee SHA256SUMS.txt )
+
+          # This is the build record the SOP's hash check compares against, so surface it where an
+          # operator can read it without downloading anything.
+          {
+            echo "## Unsigned Windows executables — $TAG_NAME"
+            echo
+            echo "Signing attests to whatever bytes are in the file. Confirm these hashes"
+            echo "match before signing anything."
+            echo
+            echo '```'
+            cat unsigned/SHA256SUMS.txt
+            echo '```'
+            echo
+            echo "Next: sign out of band per the release runbook, then run"
+            echo '`script/finish-windows-release '"$TAG_NAME"' --signed-dir <dir>`'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: unsigned-windows
+          path: unsigned/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            dist/vulncheck_*_linux_*.tar.gz
+            dist/vulncheck_*_macOS_*.zip
+            unsigned/*.exe
+
+      - name: Create the draft release
         env:
           TAG_NAME: ${{ github.ref_name }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -124,8 +155,11 @@ jobs:
           shopt -s failglob
           VERSION="${TAG_NAME#v}"
 
+          # Draft, and without the checksum manifest: both wait for the Windows archives, since
+          # the manifest has to cover all nine artifacts. finish-windows-release publishes.
           release_args=(
             "$TAG_NAME"
+            --draft
             --title "VulnCheck CLI ${VERSION}"
             --generate-notes
           )
@@ -134,11 +168,5 @@ jobs:
           fi
 
           gh release create "${release_args[@]}" \
-            "dist/vulncheck_${VERSION}"_*.tar.gz \
-            "dist/vulncheck_${VERSION}"_*.zip \
-            "dist/vulncheck_${VERSION}_checksums.txt"
-
-      - name: Attest build provenance
-        uses: actions/attest-build-provenance@v4
-        with:
-          subject-path: dist/vulncheck_*_checksums.txt
+            "dist/vulncheck_${VERSION}"_linux_*.tar.gz \
+            "dist/vulncheck_${VERSION}"_macOS_*.zip
