@@ -137,9 +137,17 @@ func TestPURLParity(t *testing.T) {
 
 			detail := []models.PurlDetail{{Purl: p}}
 
-			onlineVulns, err := bill.GetBatchVulns(ctx, detail, noopProgress)
+			onlineVulns, unprocessed, err := bill.GetBatchVulns(ctx, detail, noopProgress)
 			if err != nil {
 				t.Fatalf("online lookup: %v", err)
+			}
+			// A purl the API cannot assess returns no findings, and offline
+			// returns none either, so the CVE sets would agree trivially and the
+			// row would pass for the wrong reason. Skip rather than bank a false
+			// match.
+			if len(unprocessed) > 0 {
+				t.Skipf("API could not assess this purl: %s (%s)",
+					unprocessed[0].Purl, unprocessed[0].Reason)
 			}
 			offlineVulns, err := bill.GetOfflineVulns(indices, detail, noopProgress, false)
 			if err != nil {

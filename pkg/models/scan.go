@@ -6,6 +6,21 @@ import (
 
 type ScanResult struct {
 	Vulnerabilities []ScanResultVulnerabilities `json:"vulnerabilities"`
+
+	// Omitted when empty: this field alone must not change the document
+	// vulncheck-oss/action hashes to dedupe PR comments.
+	Unprocessed []UnprocessedComponent `json:"unprocessed,omitempty"`
+}
+
+// UnprocessedComponent is a component the scan could not assess, and why. These
+// never appear in Vulnerabilities, so without reporting them a partial scan
+// reads as a clean one.
+type UnprocessedComponent struct {
+	Purl string `json:"purl"`
+
+	// Passed through from the API. An open set; as of writing
+	// "unsupported_type", "unparseable" or "unsupported_distro".
+	Reason string `json:"reason"`
 }
 
 type PurlDetail struct {
