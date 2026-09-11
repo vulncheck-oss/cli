@@ -35,7 +35,16 @@ func Command() *cobra.Command {
 		Use:     "sync",
 		Short:   "Sync indices",
 		Long:    "Sync indices for offline use",
-		Example: "vulncheck offline sync",
+		Example: "vulncheck offline sync --add vulncheck-kev",
+		// Indices are named with --add/--remove, never positionally. Without
+		// this, cobra discards a bare index name and the sync silently falls
+		// back to re-syncing whatever is already cached.
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return nil
+			}
+			return errs.Validation("unexpected argument %q; use --add %s to sync that index\n\nUsage:\n  %s", args[0], args[0], cmd.UseLine())
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			r := output.FromCmd(cmd)
 			choose, _ := cmd.Flags().GetBool("choose")
