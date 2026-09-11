@@ -7,9 +7,8 @@ import (
 type ScanResult struct {
 	Vulnerabilities []ScanResultVulnerabilities `json:"vulnerabilities"`
 
-	// Unprocessed lists components the scan could not assess. Omitted when
-	// empty, so a scan that skipped nothing serialises byte-for-byte as before
-	// — vulncheck-oss/action hashes this whole document to dedupe PR comments.
+	// Omitted when empty: this field alone must not change the document
+	// vulncheck-oss/action hashes to dedupe PR comments.
 	Unprocessed []UnprocessedComponent `json:"unprocessed,omitempty"`
 }
 
