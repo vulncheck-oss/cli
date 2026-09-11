@@ -211,6 +211,7 @@ func Command() *cobra.Command {
 								purlVulns = results
 								t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEndOffline, len(purlVulns), len(purls))
 								vulns = append(cpeVulns, purlVulns...)
+								bill.SortResults(vulns)
 								result = models.ScanResult{
 									Vulnerabilities: vulns,
 									Unprocessed:     unprocessed,

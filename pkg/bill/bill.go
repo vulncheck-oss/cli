@@ -479,9 +479,19 @@ func GetBatchVulns(ctx context.Context, purls []models.PurlDetail, iterator func
 		iterator(start, total)
 	}
 
-	// Backstop: the API returns hits in non-deterministic order, and
-	// vulncheck-oss/action hashes output.json to dedupe PR comments. Being fixed
-	// upstream too.
+	SortResults(vulns)
+	slices.SortFunc(unprocessed, func(a, b models.UnprocessedComponent) int {
+		return cmp.Compare(a.Purl, b.Purl)
+	})
+
+	return vulns, unprocessed, nil
+}
+
+// SortResults orders findings so output.json is stable between identical scans;
+// vulncheck-oss/action hashes it to dedupe PR comments. Neither source
+// guarantees an order: the API dedupes through a map, and the offline queries
+// carry no ORDER BY.
+func SortResults(vulns []models.ScanResultVulnerabilities) {
 	slices.SortFunc(vulns, func(a, b models.ScanResultVulnerabilities) int {
 		if c := cmp.Compare(a.Name, b.Name); c != 0 {
 			return c
@@ -491,11 +501,6 @@ func GetBatchVulns(ctx context.Context, purls []models.PurlDetail, iterator func
 		}
 		return cmp.Compare(a.CVE, b.CVE)
 	})
-	slices.SortFunc(unprocessed, func(a, b models.UnprocessedComponent) int {
-		return cmp.Compare(a.Purl, b.Purl)
-	})
-
-	return vulns, unprocessed, nil
 }
 
 func GetVulns(ctx context.Context, purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
