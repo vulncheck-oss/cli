@@ -24,10 +24,11 @@ import (
 // --sbom-only, so agents can tell a "successful no-vuln-lookup" run
 // apart from a normal empty-result run.
 type scanEnvelope struct {
-	SchemaVersion   int                                 `json:"schema_version"`
-	Vulnerabilities []models.ScanResultVulnerabilities  `json:"vulnerabilities,omitempty"`
-	SbomOnly        bool                                `json:"sbom_only,omitempty"`
-	SbomOutputFile  string                              `json:"sbom_output_file,omitempty"`
+	SchemaVersion   int                                `json:"schema_version"`
+	Vulnerabilities []models.ScanResultVulnerabilities `json:"vulnerabilities,omitempty"`
+	SbomOnly        bool                               `json:"sbom_only,omitempty"`
+	SbomOutputFile  string                             `json:"sbom_output_file,omitempty"`
+	Unprocessed     []models.UnprocessedComponent      `json:"unprocessed,omitempty"`
 }
 
 type Options struct {
@@ -91,6 +92,10 @@ func Command() *cobra.Command {
 			var cpeVulns []models.ScanResultVulnerabilities
 			var purlVulns []models.ScanResultVulnerabilities
 			var vulns []models.ScanResultVulnerabilities
+			// unprocessed holds components the API could not assess. They are
+			// absent from vulns entirely, so without reporting them a partial
+			// scan is indistinguishable from a clean one.
+			var unprocessed []models.UnprocessedComponent
 			// metaAvailable tracks whether the vulncheck-nvd2 index was
 			// usable. When --offline-meta is requested but the index is
 			// missing (with --warn-on-index), we still surface the CVEs
@@ -208,6 +213,7 @@ func Command() *cobra.Command {
 								vulns = append(cpeVulns, purlVulns...)
 								result = models.ScanResult{
 									Vulnerabilities: vulns,
+									Unprocessed:     unprocessed,
 								}
 								return nil
 							},
@@ -232,6 +238,7 @@ func Command() *cobra.Command {
 									}
 									result = models.ScanResult{
 										Vulnerabilities: vulns,
+										Unprocessed:     unprocessed,
 									}
 									return nil
 								},
@@ -244,7 +251,7 @@ func Command() *cobra.Command {
 							Title: i18n.C.ScanScanPurlStart,
 							Task: func(t *taskin.Task) error {
 								purlVulns = []models.ScanResultVulnerabilities{}
-								results, err := bill.GetBatchVulns(ctx, purls, func(cur int, total int) {
+								results, skipped, err := bill.GetBatchVulns(ctx, purls, func(cur int, total int) {
 									t.Title = fmt.Sprintf(i18n.C.ScanScanPurlProgress, cur, total)
 									t.Progress(cur, total)
 								})
@@ -252,7 +259,12 @@ func Command() *cobra.Command {
 									return err
 								}
 								purlVulns = results
+								unprocessed = skipped
 								t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEnd, len(purlVulns), len(purls))
+								if len(unprocessed) > 0 {
+									t.Title = fmt.Sprintf(i18n.C.ScanScanPurlEndPartial,
+										len(purlVulns), len(purls)-len(unprocessed), len(purls))
+								}
 								vulns = purlVulns
 								return nil
 							},
@@ -268,6 +280,7 @@ func Command() *cobra.Command {
 								t.Title = i18n.C.ScanVulnMetaEnd
 								result = models.ScanResult{
 									Vulnerabilities: vulns,
+									Unprocessed:     unprocessed,
 								}
 								return nil
 							},
@@ -346,6 +359,7 @@ func Command() *cobra.Command {
 				return r.JSON(scanEnvelope{
 					SchemaVersion:   output.SchemaVersion,
 					Vulnerabilities: result.Vulnerabilities,
+					Unprocessed:     result.Unprocessed,
 				})
 			}
 
@@ -360,6 +374,24 @@ func Command() *cobra.Command {
 				}
 				if opts.OfflineMeta && !metaAvailable {
 					r.Info("%s", i18n.C.ScanVulnOfflineMetaUnavailable)
+				}
+			}
+
+			// Outside the if/else above: an incomplete scan needs stating
+			// whether or not anything was found. All of it goes through Warn so
+			// the header and the list stay on one stream and survive --quiet.
+			if len(result.Unprocessed) > 0 {
+				r.Warn(i18n.C.ScanUnprocessed, len(result.Unprocessed), len(purls))
+
+				// A large SBOM can skip hundreds; the full list is in the JSON
+				// output rather than flooding the terminal with it.
+				const shown = 10
+				for i, item := range result.Unprocessed {
+					if i == shown {
+						r.Warn(i18n.C.ScanUnprocessedMore, len(result.Unprocessed)-shown)
+						break
+					}
+					r.Warn("  %s (%s)", item.Purl, item.Reason)
 				}
 			}
 

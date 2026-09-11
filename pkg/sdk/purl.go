@@ -42,11 +42,26 @@ type BatchPurlData struct {
 	Vulnerabilities []PurlVulnerability `json:"vulnerabilities"`
 }
 
+// UnprocessedPurl is a purl the API could not look up. Reason is passed through
+// verbatim and should be treated as an open set; as of writing it is
+// "unsupported_type" (a valid purl for an ecosystem VulnCheck does not index),
+// "unparseable" (not a valid purl), or "unsupported_distro" (a distro-scoped
+// purl whose distro qualifier is missing or unrecognised).
+type UnprocessedPurl struct {
+	Purl   string `json:"purl"`
+	Reason string `json:"reason"`
+}
+
 type PurlsResponse struct {
 	Benchmark float64 `json:"_benchmark"`
 	Meta      struct {
 		Timestamp      string  `json:"timestamp"`
 		TotalDocuments float64 `json:"total_documents"`
+		TotalSubmitted float64 `json:"total_submitted"`
+
+		// Absent on API versions predating partial results, where an unusable
+		// purl failed the whole batch instead of being reported.
+		Unprocessed []UnprocessedPurl `json:"unprocessed"`
 	} `json:"_meta"`
 	PurlData []BatchPurlData `json:"data"`
 }
