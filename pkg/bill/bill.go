@@ -1,11 +1,13 @@
 package bill
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/anchore/syft/syft"
@@ -476,6 +478,22 @@ func GetBatchVulns(ctx context.Context, purls []models.PurlDetail, iterator func
 
 		iterator(start, total)
 	}
+
+	// Backstop: the API returns hits in non-deterministic order, and
+	// vulncheck-oss/action hashes output.json to dedupe PR comments. Being fixed
+	// upstream too.
+	slices.SortFunc(vulns, func(a, b models.ScanResultVulnerabilities) int {
+		if c := cmp.Compare(a.Name, b.Name); c != 0 {
+			return c
+		}
+		if c := cmp.Compare(a.Version, b.Version); c != 0 {
+			return c
+		}
+		return cmp.Compare(a.CVE, b.CVE)
+	})
+	slices.SortFunc(unprocessed, func(a, b models.UnprocessedComponent) int {
+		return cmp.Compare(a.Purl, b.Purl)
+	})
 
 	return vulns, unprocessed, nil
 }
