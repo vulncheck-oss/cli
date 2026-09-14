@@ -1,11 +1,13 @@
 package bill
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/anchore/syft/syft"
@@ -428,10 +430,14 @@ func GetPURLDetail(sbm *sbom.SBOM, inputRefs []InputSbomRef) []models.PurlDetail
 	return purls
 }
 
-func GetBatchVulns(ctx context.Context, purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {
+// GetBatchVulns looks up every purl and also returns the components the API
+// could not assess. Those never appear in the findings, so a caller that
+// ignores the second return cannot tell a partial scan from a clean one.
+func GetBatchVulns(ctx context.Context, purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, []models.UnprocessedComponent, error) {
 	const batchSize = 100
 
 	var vulns []models.ScanResultVulnerabilities
+	var unprocessed []models.UnprocessedComponent
 
 	purlStrings := make([]string, 0, len(purls))
 	for _, purl := range purls {
@@ -447,7 +453,7 @@ func GetBatchVulns(ctx context.Context, purls []models.PurlDetail, iterator func
 
 		response, err := session.ConnectWithContext(ctx, config.Token()).GetPurls(batch)
 		if err != nil {
-			return nil, fmt.Errorf("error fetching purls %v: %w", batch, err)
+			return nil, nil, fmt.Errorf("error fetching purls %v: %w", batch, err)
 		}
 
 		for _, purlResponse := range response.PurlData {
@@ -460,10 +466,41 @@ func GetBatchVulns(ctx context.Context, purls []models.PurlDetail, iterator func
 				})
 			}
 		}
+
+		// Empty against an API predating partial results, where an unusable purl
+		// failed the whole batch rather than being reported.
+		for _, item := range response.Meta.Unprocessed {
+			unprocessed = append(unprocessed, models.UnprocessedComponent{
+				Purl:   item.Purl,
+				Reason: item.Reason,
+			})
+		}
+
 		iterator(start, total)
 	}
 
-	return vulns, nil
+	SortResults(vulns)
+	slices.SortFunc(unprocessed, func(a, b models.UnprocessedComponent) int {
+		return cmp.Compare(a.Purl, b.Purl)
+	})
+
+	return vulns, unprocessed, nil
+}
+
+// SortResults orders findings so output.json is stable between identical scans;
+// vulncheck-oss/action hashes it to dedupe PR comments. Neither source
+// guarantees an order: the API dedupes through a map, and the offline queries
+// carry no ORDER BY.
+func SortResults(vulns []models.ScanResultVulnerabilities) {
+	slices.SortFunc(vulns, func(a, b models.ScanResultVulnerabilities) int {
+		if c := cmp.Compare(a.Name, b.Name); c != 0 {
+			return c
+		}
+		if c := cmp.Compare(a.Version, b.Version); c != 0 {
+			return c
+		}
+		return cmp.Compare(a.CVE, b.CVE)
+	})
 }
 
 func GetVulns(ctx context.Context, purls []models.PurlDetail, iterator func(cur int, total int)) ([]models.ScanResultVulnerabilities, error) {

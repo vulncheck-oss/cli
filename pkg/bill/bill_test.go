@@ -1,8 +1,14 @@
 package bill
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -10,6 +16,8 @@ import (
 	"github.com/anchore/syft/syft/cataloging/pkgcataloging"
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/vulncheck-oss/cli/pkg/cache"
+	"github.com/vulncheck-oss/cli/pkg/config"
+	"github.com/vulncheck-oss/cli/pkg/environment"
 	"github.com/vulncheck-oss/cli/pkg/models"
 )
 
@@ -560,4 +568,106 @@ func TestEnrichAllDoesNotEnableVcpkgCloning(t *testing.T) {
 	if pkgcataloging.DefaultConfig().Cpp.VcpkgAllowGitClone {
 		t.Error("syft's default config now enables vcpkg git cloning; the --enrich rejection is no longer sufficient")
 	}
+}
+
+// pointAtStub routes GetBatchVulns at a local server. session.Connect reads the
+// exported environment.Env.API, so overriding it is enough; the token only has
+// to be non-empty to satisfy config.ValidToken.
+func pointAtStub(t *testing.T, handler http.HandlerFunc) {
+	t.Helper()
+
+	srv := httptest.NewServer(handler)
+	t.Cleanup(srv.Close)
+
+	previous := environment.Env.API
+	environment.Env.API = srv.URL
+	t.Cleanup(func() { environment.Env.API = previous })
+
+	t.Setenv(config.EnvToken, "vulncheck_test_token")
+}
+
+func noProgress(_ int, _ int) {}
+
+func TestGetBatchVulns(t *testing.T) {
+	t.Run("reports unprocessed components alongside findings", func(t *testing.T) {
+		pointAtStub(t, func(w http.ResponseWriter, _ *http.Request) {
+			_, _ = fmt.Fprint(w, `{"_meta":{"total_documents":1,"total_submitted":2,`+
+				`"unprocessed":[{"purl":"pkg:generic/openssl@1.1.1","reason":"unsupported_type"}]},`+
+				`"data":[{"purl":"pkg:hex/coherence@0.1.2","purl_struct":{"name":"coherence","version":"0.1.2"},`+
+				`"vulnerabilities":[{"detection":"CVE-2018-20301","fixed_version":"0.5.2"}]}]}`)
+		})
+
+		vulns, unprocessed, err := GetBatchVulns(context.Background(), []models.PurlDetail{
+			{Purl: "pkg:hex/coherence@0.1.2"},
+			{Purl: "pkg:generic/openssl@1.1.1"},
+		}, noProgress)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(vulns) != 1 || vulns[0].CVE != "CVE-2018-20301" {
+			t.Fatalf("expected the one finding to survive, got %+v", vulns)
+		}
+		want := []models.UnprocessedComponent{
+			{Purl: "pkg:generic/openssl@1.1.1", Reason: "unsupported_type"},
+		}
+		if !reflect.DeepEqual(unprocessed, want) {
+			t.Errorf("unprocessed: got %+v, want %+v", unprocessed, want)
+		}
+	})
+
+	// batchSize is 100, so 101 purls means two round-trips. Each reports one
+	// unusable component and both must survive; accumulating only the last
+	// batch's would silently under-report on any large SBOM.
+	t.Run("accumulates unprocessed across batches", func(t *testing.T) {
+		var calls int
+		pointAtStub(t, func(w http.ResponseWriter, r *http.Request) {
+			var batch []string
+			_ = json.NewDecoder(r.Body).Decode(&batch)
+			calls++
+			_, _ = fmt.Fprintf(w, `{"_meta":{"total_documents":0,"total_submitted":%d,`+
+				`"unprocessed":[{"purl":"pkg:generic/batch-%d@1.0.0","reason":"unsupported_type"}]},`+
+				`"data":[]}`, len(batch), calls)
+		})
+
+		purls := make([]models.PurlDetail, 0, 101)
+		for i := 0; i < 101; i++ {
+			purls = append(purls, models.PurlDetail{Purl: fmt.Sprintf("pkg:npm/pkg-%d@1.0.0", i)})
+		}
+
+		vulns, unprocessed, err := GetBatchVulns(context.Background(), purls, noProgress)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(vulns) != 0 {
+			t.Errorf("expected no findings, got %d", len(vulns))
+		}
+		if calls != 2 {
+			t.Fatalf("expected 101 purls to span 2 batches, got %d calls", calls)
+		}
+		want := []models.UnprocessedComponent{
+			{Purl: "pkg:generic/batch-1@1.0.0", Reason: "unsupported_type"},
+			{Purl: "pkg:generic/batch-2@1.0.0", Reason: "unsupported_type"},
+		}
+		if !reflect.DeepEqual(unprocessed, want) {
+			t.Errorf("unprocessed: got %+v, want %+v", unprocessed, want)
+		}
+	})
+
+	t.Run("returns nothing unprocessed against an API that omits the field", func(t *testing.T) {
+		pointAtStub(t, func(w http.ResponseWriter, _ *http.Request) {
+			_, _ = fmt.Fprint(w, `{"_meta":{"total_documents":0},"data":[]}`)
+		})
+
+		vulns, unprocessed, err := GetBatchVulns(context.Background(),
+			[]models.PurlDetail{{Purl: "pkg:hex/coherence@0.1.2"}}, noProgress)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(vulns) != 0 {
+			t.Errorf("expected no findings, got %d", len(vulns))
+		}
+		if len(unprocessed) != 0 {
+			t.Errorf("expected nothing unprocessed, got %+v", unprocessed)
+		}
+	})
 }

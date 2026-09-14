@@ -136,6 +136,9 @@ type Copy struct {
 	ScanScanPurlProgress        string
 	ScanScanPurlProgressOffline string
 	ScanScanPurlEnd             string
+	ScanScanPurlEndPartial      string
+	ScanUnprocessed             string
+	ScanUnprocessedMore         string
 	ScanScanPurlEndOffline      string
 	ScanExtractCpeStart         string
 	ScanExtractCpeEnd           string
@@ -326,6 +329,9 @@ var En = Copy{
 	ScanScanPurlProgress:        "Scanning PURLs [%d/%d]",
 	ScanScanPurlProgressOffline: "[OFFLINE] Scanning PURLs [%d/%d]",
 	ScanScanPurlEnd:             "Scanning PURLs: %d vulns found in %d packages",
+	ScanScanPurlEndPartial:      "Scanning PURLs: %d vulns found in %d of %d packages",
+	ScanUnprocessed:             "%d of %d components could not be assessed and are not counted above:",
+	ScanUnprocessedMore:         "  ...and %d more (see the scan output file for the full list)",
 	ScanScanPurlEndOffline:      "[OFFLINE] Scanning PURLs: %d vulns found in %d packages",
 
 	ScanScanCpeStartOffline:    "[OFFLINE] Scanning CPEs",
