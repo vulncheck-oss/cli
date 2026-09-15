@@ -63,7 +63,11 @@ if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
 fi
 
 VERSION="${TAG#v}"
-UNSIGNED_DIR="dist/unsigned"
+# One directory for the whole signing handoff: the unsigned executables go out of it and the
+# signed ones come back into it. Named for the exchange rather than for either side of it --
+# the signing step writes its output next to its input, so both live here and calling it
+# "unsigned" would be wrong the moment anything came back.
+HANDOFF_DIR="dist/signing"
 
 step() { printf '\n\033[1m==> %s\033[0m\n' "$1"; }
 info() { printf '    %s\n' "$1"; }
@@ -156,31 +160,31 @@ else
   # -------------------------------------------------------------------------
   step "Handing off the Windows executables for signing"
   # -------------------------------------------------------------------------
-  rm -rf "$UNSIGNED_DIR"
-  mkdir -p "$UNSIGNED_DIR"
+  rm -rf "$HANDOFF_DIR"
+  mkdir -p "$HANDOFF_DIR"
 
   # Named by architecture so the signing step, which writes signed-<name>.exe, produces
   # distinguishable outputs for all three.
   for arch in "${ARCHES[@]}"; do
     src="$(ls -d dist/windows_windows_"${arch}"*/bin/vulncheck.exe 2>/dev/null | head -1)"
     [ -n "$src" ] || die "no built Windows executable for $arch"
-    cp "$src" "$UNSIGNED_DIR/vulncheck_${arch}.exe"
+    cp "$src" "$HANDOFF_DIR/vulncheck_${arch}.exe"
   done
 
   echo ""
-  info "Unsigned executables are in $UNSIGNED_DIR:"
+  info "Unsigned executables are in $HANDOFF_DIR:"
   echo ""
-  ( cd "$UNSIGNED_DIR" && shasum -a 256 ./*.exe | sed 's/^/    /' )
+  ( cd "$HANDOFF_DIR" && shasum -a 256 ./*.exe | sed 's/^/    /' )
   echo ""
   info "Signing attests to whatever bytes are in the file — check these hashes against"
   info "what the signing host reports before you approve anything."
   echo ""
 
   if [ -z "$SIGNED_DIR" ]; then
-    # Defaults to the directory the unsigned executables are in, because the signing step writes
-    # its output alongside its input. Signing them where they sit means nothing has to be copied.
-    read -r -p "Where will the signed executables be? [$UNSIGNED_DIR] " SIGNED_DIR
-    SIGNED_DIR="${SIGNED_DIR:-$UNSIGNED_DIR}"
+    # Defaults to the handoff directory, because the signing step writes its output alongside
+    # its input. Signing them where they sit means nothing has to be copied.
+    read -r -p "Where will the signed executables be? [$HANDOFF_DIR] " SIGNED_DIR
+    SIGNED_DIR="${SIGNED_DIR:-$HANDOFF_DIR}"
   fi
   mkdir -p "$SIGNED_DIR"
 
@@ -201,12 +205,12 @@ else
     for arch in "${ARCHES[@]}"; do
       found=""
       # signed-<name>.exe is what the signing step writes. The bare name is also accepted, but
-      # only when the signed files are somewhere other than where the unsigned ones were put --
-      # in that directory the bare name IS the unsigned file, and picking it up would package an
-      # unsigned binary. The signature check downstream would catch it, but with a confusing
-      # error rather than this never happening.
+      # only when the signed files are somewhere other than the handoff directory -- in there the
+      # bare name IS the unsigned executable, and picking it up would package an unsigned binary.
+      # The signature check downstream would catch it, but with a confusing error rather than
+      # this never happening.
       candidates=("$SIGNED_DIR/signed-vulncheck_${arch}.exe")
-      if [ "$(cd "$SIGNED_DIR" && pwd)" != "$(cd "$UNSIGNED_DIR" && pwd)" ]; then
+      if [ "$(cd "$SIGNED_DIR" && pwd)" != "$(cd "$HANDOFF_DIR" && pwd)" ]; then
         candidates+=("$SIGNED_DIR/vulncheck_${arch}.exe")
       fi
       for candidate in "${candidates[@]}"; do
