@@ -2,9 +2,12 @@ package db
 
 import (
 	"bufio"
+	"bytes"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,14 +18,9 @@ import (
 const maxInsertSize int64 = 25_000_000 // 25MB - Conservative but performant
 const maxSQLiteVariables = 900         // Slightly below limit of 999 to be safe
 
-// NDJSON scanner buffer for line-by-line imports. The cpecve backup
-// occasionally ships rows above 256KB (the previous ceiling), which silently
-// dropped the rest of the file. 4MB gives ~14x headroom over the largest line
-// observed in the wild.
-const (
-	scannerInitialBuf = 256 * 1024
-	scannerMaxBuf     = 4 * 1024 * 1024
-)
+// Starting read buffer for line-by-line imports. ReadBytes grows past this
+// as needed, so no record size can truncate or fail an import.
+const readerBufSize = 256 * 1024
 
 func ImportIndex(filePath string, indexDir string, progressCallback func(int)) error {
 	db, err := DB()
@@ -209,41 +207,41 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 			}
 		}
 	} else {
-		// Original line-by-line processing.
+		// Line-by-line processing.
 		//
-		// bufio.Scanner silently stops at the first line exceeding its buffer
-		// (returning bufio.ErrTooLong via Err()). The cpecve backup ships some
-		// records that exceed 256KB once their CVE arrays grow (one row at the
-		// time of writing was 276KB), and the rest of the file gets dropped
-		// after the first oversized line - so the imported index ends up
-		// missing the tail. We size generously and check Err() so this fails
-		// loud if a future line ever does exceed the new ceiling.
-		scanner := bufio.NewScanner(file)
-		scanner.Buffer(make([]byte, scannerInitialBuf), scannerMaxBuf)
+		// ReadBytes grows to fit the record
+		reader := bufio.NewReaderSize(file, readerBufSize)
 
-		for scanner.Scan() {
-			line := scanner.Bytes()
+		for {
+			// ReadBytes returns the final line and io.EOF together, so check for
+			// real errors first and handle EOF after the line is processed.
+			line, readErr := reader.ReadBytes('\n')
+			if readErr != nil && !errors.Is(readErr, io.EOF) {
+				return fmt.Errorf("failed to read %s: %w", filePath, readErr)
+			}
 
-			// Fast path for fallback schema
-			if len(schema.Columns) == 1 && schema.Columns[0].Name == "data" {
-				if !json.Valid(line) {
-					return fmt.Errorf("invalid JSON")
+			line = bytes.TrimRight(line, "\r\n")
+			if len(line) > 0 {
+				// Fast path for fallback schema
+				if len(schema.Columns) == 1 && schema.Columns[0].Name == "data" {
+					if !json.Valid(line) {
+						return fmt.Errorf("invalid JSON")
+					}
+					batch = append(batch, []interface{}{string(line)})
+					batchSize += int64(len(line))
+				} else {
+					var entry map[string]interface{}
+					if err := json.Unmarshal(line, &entry); err != nil {
+						return fmt.Errorf("failed to unmarshal JSON: %w", err)
+					}
+
+					if values, size, err := processEntry(entry, schema, jsonColumns); err == nil {
+						batch = append(batch, values)
+						batchSize += size
+					}
 				}
-				batch = append(batch, []interface{}{string(line)})
-				batchSize += int64(len(line))
-				continue
-			}
 
-			var entry map[string]interface{}
-			if err := json.Unmarshal(line, &entry); err != nil {
-				return fmt.Errorf("failed to unmarshal JSON: %w", err)
-			}
-
-			if values, size, err := processEntry(entry, schema, jsonColumns); err == nil {
-				batch = append(batch, values)
-				batchSize += size
-
-				// Conservative batching - flush every 500 records or size limit
+				// Flush every 500 records or size limit
 				if batchSize >= maxSize || len(batch) >= 500 {
 					if err := executeBatch(db, baseInsertSQL, batch); err != nil {
 						return err
@@ -253,9 +251,10 @@ func importFile(db *sql.DB, filePath string, schema *Schema, baseInsertSQL strin
 					batchSize = 0
 				}
 			}
-		}
-		if err := scanner.Err(); err != nil {
-			return fmt.Errorf("failed to scan %s: %w", filePath, err)
+
+			if errors.Is(readErr, io.EOF) {
+				break
+			}
 		}
 	}
 
