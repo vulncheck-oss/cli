@@ -21,11 +21,12 @@ type AdvisoryBackupsResponse struct {
 //
 // Unlike /v3/backup/{index} this is a flat object rather than a data array, it
 // carries no filename or date_added (backup_written_at lives on the list
-// endpoint instead), there is no plain "url" field, and url_ttl_minutes is a
-// number here where v3 sends a string.
+// endpoint instead), and url_ttl_minutes is a number here where v3 sends a
+// string.
 type AdvisoryBackup struct {
 	Feed            string `json:"feed"`
 	Available       bool   `json:"available"`
+	URL             string `json:"url"`
 	URLMrap         string `json:"url_mrap"`
 	URLUsEast1      string `json:"url_us-east-1"`
 	URLEuWest2      string `json:"url_eu-west-2"`
@@ -33,22 +34,6 @@ type AdvisoryBackup struct {
 	URLExpires      string `json:"url_expires"`
 	URLTTLMinutes   int    `json:"url_ttl_minutes"`
 	SHA256          string `json:"sha256"`
-
-	// URL is not sent by the API, which offers only the regional variants
-	// above. It is resolved on decode so that `jq -r .url` works identically
-	// against a v3 and a v4 backup payload.
-	URL string `json:"url"`
-}
-
-// resolveURL picks the download URL, preferring the multi-region access point
-// and falling back to a regional bucket if it is absent.
-func (b AdvisoryBackup) resolveURL() string {
-	for _, u := range []string{b.URLMrap, b.URLUsEast1, b.URLEuWest2, b.URLApSoutheast2} {
-		if u != "" {
-			return u
-		}
-	}
-	return ""
 }
 
 // GetAdvisoryBackups https://docs.vulncheck.com/api/v4/backup
@@ -75,9 +60,6 @@ func (c *Client) GetAdvisoryBackup(feed string) (responseJSON *AdvisoryBackup, e
 	defer func() { _ = resp.Body.Close() }()
 
 	_ = json.NewDecoder(LimitedBody(resp.Body)).Decode(&responseJSON)
-	if responseJSON != nil {
-		responseJSON.URL = responseJSON.resolveURL()
-	}
 	return responseJSON, nil
 }
 
