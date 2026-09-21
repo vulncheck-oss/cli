@@ -61,6 +61,7 @@ func TestGetAdvisoryBackupUsesTheCloudFrontURL(t *testing.T) {
 	backup, err := Connect(srv.URL, "tok").GetAdvisoryBackup("ghsa")
 	assert.NoError(t, err)
 	assert.Equal(t, cf, backup.URL)
+	assert.Equal(t, cf, backup.URLCloudfront)
 }
 
 // BACKUP_CLOUDFRONT_SIGNING_ENABLED is a live kill-switch on the API. With it
@@ -75,6 +76,7 @@ func TestGetAdvisoryBackupFollowsTheURLBackToS3(t *testing.T) {
 	backup, err := Connect(srv.URL, "tok").GetAdvisoryBackup("ghsa")
 	assert.NoError(t, err)
 	assert.Equal(t, "https://mrap/ghsa.zip", backup.URL)
+	assert.Empty(t, backup.URLCloudfront)
 }
 
 // The API always sends the regional alternates alongside the primary url;

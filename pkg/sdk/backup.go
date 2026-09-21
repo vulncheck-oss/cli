@@ -12,6 +12,7 @@ type BackupFile struct {
 	URLTtlMinutes   int    `json:"url_ttl_minutes"`
 	URLExpires      string `json:"url_expires"`
 	URL             string `json:"url"`
+	URLCloudfront   string `json:"url_cloudfront,omitempty"`
 	URLMrap         string `json:"url_mrap"`
 	URLUsEast1      string `json:"url_us-east-1"`
 	URLUsWest2      string `json:"url_us-west-2"`

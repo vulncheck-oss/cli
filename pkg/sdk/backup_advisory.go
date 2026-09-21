@@ -27,6 +27,7 @@ type AdvisoryBackup struct {
 	Feed            string `json:"feed"`
 	Available       bool   `json:"available"`
 	URL             string `json:"url"`
+	URLCloudfront   string `json:"url_cloudfront,omitempty"`
 	URLMrap         string `json:"url_mrap"`
 	URLUsEast1      string `json:"url_us-east-1"`
 	URLEuWest2      string `json:"url_eu-west-2"`
