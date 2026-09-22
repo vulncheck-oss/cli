@@ -212,6 +212,14 @@ func TestBackupFilename(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			// The primary URL is now a CloudFront signed URL: different host
+			// and query string to the S3 presigned one, same object key.
+			name:    "CloudFront signed URL",
+			urlStr:  "https://serve.vulncheck.com/v4DataBackups/ghsa.zip?x-vc-req-id=test-req-id&Expires=1789643497&Signature=abc&Key-Pair-Id=K123",
+			want:    "ghsa.zip",
+			wantErr: false,
+		},
+		{
 			name:    "No extension",
 			urlStr:  "https://example.com/latest/target-intel",
 			want:    "target-intel",

@@ -101,8 +101,11 @@ func fetchAdvisoryBackup(cmd *cobra.Command, feed string, interactive bool) (*sd
 	if backup == nil {
 		return nil, feed, errs.New(errs.KindInternal, "empty response from /v4/backup/%s", feed)
 	}
-	if !backup.Available || backup.URL == "" {
+	if !backup.Available {
 		return nil, feed, errs.NotFound(i18n.C.BackupAdvisoryUnavailable, feed)
+	}
+	if backup.URL == "" {
+		return nil, feed, errs.New(errs.KindInternal, "no download url in the /v4/backup/%s response", feed)
 	}
 
 	return backup, feed, nil
