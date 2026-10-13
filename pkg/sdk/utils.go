@@ -5,19 +5,26 @@ import (
 	"net/http"
 )
 
-// UnmarshalJSON decodes both error shapes: v3's {"error": true, "errors": [...]}
-// and v4's {"error": "<message>"}. The string form is promoted into Errors
-// because that is the only field defaultMessageFor reads.
+// UnmarshalJSON decodes all three error shapes: v3's {"error": true, "errors": [...]},
+// v4's {"error": "<message>"} and the NVD-compatible endpoints' {"message": "<message>",
+// "status": 400}. The string forms are promoted into Errors because that is the only
+// field defaultMessageFor reads.
 func (m *MetaError) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Error  json.RawMessage `json:"error"`
-		Errors []string        `json:"errors"`
+		Error   json.RawMessage `json:"error"`
+		Errors  []string        `json:"errors"`
+		Message string          `json:"message"`
 	}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
 
 	m.Errors = raw.Errors
+
+	if len(m.Errors) == 0 && raw.Message != "" {
+		m.Error = true
+		m.Errors = []string{raw.Message}
+	}
 
 	if len(raw.Error) == 0 {
 		return nil

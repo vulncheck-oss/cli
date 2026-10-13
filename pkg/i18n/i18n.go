@@ -76,6 +76,16 @@ type Copy struct {
 	AdvisoryBrowseShort string
 	AdvisoryFound       string
 
+	NvdShort            string
+	NvdCvesShort        string
+	NvdCveHistoryShort  string
+	NvdCpesShort        string
+	NvdCpeMatchShort    string
+	NvdSourceShort      string
+	NvdFound            string
+	NvdNextCursor       string
+	NvdFlagFullResponse string
+
 	BackupShort            string
 	BackupLong             string
 	BackupListShort        string
@@ -262,6 +272,16 @@ var En = Copy{
 	AdvisoryListShort:   "List advisory records (GET /v4/advisory)",
 	AdvisoryBrowseShort: "Browse advisory records interactively (GET /v4/advisory)",
 	AdvisoryFound:       "%d of %d advisory records",
+
+	NvdShort:            "Query the NVD API 2.0 compatible endpoints (api /rest/json)",
+	NvdCvesShort:        "Search CVEs (GET /rest/json/cves/2.0)",
+	NvdCveHistoryShort:  "Search CVE change history (GET /rest/json/cvehistory/2.0)",
+	NvdCpesShort:        "Search the CPE dictionary (GET /rest/json/cpes/2.0)",
+	NvdCpeMatchShort:    "Search CPE match criteria (GET /rest/json/cpematch/2.0)",
+	NvdSourceShort:      "List data sources (GET /rest/json/source/2.0)",
+	NvdFound:            "%d of %d results",
+	NvdNextCursor:       "Next page: --cursor %s",
+	NvdFlagFullResponse: "Output the full NVD response, including totalResults and nextCursor",
 
 	BackupShort: "Fetch or download a bulk archive",
 	BackupLong: heredoc.Doc(`

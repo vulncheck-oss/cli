@@ -12,6 +12,7 @@ import (
 	"github.com/vulncheck-oss/cli/internal/output"
 	"github.com/vulncheck-oss/cli/pkg/cmd/upgrade"
 
+	"github.com/vulncheck-oss/cli/pkg/cmd/nvd"
 	"github.com/vulncheck-oss/cli/pkg/cmd/offline"
 
 	"github.com/vulncheck-oss/cli/pkg/cmd/token"
@@ -104,6 +105,7 @@ func NewCmdRoot() *cobra.Command {
 	cmd.AddCommand(indices.Command())
 	cmd.AddCommand(index.Command())
 	cmd.AddCommand(advisory.Command())
+	cmd.AddCommand(nvd.Command())
 	cmd.AddCommand(backup.Command())
 	cmd.AddCommand(cpe.Command())
 	cmd.AddCommand(purl.Command())
