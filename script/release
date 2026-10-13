@@ -306,7 +306,7 @@ read -r -p "Push $TAG and publish the release? [y/N] " confirm
 git push origin "$TAG"
 PUSHED=true
 
-release_args=("$TAG" --title "VulnCheck CLI ${VERSION}" --generate-notes)
+release_args=("$TAG" --title "v${VERSION}" --generate-notes)
 [[ "$TAG" == *-* ]] && release_args+=(--prerelease)
 
 gh release create "${release_args[@]}" -R "$REPO" \
