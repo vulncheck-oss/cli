@@ -212,6 +212,7 @@ Every command below accepts the [global flags](#global-flags) (`--json`, `--quie
 - [`indices`](#indices) — list or browse the catalogue of indices
 - [`index`](#index) — query one index
 - [`advisory`](#advisory) — query v4 advisories in CVE Record Format 5.2
+- [`nvd`](#nvd) — query the NVD API 2.0 compatible endpoints
 - [`backup`](#backup) — download or fetch a signed URL for an index or advisory-feed backup
 - [`cpe`](#cpe) — look up CVEs for a CPE (single or batch)
 - [`purl`](#purl) — look up CVEs for a PURL (single or batch)
@@ -283,6 +284,24 @@ Every record is CVE Record Format 5.2, and there is one record per feed per CVE.
 
 At least one filter is required; see `advisory list --help` for the set (`--feed`, `--cve`, `--vendor`, `--purl`, `--updated-after`, …) and `advisory feeds` for `--feed` values. `--limit` caps at 100 and `--page × --limit` at 10,000 — page past that with `--start-cursor` and `--cursor`, or `--all` to walk it in one call (which buffers every record, so prefer cursors on the largest feeds). `browse` runs an interactive viewport.
 
+
+### nvd
+
+```
+vulncheck nvd cves       [--full] [query flags]   # GET /rest/json/cves/2.0
+vulncheck nvd cvehistory [--full] [query flags]   # GET /rest/json/cvehistory/2.0
+vulncheck nvd cpes       [--full] [query flags]   # GET /rest/json/cpes/2.0
+vulncheck nvd cpematch   [--full] [query flags]   # GET /rest/json/cpematch/2.0
+vulncheck nvd source     [--full] [query flags]   # GET /rest/json/source/2.0
+```
+
+These mirror the NVD API 2.0: each flag is an NVD query parameter in kebab-case (`--cve-id` is `cveId`, `--last-mod-start-date` is `lastModStartDate`), its value is sent unchanged, and the API validates it. They work with any VulnCheck API token, including community. Output is the endpoint's records (`vulnerabilities`, `cveChanges`, `products`, `matchStrings` or `sources`); `--full` returns the whole NVD response. Each command makes one request: to page, pass `--cursor ""` for the first page and then each response's `nextCursor`, or `--start-index` (the only paging on `source`).
+
+```bash
+vulncheck nvd cves --cve-id CVE-2021-44228 --json
+vulncheck nvd cves --has-kev --results-per-page 100 --cursor "" --full --json
+vulncheck nvd cvehistory --event-name "CVE Modified" --change-start-date 2026-09-01T00:00:00.000 --change-end-date 2026-10-01T00:00:00.000 --json
+```
 
 ### backup
 

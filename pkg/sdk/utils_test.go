@@ -44,7 +44,7 @@ func TestHandleErrorResponse(t *testing.T) {
 // {"error": true, "errors": [...]}. The string form must be promoted into
 // Errors, because that is the only field the error classifier reads -- decoding
 // it anywhere else leaves the user with no message at all.
-func TestMetaErrorDecodesBothErrorShapes(t *testing.T) {
+func TestMetaErrorDecodesEveryErrorShape(t *testing.T) {
 	tests := []struct {
 		name       string
 		body       string
@@ -74,6 +74,12 @@ func TestMetaErrorDecodesBothErrorShapes(t *testing.T) {
 			body:       `{"error":"failed to query data-source: opensearch response: status 400"}`,
 			wantFlag:   true,
 			wantErrors: []string{"failed to query data-source: opensearch response: status 400"},
+		},
+		{
+			name:       "NVD-compatible shape, refused parameter",
+			body:       `{"message":"parameter \"keywordSearch\" is not supported in v1; deferred to v2","status":400}`,
+			wantFlag:   true,
+			wantErrors: []string{`parameter "keywordSearch" is not supported in v1; deferred to v2`},
 		},
 		{
 			name:       "no error field",
