@@ -39,3 +39,20 @@ func TestGetIndexBackup(t *testing.T) {
 		assert.Equal(t, "initial-access-1707769254529150054.zip", backupResp.Data[0].Filename)
 	})
 }
+
+func TestGetIndexBackupKeepsOnlyTheURL(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = fmt.Fprint(w, `{"data":[{"filename":"vulncheck-kev-1.zip","url":"https://serve.vulncheck.com/latest/vulncheck-kev-1.zip","url_cloudfront":"https://serve.vulncheck.com/latest/vulncheck-kev-1.zip","url_mrap":"https://mrap/kev.zip","url_us-east-1":"https://use1/kev.zip","url_us-west-2":"https://usw2/kev.zip","url_eu-west-2":"https://euw2/kev.zip","url_ap-southeast-2":"https://apse2/kev.zip","url_il-central-1":"","url_me-central-1":""}]}`)
+	}))
+	defer srv.Close()
+
+	response, err := Connect(srv.URL, "tok").GetIndexBackup("vulncheck-kev")
+	assert.NoError(t, err)
+
+	encoded, err := json.Marshal(response.GetData()[0])
+	assert.NoError(t, err)
+	assert.Contains(t, string(encoded), `"url":"https://serve.vulncheck.com/latest/vulncheck-kev-1.zip"`)
+	for _, gone := range []string{"url_cloudfront", "url_mrap", "url_us-", "url_eu-", "url_ap-", "url_il-", "url_me-"} {
+		assert.NotContains(t, string(encoded), gone)
+	}
+}

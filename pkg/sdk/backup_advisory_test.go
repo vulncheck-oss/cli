@@ -45,11 +45,10 @@ func TestGetAdvisoryBackupDecodesTheFlatPayload(t *testing.T) {
 	assert.Equal(t, 15, backup.URLTTLMinutes)
 	assert.Equal(t, "01133e67", backup.SHA256)
 	assert.Equal(t, "https://serve.vulncheck.com/v4DataBackups/ghsa.zip", backup.URL)
-	assert.Equal(t, "https://mrap/ghsa.zip", backup.URLMrap)
 }
 
 // The primary url is the CloudFront signed URL while CloudFront signing is on.
-// Downloading from url_mrap instead would egress from S3 and drop the
+// Downloading from an S3 URL instead would egress from S3 and drop the
 // x-vc-req-id attribution the signed URL carries.
 func TestGetAdvisoryBackupUsesTheCloudFrontURL(t *testing.T) {
 	cf := "https://serve.vulncheck.com/v4DataBackups/ghsa.zip?x-vc-req-id=abc&Expires=1"
@@ -61,7 +60,6 @@ func TestGetAdvisoryBackupUsesTheCloudFrontURL(t *testing.T) {
 	backup, err := Connect(srv.URL, "tok").GetAdvisoryBackup("ghsa")
 	assert.NoError(t, err)
 	assert.Equal(t, cf, backup.URL)
-	assert.Equal(t, cf, backup.URLCloudfront)
 }
 
 // BACKUP_CLOUDFRONT_SIGNING_ENABLED is a live kill-switch on the API. With it
@@ -69,21 +67,20 @@ func TestGetAdvisoryBackupUsesTheCloudFrontURL(t *testing.T) {
 // the CLI follows it back to S3 with no change of its own.
 func TestGetAdvisoryBackupFollowsTheURLBackToS3(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = fmt.Fprint(w, `{"feed":"ghsa","available":true,"url":"https://mrap/ghsa.zip","url_mrap":"https://mrap/ghsa.zip"}`)
+		_, _ = fmt.Fprint(w, `{"feed":"ghsa","available":true,"url":"https://use1/ghsa.zip","url_us-east-1":"https://use1/ghsa.zip"}`)
 	}))
 	defer srv.Close()
 
 	backup, err := Connect(srv.URL, "tok").GetAdvisoryBackup("ghsa")
 	assert.NoError(t, err)
-	assert.Equal(t, "https://mrap/ghsa.zip", backup.URL)
-	assert.Empty(t, backup.URLCloudfront)
+	assert.Equal(t, "https://use1/ghsa.zip", backup.URL)
 }
 
-// The API always sends the regional alternates alongside the primary url;
-// decoding must keep them so --json can expose every option.
-func TestGetAdvisoryBackupKeepsTheRegionalAlternates(t *testing.T) {
+// --json passes this struct through, so keeping only url stops scripts pinning
+// an alternate URL field the API may later drop.
+func TestGetAdvisoryBackupKeepsOnlyTheURL(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = fmt.Fprint(w, `{"feed":"ghsa","available":true,"url":"https://serve.vulncheck.com/ghsa.zip","url_mrap":"https://mrap/ghsa.zip","url_us-east-1":"https://use1/ghsa.zip","url_eu-west-2":"https://euw2/ghsa.zip","url_ap-southeast-2":"https://apse2/ghsa.zip"}`)
+		_, _ = fmt.Fprint(w, `{"feed":"ghsa","available":true,"url":"https://serve.vulncheck.com/ghsa.zip","url_cloudfront":"https://serve.vulncheck.com/ghsa.zip","url_mrap":"https://mrap/ghsa.zip","url_us-east-1":"https://use1/ghsa.zip","url_eu-west-2":"https://euw2/ghsa.zip","url_ap-southeast-2":"https://apse2/ghsa.zip"}`)
 	}))
 	defer srv.Close()
 
@@ -92,14 +89,9 @@ func TestGetAdvisoryBackupKeepsTheRegionalAlternates(t *testing.T) {
 
 	encoded, err := json.Marshal(backup)
 	assert.NoError(t, err)
-	for _, want := range []string{
-		`"url":"https://serve.vulncheck.com/ghsa.zip"`,
-		`"url_mrap":"https://mrap/ghsa.zip"`,
-		`"url_us-east-1":"https://use1/ghsa.zip"`,
-		`"url_eu-west-2":"https://euw2/ghsa.zip"`,
-		`"url_ap-southeast-2":"https://apse2/ghsa.zip"`,
-	} {
-		assert.Contains(t, string(encoded), want)
+	assert.Contains(t, string(encoded), `"url":"https://serve.vulncheck.com/ghsa.zip"`)
+	for _, gone := range []string{"url_cloudfront", "url_mrap", "url_us-east-1", "url_eu-west-2", "url_ap-southeast-2"} {
+		assert.NotContains(t, string(encoded), gone)
 	}
 }
 
