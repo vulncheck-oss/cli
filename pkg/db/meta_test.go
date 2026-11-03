@@ -21,7 +21,10 @@ func TestMetaByCVE(t *testing.T) {
 		columns = append(columns, colDef)
 	}
 
-	tableDef := "CREATE TABLE IF NOT EXISTS vulncheck_nvd2 (" + strings.Join(columns, ", ") + ")"
+	if _, err := testDB.Exec(`DROP TABLE IF EXISTS vulncheck_nvd2`); err != nil {
+		t.Fatalf("failed to drop table: %v", err)
+	}
+	tableDef := "CREATE TABLE vulncheck_nvd2 (" + strings.Join(columns, ", ") + ")"
 	if _, err := testDB.Exec(tableDef); err != nil {
 		t.Fatalf("failed to create table: %v", err)
 	}
@@ -63,9 +66,10 @@ func TestMetaByCVE(t *testing.T) {
 
 	kevData := "2021-12-10"
 
-	_, err := testDB.Exec(`INSERT INTO vulncheck_nvd2 (id, published, vulncheckKEVExploitAdd, metrics, weaknesses) 
-		VALUES (?, ?, ?, ?, ?)`,
-		"CVE-2021-44228", "2021-12-10T10:15:00Z", kevData, string(metricsJSON), string(weaknessesJSON))
+	refsJSON := `[{"url":"https://example.com/cve","name":"Example"}]`
+	_, err := testDB.Exec(`INSERT INTO vulncheck_nvd2 (id, published, lastModified, date_added, vulnStatus, vulncheckKEVExploitAdd, metrics, weaknesses, description, "references") 
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		"CVE-2021-44228", "2021-12-10T10:15:00Z", "2022-01-01T00:00:00Z", "2021-12-11T00:00:00Z", "Modified", kevData, string(metricsJSON), string(weaknessesJSON), "Log4Shell", refsJSON)
 	if err != nil {
 		t.Fatalf("failed to insert test data: %v", err)
 	}
@@ -127,6 +131,16 @@ func TestMetaByCVE(t *testing.T) {
 
 			if result.Data[0].Weaknesses == nil {
 				t.Error("expected weaknesses to be populated")
+			}
+
+			if result.Description != "Log4Shell" {
+				t.Errorf("expected description Log4Shell, got %q", result.Description)
+			}
+			if result.Data[0].LastModified == nil || *result.Data[0].LastModified != "2022-01-01T00:00:00Z" {
+				t.Error("lastModified mismatch")
+			}
+			if result.Data[0].References == nil || len(*result.Data[0].References) != 1 {
+				t.Error("expected one reference")
 			}
 		})
 	}

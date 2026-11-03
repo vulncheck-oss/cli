@@ -32,10 +32,15 @@ var Schemas = []Schema{
 		Columns: []Column{
 			{Name: "id", Type: "TEXT", Index: true, NotNull: true},
 			{Name: "published", Type: "TEXT", Index: false, NotNull: false, IsJSON: false},
+			{Name: "lastModified", Type: "TEXT", Index: true, NotNull: false, IsJSON: false},
+			{Name: "date_added", Type: "TEXT", Index: true, NotNull: false, IsJSON: false},
+			{Name: "vulnStatus", Type: "TEXT", Index: false, NotNull: false, IsJSON: false},
 			{Name: "vulncheckKEVExploitAdd", Type: "TEXT", Index: false, NotNull: false, IsJSON: false},
 			{Name: "metrics", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
 			{Name: "weaknesses", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
-			{Name: "description", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
+			// Flattened from descriptions[0].value in processEntry (not a JSON column).
+			{Name: "description", Type: "TEXT", Index: false, NotNull: false, IsJSON: false},
+			{Name: "references", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
 		},
 	},
 	{
@@ -74,6 +79,8 @@ var Schemas = []Schema{
 			{Name: "licenses", Type: "TEXT", Index: false, NotNull: false, IsJSON: true}, // Add licenses
 			{Name: "cves", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
 			{Name: "vulnerabilities", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
+			// Package publish time from the backup payload (not an advisory "updated at").
+			{Name: "published_date", Type: "TEXT", Index: false, NotNull: false, IsJSON: false},
 		},
 	},
 	{
@@ -88,6 +95,7 @@ var Schemas = []Schema{
 			{Name: "licenses", Type: "TEXT", Index: false, NotNull: false, IsJSON: true}, // Add licenses
 			{Name: "cves", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
 			{Name: "vulnerabilities", Type: "TEXT", Index: false, NotNull: false, IsJSON: true},
+			{Name: "published_date", Type: "TEXT", Index: false, NotNull: false, IsJSON: false},
 			/*
 				{Name: "os_version", Type: "TEXT", Index: true, NotNull: true},
 				{Name: "os_arch", Type: "TEXT", Index: true, NotNull: true},
