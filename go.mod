@@ -13,20 +13,20 @@ require (
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/dustin/go-humanize v1.1.0
 	github.com/fumeapp/taskin v0.3.0
-	github.com/getkin/kin-openapi v0.152.0
+	github.com/getkin/kin-openapi v0.153.0
 	github.com/hashicorp/go-version v1.9.0
-	github.com/itchyny/gojq v0.12.19
+	github.com/itchyny/gojq v0.12.20
 	github.com/oapi-codegen/runtime v1.8.0
 	github.com/package-url/packageurl-go v0.1.7
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/spf13/cobra v1.10.2
-	github.com/spf13/pflag v1.0.10
+	github.com/spf13/pflag v1.1.0
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.1
-	github.com/tidwall/gjson v1.20.0
+	github.com/tidwall/gjson v1.20.1
 	golang.org/x/term v0.47.0
 	gopkg.in/yaml.v3 v3.0.1
-	modernc.org/sqlite v1.61.0
+	modernc.org/sqlite v1.62.0
 )
 
 require (
@@ -65,6 +65,7 @@ require (
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	go.podman.io/image/v5 v5.41.2 // indirect
 	go.podman.io/storage v1.64.1 // indirect
+	go.yaml.in/yaml/v4 v4.0.0 // indirect
 	howett.net/plist v1.0.1 // indirect
 )
 
@@ -221,7 +222,7 @@ require (
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/itchyny/timefmt-go v0.1.8 // indirect
+	github.com/itchyny/timefmt-go v0.1.9 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jinzhu/copier v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -233,7 +234,7 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mattn/go-localereader v0.0.2-0.20220822084749-2491eb6c1c75 // indirect
-	github.com/mattn/go-runewidth v0.0.27 // indirect
+	github.com/mattn/go-runewidth v0.0.31 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mholt/archives v0.1.5 // indirect
 	github.com/mikelolasagasti/xz v1.0.1 // indirect
@@ -259,8 +260,6 @@ require (
 	github.com/ncruces/go-strftime v1.1.0 // indirect
 	github.com/nix-community/go-nix v0.0.0-20250101154619-4bdde671e0a1 // indirect
 	github.com/nwaples/rardecode/v2 v2.4.1 // indirect
-	github.com/oasdiff/yaml v0.1.1 // indirect
-	github.com/oasdiff/yaml3 v0.0.14 // indirect
 	github.com/olekukonko/cat v0.0.0-20250911104152-50322a0618f6 // indirect
 	github.com/olekukonko/errors v1.2.0 // indirect
 	github.com/olekukonko/ll v0.1.6 // indirect
@@ -341,7 +340,7 @@ require (
 	google.golang.org/grpc v1.84.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	modernc.org/libc v1.79.0 // indirect
+	modernc.org/libc v1.80.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
 	pault.ag/go/debian v0.21.3
