@@ -30,6 +30,7 @@ func TestCommand(t *testing.T) {
 		"ipintel",
 		"purl",
 		"cpe",
+		"export",
 		"status",
 	}
 
