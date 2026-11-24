@@ -16,14 +16,14 @@ require (
 	github.com/getkin/kin-openapi v0.153.0
 	github.com/hashicorp/go-version v1.9.0
 	github.com/itchyny/gojq v0.12.20
-	github.com/oapi-codegen/runtime v1.9.0
+	github.com/oapi-codegen/runtime v1.9.1
 	github.com/package-url/packageurl-go v0.1.7
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.1.0
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.1
-	github.com/tidwall/gjson v1.20.2
+	github.com/tidwall/gjson v1.20.5
 	golang.org/x/term v0.48.0
 	gopkg.in/yaml.v3 v3.0.1
 	modernc.org/sqlite v1.62.0
