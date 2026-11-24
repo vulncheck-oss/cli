@@ -61,10 +61,10 @@ func TestSchemaStructure(t *testing.T) {
 		hasResults      bool
 	}{
 		{"ipintel", 15, "hostnames", true, false},
-		{"purl PM", 6, "purl", true, false},
+		{"purl PM", 7, "purl", true, false},
 		{"cpecve", 12, "cves", true, false},
 		{"fallback", 1, "data", true, false},
-		{"nvd", 6, "weaknesses", true, true},
+		{"nvd", 10, "references", true, true},
 	}
 
 	for _, tc := range testCases {
